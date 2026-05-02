@@ -177,6 +177,14 @@ class TripDetailsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+                      
+                      const SizedBox(height: 32),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      
+                      _buildHelpRow(icon: Icons.help_outline_rounded, title: 'Need help with a trip?', color: AppTheme.primaryColor),
+                      const SizedBox(height: 16),
+                      _buildHelpRow(icon: Icons.report_problem_outlined, title: 'Report a problem', color: Colors.red),
                     ],
                   ),
                 ),
@@ -184,6 +192,21 @@ class TripDetailsScreen extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpRow({required IconData icon, required String title, required Color color}) {
+    return InkWell(
+      onTap: () {},
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 16),
+          Text(title, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+          const Spacer(),
+          Icon(Icons.arrow_forward_ios, size: 14, color: color.withOpacity(0.5)),
         ],
       ),
     );

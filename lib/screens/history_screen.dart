@@ -106,11 +106,13 @@ class _HistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isCompleted = status == 'Completed' || status == 'Successful';
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Row(
@@ -118,19 +120,19 @@ class _HistoryItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(12),
+              color: AppTheme.primaryColor.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: AppTheme.primaryColor),
+            child: Icon(icon, color: AppTheme.primaryColor, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 4),
-                Text('$date • $time', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                Text('$date • $time', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
               ],
             ),
           ),
@@ -141,16 +143,24 @@ class _HistoryItem extends StatelessWidget {
                 '${isCredit ? "+" : ""}$amount',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 14,
                   color: isCredit ? Colors.green : AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                status,
-                style: TextStyle(
-                  color: status == 'Completed' || status == 'Successful' ? Colors.green : Colors.orange,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isCompleted ? Colors.green : Colors.orange).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    color: isCompleted ? Colors.green : Colors.orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],

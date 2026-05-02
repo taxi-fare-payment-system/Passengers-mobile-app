@@ -7,73 +7,147 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Profile', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, color: AppTheme.textPrimary),
-            onPressed: () {},
-          ),
-        ],
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           children: [
             // Profile Header
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=samuel'),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Samuel Abera',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '+251 91 234 5678',
-              style: Theme.of(context).textTheme.bodyMedium,
+            Center(
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                        ),
+                        child: const CircleAvatar(
+                          radius: 46,
+                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=samuel'),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
+                          child: const Icon(Icons.edit, color: Colors.white, size: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Samuel Abera',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                  ),
+                  const Text(
+                    '+251 91 234 5678',
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
             
-            // Settings Groups
+            // Wallet Balance Card
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('WuloPay Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      SizedBox(height: 4),
+                      Text('450.00 ETB', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/top-up'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppTheme.primaryColor,
+                      minimumSize: const Size(80, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Top Up'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Settings Menu
             _buildSection(
               context,
-              'Account',
+              'ACCOUNT',
               [
-                _ProfileTile(icon: Icons.person_outline_rounded, title: 'Edit Profile', onTap: () {}),
+                _ProfileTile(icon: Icons.person_outline_rounded, title: 'Edit Profile', onTap: () => Navigator.pushNamed(context, '/edit-profile')),
+                _ProfileTile(icon: Icons.history_rounded, title: 'Trip History', onTap: () {}),
                 _ProfileTile(icon: Icons.payment_rounded, title: 'Payment Methods', onTap: () {}),
+              ],
+            ),
+            _buildSection(
+              context,
+              'PREFERENCES',
+              [
+                _ProfileTile(icon: Icons.language_rounded, title: 'Language', subtitle: 'English', onTap: () => Navigator.pushNamed(context, '/language')),
+                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notification Settings', onTap: () => Navigator.pushNamed(context, '/notification-settings')),
                 _ProfileTile(icon: Icons.security_rounded, title: 'Security (PIN/Biometric)', onTap: () {}),
               ],
             ),
             _buildSection(
               context,
-              'Preferences',
-              [
-                _ProfileTile(icon: Icons.language_rounded, title: 'Language', subtitle: 'English', onTap: () {}),
-                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notification Settings', onTap: () {}),
-              ],
-            ),
-            _buildSection(
-              context,
-              'Support',
+              'SUPPORT',
               [
                 _ProfileTile(icon: Icons.help_outline_rounded, title: 'Help Center', onTap: () {}),
-                _ProfileTile(icon: Icons.policy_outlined, title: 'Privacy Policy', onTap: () {}),
                 _ProfileTile(icon: Icons.info_outline_rounded, title: 'About WuloPay', onTap: () {}),
               ],
             ),
             
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.logout_rounded, color: Colors.red),
-              label: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.logout_rounded, color: Colors.red),
+                label: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Colors.red, width: 1),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 32),
             const Text('Version 1.0.0', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -85,19 +159,13 @@ class ProfileScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.only(left: 24, top: 24, bottom: 8),
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textSecondary,
-              letterSpacing: 1,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textSecondary, letterSpacing: 1),
           ),
         ),
         ...children,
-        const Divider(height: 32, thickness: 1, color: Color(0xFFF1F5F9)),
       ],
     );
   }
@@ -109,35 +177,23 @@ class _ProfileTile extends StatelessWidget {
   final String? subtitle;
   final VoidCallback onTap;
 
-  const _ProfileTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    required this.onTap,
-  });
+  const _ProfileTile({required this.icon, required this.title, this.subtitle, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: AppTheme.primaryColor, size: 22),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      onTap: onTap,
+      leading: Icon(icon, color: AppTheme.primaryColor, size: 22),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (subtitle != null)
-            Text(subtitle!, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            Text(subtitle!, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
           const SizedBox(width: 8),
           const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.textSecondary),
         ],
       ),
-      onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 24),
     );
   }
