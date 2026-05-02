@@ -72,7 +72,7 @@ class WalletScreen extends StatelessWidget {
               children: [
                 const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.pushNamed(context, '/transaction-history'),
                   child: const Text('See All', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
                 ),
               ],

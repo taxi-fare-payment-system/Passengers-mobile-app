@@ -27,14 +27,21 @@ class _RateTripScreenState extends State<RateTripScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            const CircleAvatar(
-              radius: 60,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=driver1'),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Dawit K.',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            InkWell(
+              onTap: () => Navigator.pushNamed(context, '/driver-profile'),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 60,
+                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=driver1'),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Dawit K.',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
             const Text(

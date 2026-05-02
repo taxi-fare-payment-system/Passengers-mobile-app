@@ -86,35 +86,42 @@ class TripDetailsScreen extends StatelessWidget {
                       const Divider(height: 40),
                       
                       // Driver Info
-                      Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 24,
-                            backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=driver1'),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Dawit K.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                Row(
+                      InkWell(
+                        onTap: () => Navigator.pushNamed(context, '/driver-profile'),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 24,
+                                backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=driver1'),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.star_rounded, color: Colors.orange, size: 16),
-                                    const Text(' 5.0 rating', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                                    const Text('Dawit K.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.star_rounded, color: Colors.orange, size: 16),
+                                        const Text(' 5.0 rating', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const Text('Toyota Vitz', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                              const Text('2-A34567', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text('Toyota Vitz', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                  const Text('2-A34567', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 32),
                       

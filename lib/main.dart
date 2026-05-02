@@ -10,6 +10,8 @@ import 'screens/trip_details_screen.dart';
 import 'screens/payment_screens.dart';
 import 'screens/feedback_screens.dart';
 import 'screens/payment_methods_screen.dart';
+import 'screens/driver_profile_screen.dart';
+import 'screens/transaction_history_screen.dart';
 
 void main() {
   runApp(const WuloPayApp());
@@ -36,6 +38,8 @@ class WuloPayApp extends StatelessWidget {
         '/rate-trip': (context) => const RateTripScreen(),
         '/payment-methods': (context) => const PaymentMethodsScreen(),
         '/top-up': (context) => const TopUpScreen(),
+        '/driver-profile': (context) => const DriverProfileScreen(),
+        '/transaction-history': (context) => const TransactionHistoryScreen(),
       },
     );
   }

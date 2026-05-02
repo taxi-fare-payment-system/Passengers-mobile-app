@@ -7,56 +7,66 @@ class ConfirmPaymentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Confirm Payment', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Payment Confirmation', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppTheme.textPrimary),
+          icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+              padding: const EdgeInsets.symmetric(vertical: 40),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
               ),
               child: Column(
                 children: [
-                  Text(
-                    'Trip Fare',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  const Text('Trip Fare', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                   const SizedBox(height: 8),
-                  Text(
-                    '15.00 ETB',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  const Text(
+                    'ETB 15.00',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 40),
-            _PaymentDetailRow(label: 'From', value: 'Megenagna Station'),
-            _PaymentDetailRow(label: 'To', value: 'Stadium'),
-            _PaymentDetailRow(label: 'Vehicle', value: 'Taxi - Plate 2-A34567'),
-            const Divider(height: 48),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Wallet Balance', style: TextStyle(color: AppTheme.textSecondary)),
-                const Text('450.75 ETB', style: TextStyle(fontWeight: FontWeight.bold)),
-              ],
+            _PaymentMethodSelector(),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.info_outline_rounded, color: Colors.green, size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Payment will be deducted from your wallet.',
+                      style: TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             ElevatedButton(
@@ -71,7 +81,7 @@ class ConfirmPaymentScreen extends StatelessWidget {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel Payment', style: TextStyle(color: Colors.red)),
+              child: const Text('Cancel Payment', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -80,111 +90,34 @@ class ConfirmPaymentScreen extends StatelessWidget {
   }
 }
 
-class _PaymentDetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _PaymentDetailRow({required this.label, required this.value});
-
+class _PaymentMethodSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-        ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
-    );
-  }
-}
-
-class PaymentSuccessScreen extends StatelessWidget {
-  const PaymentSuccessScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: const BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.check, color: Colors.white, size: 60),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Payment Successful!',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Your payment of 15.00 ETB has been processed successfully.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 48),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: [
-                    _ReceiptRow(label: 'Transaction ID', value: '#TXN987654321'),
-                    const SizedBox(height: 12),
-                    _ReceiptRow(label: 'Date', value: '24 Jan 2024'),
-                    const SizedBox(height: 12),
-                    _ReceiptRow(label: 'Time', value: '10:35 AM'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 64),
-              ElevatedButton(
-                onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-                child: const Text('Back to Home'),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const TripReceiptScreen()));
-                },
-                child: const Text('View Receipt', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: AppTheme.primaryColor, borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 20),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ReceiptRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _ReceiptRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Wallet', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text('Available Balance: ETB 450.00', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+          const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.textSecondary),
         ],
       ),
     );
@@ -197,30 +130,33 @@ class PaymentPinScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(backgroundColor: Colors.white, elevation: 0, leading: const BackButton(color: Colors.black)),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            const Text('Enter Payment PIN', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text('Payment PIN Verification', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const Text('Please enter your 4-digit PIN to authorize the payment.', textAlign: TextAlign.center),
-            const SizedBox(height: 48),
-            // Placeholder for PIN dots
+            const Text(
+              'Enter your 4-digit security PIN to authorize this payment.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 64),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) => Container(
-                width: 16,
-                height: 16,
-                margin: const EdgeInsets.symmetric(horizontal: 8),
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey[300],
+                  color: index == 0 ? AppTheme.primaryColor : const Color(0xFFE2E8F0),
                 ),
               )),
             ),
             const Spacer(),
-            // Numeric Keypad Placeholder
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -232,14 +168,15 @@ class PaymentPinScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 if (index == 9) return const SizedBox.shrink();
                 if (index == 10) return _KeyButton('0', onTap: () {});
-                if (index == 11) return IconButton(onPressed: () {}, icon: const Icon(Icons.backspace_outlined));
+                if (index == 11) return IconButton(onPressed: () {}, icon: const Icon(Icons.backspace_outlined, size: 28));
                 return _KeyButton('${index + 1}', onTap: () {
-                  if (index == 2) { // Simulate correct PIN entry on '3'
+                  if (index == 2) {
                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProcessingPaymentScreen()));
                   }
                 });
               },
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -255,7 +192,8 @@ class _KeyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onTap,
-      child: Text(text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+      style: TextButton.styleFrom(shape: const CircleBorder()),
+      child: Text(text, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
     );
   }
 }
@@ -279,16 +217,95 @@ class _ProcessingPaymentScreenState extends State<ProcessingPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(color: AppTheme.primaryColor),
-            const SizedBox(height: 24),
-            const Text('Processing Payment...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('Please do not close the app.', style: TextStyle(color: AppTheme.textSecondary)),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.05), shape: BoxShape.circle),
+                child: const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor, strokeWidth: 3)),
+              ),
+              const SizedBox(height: 40),
+              const Text('Processing Payment...', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              const Text(
+                'Please wait while we confirm your payment with the server. Do not close the app.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class PaymentSuccessScreen extends StatelessWidget {
+  const PaymentSuccessScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 80),
+              ),
+              const SizedBox(height: 32),
+              const Text('Payment Successful!', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              const Text(
+                'Your transaction was completed successfully.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 48),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    _ReceiptRow(label: 'Amount Paid', value: '15.00 ETB'),
+                    const Divider(height: 32),
+                    _ReceiptRow(label: 'To', value: 'Dawit K.'),
+                    const SizedBox(height: 12),
+                    _ReceiptRow(label: 'Trip Destination', value: 'Current Area'),
+                    const SizedBox(height: 12),
+                    _ReceiptRow(label: 'Transaction ID', value: '#TXN123456789'),
+                    const SizedBox(height: 12),
+                    _ReceiptRow(label: 'Date & Time', value: 'Jan 24, 2024 • 11:35 AM'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 64),
+              ElevatedButton(
+                onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TripReceiptScreen())),
+                child: const Text('View Receipt'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                child: const Text('Back to Home', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -301,25 +318,42 @@ class PaymentCancelledScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.red[50], shape: BoxShape.circle),
-              child: const Icon(Icons.close_rounded, color: Colors.red, size: 60),
-            ),
-            const SizedBox(height: 32),
-            const Text('Payment Cancelled', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            const Text('The transaction was cancelled by the user or timed out.', textAlign: TextAlign.center),
-            const SizedBox(height: 48),
-            ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Try Again')),
-            const SizedBox(height: 16),
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Back to Home')),
-          ],
+      backgroundColor: const Color(0xFFFDF7F2), // Beige background from Figma
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
+                ),
+                child: const Icon(Icons.error_outline_rounded, color: Colors.orange, size: 80),
+              ),
+              const SizedBox(height: 40),
+              const Text('Payment Cancelled', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              const Text(
+                'The transaction was cancelled by the user or there was insufficient funds in your wallet. Please check your balance and try again.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textSecondary, height: 1.5),
+              ),
+              const SizedBox(height: 64),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Try Again'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                child: const Text('Back to Home', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -332,57 +366,104 @@ class TripReceiptScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Trip Receipt', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white, elevation: 0, leading: const BackButton(color: Colors.black),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: const BackButton(color: Colors.black),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            // Map Placeholder
+            Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.network(
+                  'https://api.placeholder.com/600/300',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFF1F5F9)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
               ),
               child: Column(
                 children: [
-                  const Text('Total Amount', style: TextStyle(color: AppTheme.textSecondary)),
+                  const Text('Trip Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 8),
-                  const Text('15.00 ETB', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                  const Text('Oct 12, 2023 • 10:35 AM', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                   const Divider(height: 48),
-                  _ReceiptRow(label: 'Trip Date', value: '24 Jan 2024'),
-                  _ReceiptRow(label: 'Trip ID', value: '#TRP123456'),
-                  _ReceiptRow(label: 'Driver', value: 'Dawit K.'),
-                  _ReceiptRow(label: 'Vehicle', value: 'Taxi (2-A34567)'),
+                  _ReceiptRow(label: 'Trip Distance', value: '6.2 km'),
+                  const SizedBox(height: 12),
+                  _ReceiptRow(label: 'Trip Duration', value: '18 mins'),
+                  const SizedBox(height: 12),
+                  _ReceiptRow(label: 'Vehicle Plate', value: '2-A34567'),
                   const Divider(height: 48),
-                  _ReceiptRow(label: 'Subtotal', value: '14.50 ETB'),
+                  _ReceiptRow(label: 'Fare Amount', value: '14.50 ETB'),
+                  const SizedBox(height: 12),
                   _ReceiptRow(label: 'Service Fee', value: '0.50 ETB'),
                   const Divider(height: 48),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
-                      Text('Paid with', style: TextStyle(color: AppTheme.textSecondary)),
-                      Text('WuloPay Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Total Paid', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('15.00 ETB', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppTheme.primaryColor)),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             ElevatedButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.download_rounded),
               label: const Text('Download PDF'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+                backgroundColor: AppTheme.surfaceColor,
+                foregroundColor: AppTheme.textPrimary,
+                elevation: 0,
+              ),
             ),
             const SizedBox(height: 16),
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+            ElevatedButton(
+              onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+              child: const Text('Done'),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReceiptRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _ReceiptRow({required this.label, required this.value});
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      ],
     );
   }
 }
