@@ -9,6 +9,7 @@ import 'screens/main_navigation.dart';
 import 'screens/trip_details_screen.dart';
 import 'screens/payment_screens.dart';
 import 'screens/feedback_screens.dart';
+import 'screens/payment_methods_screen.dart';
 
 void main() {
   runApp(const WuloPayApp());
@@ -33,6 +34,8 @@ class WuloPayApp extends StatelessWidget {
         '/trip-details': (context) => const TripDetailsScreen(),
         '/confirm-payment': (context) => const ConfirmPaymentScreen(),
         '/rate-trip': (context) => const RateTripScreen(),
+        '/payment-methods': (context) => const PaymentMethodsScreen(),
+        '/top-up': (context) => const TopUpScreen(),
       },
     );
   }

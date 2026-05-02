@@ -110,7 +110,7 @@ class ProfileScreen extends StatelessWidget {
               [
                 _ProfileTile(icon: Icons.person_outline_rounded, title: 'Edit Profile', onTap: () => Navigator.pushNamed(context, '/edit-profile')),
                 _ProfileTile(icon: Icons.history_rounded, title: 'Trip History', onTap: () {}),
-                _ProfileTile(icon: Icons.payment_rounded, title: 'Payment Methods', onTap: () {}),
+                _ProfileTile(icon: Icons.payment_rounded, title: 'Payment Methods', onTap: () => Navigator.pushNamed(context, '/payment-methods')),
               ],
             ),
             _buildSection(

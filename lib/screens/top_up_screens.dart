@@ -185,31 +185,56 @@ class TopUpSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainManager.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle_rounded, size: 100, color: Colors.green),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.check_circle_rounded, size: 80, color: Colors.green),
+              ),
               const SizedBox(height: 32),
               const Text('Top-Up Successful!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              const Text('Your wallet has been topped up successfully.', textAlign: TextAlign.center),
-              const SizedBox(height: 40),
+              const Text('Your wallet has been credited successfully.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary)),
+              const SizedBox(height: 48),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(24),
+                ),
                 child: Column(
                   children: [
-                    const Text('New Balance', style: TextStyle(color: AppTheme.textSecondary)),
+                    const Text('Total Top-Up Amount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                     const SizedBox(height: 8),
-                    const Text('1,540.75 ETB', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                    const Text('1,000.00 ETB', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                    const Divider(height: 48),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Text('New Wallet Balance', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        Text('1,450.75 ETB', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      ],
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 64),
-              ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Back to Wallet')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Back to Wallet'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+                child: const Text('Go to Home', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
         ),

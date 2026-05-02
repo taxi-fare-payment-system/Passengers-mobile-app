@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+
+class PaymentMethodsScreen extends StatelessWidget {
+  const PaymentMethodsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Payment Methods', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: const BackButton(color: Colors.black),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          const Text('Primary Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
+          const SizedBox(height: 16),
+          _PaymentMethodItem(
+            icon: Icons.account_balance_wallet_rounded,
+            title: 'WuloPay Wallet',
+            subtitle: 'Balance: 450.00 ETB',
+            isSelected: true,
+          ),
+          const SizedBox(height: 32),
+          const Text('Other Methods', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
+          const SizedBox(height: 16),
+          _PaymentMethodItem(
+            icon: Icons.account_balance_rounded,
+            title: 'Telebirr',
+            subtitle: 'Connected',
+            isSelected: false,
+          ),
+          const SizedBox(height: 12),
+          _PaymentMethodItem(
+            icon: Icons.credit_card_rounded,
+            title: 'Mastercard •••• 4567',
+            subtitle: 'Expires 05/26',
+            isSelected: false,
+          ),
+          const SizedBox(height: 32),
+          OutlinedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add New Method'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentMethodItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+
+  const _PaymentMethodItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9), width: isSelected ? 2 : 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(subtitle, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+          if (isSelected)
+            const Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor, size: 24),
+        ],
+      ),
+    );
+  }
+}
