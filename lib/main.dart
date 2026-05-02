@@ -6,6 +6,9 @@ import 'screens/language_selection_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/main_navigation.dart';
+import 'screens/trip_details_screen.dart';
+import 'screens/payment_screens.dart';
+import 'screens/feedback_screens.dart';
 
 void main() {
   runApp(const WuloPayApp());
@@ -27,6 +30,9 @@ class WuloPayApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/otp': (context) => const OTPScreen(),
         '/home': (context) => const MainNavigation(),
+        '/trip-details': (context) => const TripDetailsScreen(),
+        '/confirm-payment': (context) => const ConfirmPaymentScreen(),
+        '/rate-trip': (context) => const RateTripScreen(),
       },
     );
   }

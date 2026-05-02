@@ -119,12 +119,15 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _ActionCard(
-                          icon: Icons.map_outlined,
-                          title: 'Find Taxi',
-                          subtitle: 'Routes & Fares',
-                          color: Colors.orange.withOpacity(0.1),
-                          iconColor: Colors.orange,
+                        child: InkWell(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RouteSelectionScreen())),
+                          child: _ActionCard(
+                            icon: Icons.map_outlined,
+                            title: 'Find Taxi',
+                            subtitle: 'Routes & Fares',
+                            color: Colors.orange.withOpacity(0.1),
+                            iconColor: Colors.orange,
+                          ),
                         ),
                       ),
                     ],

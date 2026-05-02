@@ -9,95 +9,150 @@ class RouteSelectionScreen extends StatefulWidget {
 }
 
 class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
-  final TextEditingController _destinationController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Select Your Destination', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
-          onPressed: () => Navigator.pop(context),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.white,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                _buildLocationInput(
-                  icon: Icons.my_location_rounded,
-                  iconColor: AppTheme.primaryColor,
-                  label: 'Current Location',
-                  value: 'Megenagna Station',
-                  isReadOnly: true,
-                ),
-                const SizedBox(height: 12),
-                _buildLocationInput(
-                  icon: Icons.location_on_rounded,
-                  iconColor: Colors.red,
-                  label: 'Destination',
-                  hint: 'Where are you going?',
-                  controller: _destinationController,
-                ),
-              ],
-            ),
-          ),
-          const Divider(thickness: 1, height: 1),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                Text(
-                  'Available Connect Routes',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                _RouteCard(
-                  title: 'Bole 1',
-                  subtitle: 'Megenagna -> Stadium',
-                  fare: '15.00 ETB',
-                  time: '12 mins away',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 12),
-                _RouteCard(
-                  title: 'Bole 5',
-                  subtitle: 'Megenagna -> Bole',
-                  fare: '25.00 ETB',
-                  time: '5 mins away',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 12),
-                _RouteCard(
-                  title: 'German Terminal',
-                  subtitle: 'Megenagna -> CMC',
-                  fare: '20.00 ETB',
-                  time: '8 mins away',
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
+          // Map Placeholder
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
+            width: double.infinity,
+            height: double.infinity,
+            color: const Color(0xFFE5E7EB),
+            child: Center(
+              child: Icon(Icons.map_outlined, size: 100, color: Colors.black12),
             ),
-            child: ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/confirm-payment'),
-              child: const Text('Confirm Selection'),
+          ),
+          
+          // Floating Location Input
+          Positioned(
+            top: 100,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildLocationRow(
+                    icon: Icons.my_location_rounded,
+                    color: AppTheme.primaryColor,
+                    title: 'Current Location',
+                    value: 'Megenagna Station',
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Divider(height: 24),
+                  ),
+                  _buildLocationRow(
+                    icon: Icons.location_on_rounded,
+                    color: Colors.red,
+                    title: 'Destination',
+                    value: 'Select Destination',
+                    isPlaceholder: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom Sheet for Routes
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 400,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(color: Colors.black12, blurRadius: 20),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Select Route',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _RouteCard(
+                          title: 'Bole 1',
+                          subtitle: 'Megenagna -> Stadium',
+                          fare: '15.00 ETB',
+                          time: '12 mins away',
+                          isSelected: true,
+                          onTap: () {},
+                        ),
+                        const SizedBox(height: 12),
+                        _RouteCard(
+                          title: 'Bole 5',
+                          subtitle: 'Megenagna -> Bole',
+                          fare: '25.00 ETB',
+                          time: '5 mins away',
+                          onTap: () {},
+                        ),
+                        const SizedBox(height: 12),
+                        _RouteCard(
+                          title: 'German Terminal',
+                          subtitle: 'Megenagna -> CMC',
+                          fare: '20.00 ETB',
+                          time: '8 mins away',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/confirm-payment'),
+                    child: const Text('Confirm Selection'),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -105,51 +160,32 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
     );
   }
 
-  Widget _buildLocationInput({
+  Widget _buildLocationRow({
     required IconData icon,
-    required Color iconColor,
-    required String label,
-    String? value,
-    String? hint,
-    bool isReadOnly = false,
-    TextEditingController? controller,
+    required Color color,
+    required String title,
+    required String value,
+    bool isPlaceholder = false,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 20),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10, fontWeight: FontWeight.bold)),
-                if (isReadOnly)
-                  Text(value!, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))
-                else
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: hint,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      isCollapsed: true,
-                    ),
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-              ],
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10)),
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: isPlaceholder ? AppTheme.textSecondary : AppTheme.textPrimary,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -159,6 +195,7 @@ class _RouteCard extends StatelessWidget {
   final String subtitle;
   final String fare;
   final String time;
+  final bool isSelected;
   final VoidCallback onTap;
 
   const _RouteCard({
@@ -166,6 +203,7 @@ class _RouteCard extends StatelessWidget {
     required this.subtitle,
     required this.fare,
     required this.time,
+    this.isSelected = false,
     required this.onTap,
   });
 
@@ -177,9 +215,12 @@ class _RouteCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9),
+            width: isSelected ? 2 : 1,
+          ),
         ),
         child: Row(
           children: [

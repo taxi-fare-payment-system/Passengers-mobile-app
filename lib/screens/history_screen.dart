@@ -44,14 +44,17 @@ class _TripsList extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       itemCount: 10,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        return _HistoryItem(
-          icon: Icons.directions_car_rounded,
-          title: 'Megenagna to Stadium',
-          date: '24 Jan 2024',
-          time: '10:30 AM',
-          amount: '15.00 ETB',
-          status: 'Completed',
+      itemBuilder: (context) {
+        return InkWell(
+          onTap: () => Navigator.pushNamed(context, '/trip-details'),
+          child: _HistoryItem(
+            icon: Icons.directions_car_rounded,
+            title: 'Megenagna to Stadium',
+            date: '24 Jan 2024',
+            time: '10:30 AM',
+            amount: '15.00 ETB',
+            status: 'Completed',
+          ),
         );
       },
     );

@@ -23,6 +23,7 @@ class ConfirmPaymentScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceColor,
@@ -51,7 +52,7 @@ class ConfirmPaymentScreen extends StatelessWidget {
             _PaymentDetailRow(label: 'Vehicle', value: 'Taxi - Plate 2-A34567'),
             const Divider(height: 48),
             Row(
-              mainAxisAlignment: MainManager.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Wallet Balance', style: TextStyle(color: AppTheme.textSecondary)),
                 const Text('450.75 ETB', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -60,10 +61,9 @@ class ConfirmPaymentScreen extends StatelessWidget {
             const Spacer(),
             ElevatedButton(
               onPressed: () {
-                // Show success screen
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const PaymentSuccessScreen()),
+                  MaterialPageRoute(builder: (context) => const PaymentPinScreen()),
                 );
               },
               child: const Text('Pay Now'),
@@ -91,7 +91,7 @@ class _PaymentDetailRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainManager.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -111,7 +111,7 @@ class PaymentSuccessScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainManager.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 width: 100,
@@ -130,32 +130,36 @@ class PaymentSuccessScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'Your payment of 15.00 ETB has been processed successfully.',
-                textAlign: Manager.center,
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 48),
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   children: [
                     _ReceiptRow(label: 'Transaction ID', value: '#TXN987654321'),
+                    const SizedBox(height: 12),
                     _ReceiptRow(label: 'Date', value: '24 Jan 2024'),
+                    const SizedBox(height: 12),
                     _ReceiptRow(label: 'Time', value: '10:35 AM'),
                   ],
                 ),
               ),
               const SizedBox(height: 64),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
                 child: const Text('Back to Home'),
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const TripReceiptScreen()));
+                },
                 child: const Text('View Receipt', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
@@ -177,7 +181,7 @@ class _ReceiptRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainManager.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
@@ -277,7 +281,7 @@ class _ProcessingPaymentScreenState extends State<ProcessingPaymentScreen> {
     return Scaffold(
       body: Center(
         child: Column(
-          mainAxisAlignment: MainManager.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(color: AppTheme.primaryColor),
             const SizedBox(height: 24),
@@ -300,7 +304,7 @@ class PaymentCancelledScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          mainAxisAlignment: MainManager.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(20),
@@ -359,7 +363,7 @@ class TripReceiptScreen extends StatelessWidget {
                   _ReceiptRow(label: 'Service Fee', value: '0.50 ETB'),
                   const Divider(height: 48),
                   Row(
-                    mainAxisAlignment: MainManager.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
                       Text('Paid with', style: TextStyle(color: AppTheme.textSecondary)),
                       Text('WuloPay Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
