@@ -186,3 +186,199 @@ class _ReceiptRow extends StatelessWidget {
     );
   }
 }
+
+class PaymentPinScreen extends StatelessWidget {
+  const PaymentPinScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, leading: const BackButton(color: Colors.black)),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            const Text('Enter Payment PIN', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text('Please enter your 4-digit PIN to authorize the payment.', textAlign: TextAlign.center),
+            const SizedBox(height: 48),
+            // Placeholder for PIN dots
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(4, (index) => Container(
+                width: 16,
+                height: 16,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey[300],
+                ),
+              )),
+            ),
+            const Spacer(),
+            // Numeric Keypad Placeholder
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 1.5,
+              ),
+              itemCount: 12,
+              itemBuilder: (context, index) {
+                if (index == 9) return const SizedBox.shrink();
+                if (index == 10) return _KeyButton('0', onTap: () {});
+                if (index == 11) return IconButton(onPressed: () {}, icon: const Icon(Icons.backspace_outlined));
+                return _KeyButton('${index + 1}', onTap: () {
+                  if (index == 2) { // Simulate correct PIN entry on '3'
+                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProcessingPaymentScreen()));
+                  }
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KeyButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  const _KeyButton(this.text, {required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      child: Text(text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+    );
+  }
+}
+
+class ProcessingPaymentScreen extends StatefulWidget {
+  const ProcessingPaymentScreen({super.key});
+
+  @override
+  State<ProcessingPaymentScreen> createState() => _ProcessingPaymentScreenState();
+}
+
+class _ProcessingPaymentScreenState extends State<ProcessingPaymentScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PaymentSuccessScreen()));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainManager.center,
+          children: [
+            const CircularProgressIndicator(color: AppTheme.primaryColor),
+            const SizedBox(height: 24),
+            const Text('Processing Payment...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Please do not close the app.', style: TextStyle(color: AppTheme.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PaymentCancelledScreen extends StatelessWidget {
+  const PaymentCancelledScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainManager.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(color: Colors.red[50], shape: BoxShape.circle),
+              child: const Icon(Icons.close_rounded, color: Colors.red, size: 60),
+            ),
+            const SizedBox(height: 32),
+            const Text('Payment Cancelled', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text('The transaction was cancelled by the user or timed out.', textAlign: TextAlign.center),
+            const SizedBox(height: 48),
+            ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Try Again')),
+            const SizedBox(height: 16),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Back to Home')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TripReceiptScreen extends StatelessWidget {
+  const TripReceiptScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Trip Receipt', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white, elevation: 0, leading: const BackButton(color: Colors.black),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+              ),
+              child: Column(
+                children: [
+                  const Text('Total Amount', style: TextStyle(color: AppTheme.textSecondary)),
+                  const SizedBox(height: 8),
+                  const Text('15.00 ETB', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                  const Divider(height: 48),
+                  _ReceiptRow(label: 'Trip Date', value: '24 Jan 2024'),
+                  _ReceiptRow(label: 'Trip ID', value: '#TRP123456'),
+                  _ReceiptRow(label: 'Driver', value: 'Dawit K.'),
+                  _ReceiptRow(label: 'Vehicle', value: 'Taxi (2-A34567)'),
+                  const Divider(height: 48),
+                  _ReceiptRow(label: 'Subtotal', value: '14.50 ETB'),
+                  _ReceiptRow(label: 'Service Fee', value: '0.50 ETB'),
+                  const Divider(height: 48),
+                  Row(
+                    mainAxisAlignment: MainManager.spaceBetween,
+                    children: const [
+                      Text('Paid with', style: TextStyle(color: AppTheme.textSecondary)),
+                      Text('WuloPay Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('Download PDF'),
+            ),
+            const SizedBox(height: 16),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+          ],
+        ),
+      ),
+    );
+  }
+}
