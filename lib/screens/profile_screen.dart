@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/wallet_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final wallet = context.watch<WalletProvider>();
+    final user = auth.user;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -33,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: const CircleAvatar(
                           radius: 46,
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=samuel'),
+                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=passenger'),
                         ),
                       ),
                       Positioned(
@@ -48,13 +55,22 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Samuel Abera',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        user?['name'] ?? 'Passenger User',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      ),
+                      if (auth.isVerified) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.verified, color: AppTheme.primaryColor, size: 18),
+                      ],
+                    ],
                   ),
-                  const Text(
-                    '+251 91 234 5678',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  Text(
+                    user?['phone'] ?? '+251 900 000 000',
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
@@ -81,10 +97,10 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('WuloPay Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                      SizedBox(height: 4),
-                      Text('450.00 ETB', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    children: [
+                      const Text('WuloPay Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Text('${wallet.balance ?? '0.00'} ETB', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   ElevatedButton(
@@ -109,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
               'ACCOUNT',
               [
                 _ProfileTile(icon: Icons.person_outline_rounded, title: 'Edit Profile', onTap: () => Navigator.pushNamed(context, '/edit-profile')),
-                _ProfileTile(icon: Icons.history_rounded, title: 'Trip History', onTap: () {}),
+                _ProfileTile(icon: Icons.history_rounded, title: 'Trip History', onTap: () => Navigator.pushNamed(context, '/transaction-history')),
                 _ProfileTile(icon: Icons.payment_rounded, title: 'Payment Methods', onTap: () => Navigator.pushNamed(context, '/payment-methods')),
               ],
             ),
@@ -118,7 +134,7 @@ class ProfileScreen extends StatelessWidget {
               'PREFERENCES',
               [
                 _ProfileTile(icon: Icons.language_rounded, title: 'Language', subtitle: 'English', onTap: () => Navigator.pushNamed(context, '/language')),
-                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notification Settings', onTap: () => Navigator.pushNamed(context, '/notification-settings')),
+                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notification Settings', onTap: () {}),
                 _ProfileTile(icon: Icons.security_rounded, title: 'Security (PIN/Biometric)', onTap: () {}),
               ],
             ),
@@ -134,7 +150,10 @@ class ProfileScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: TextButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  auth.logout();
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
                 icon: const Icon(Icons.logout_rounded, color: Colors.red),
                 label: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                 style: TextButton.styleFrom(

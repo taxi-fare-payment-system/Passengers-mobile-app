@@ -1,0 +1,12 @@
+{
+  "welcome": "Welcome to WuloPay",
+  "login": "Login",
+  "phone_number": "Phone Number",
+  "enter_otp": "Enter OTP",
+  "confirm": "Confirm",
+  "wallet": "Wallet",
+  "balance": "Balance",
+  "history": "History",
+  "profile": "Profile",
+  "notifications": "Notifications"
+}

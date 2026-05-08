@@ -1,12 +1,40 @@
-import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/wallet_provider.dart';
 import 'transaction_detail_screen.dart';
 
-class WalletScreen extends StatelessWidget {
+class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
 
   @override
+  State<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends State<WalletScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+  }
+
+  Future<void> _fetchData() async {
+    final auth = context.read<AuthProvider>();
+    final token = auth.token;
+    final userId = auth.user?['id'].toString();
+
+    if (token != null && userId != null) {
+      context.read<WalletProvider>().fetchBalance(userId, token);
+      context.read<WalletProvider>().fetchTransactions(token);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final wallet = context.watch<WalletProvider>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -21,101 +49,111 @@ class WalletScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Balance Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+      body: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Balance Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                        const SizedBox(height: 8),
+                        Text(
+                          wallet.balance != null ? '${wallet.balance} ETB' : '...',
+                          style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pushNamed(context, '/top-up'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppTheme.primaryColor,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('Top Up', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: () => Navigator.pushNamed(context, '/transfer'),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.white70),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('Send', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
+              const SizedBox(height: 40),
+              
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                      SizedBox(height: 8),
-                      Text('450.75 ETB', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, '/top-up'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppTheme.primaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Text('Top Up', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/transaction-history'),
+                    child: const Text('See All', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 40),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/transaction-history'),
-                  child: const Text('See All', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              
+              if (wallet.isLoading && wallet.transactions.isEmpty)
+                const Center(child: CircularProgressIndicator())
+              else if (wallet.transactions.isEmpty)
+                const Center(child: Text('No transactions found'))
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: wallet.transactions.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final tx = wallet.transactions[index];
+                    final isExpense = tx['sender_wallet_id'] == wallet.walletId;
+                    return _TransactionItem(
+                      title: tx['reason'] ?? 'Transaction',
+                      subtitle: tx['created_at'].toString().split('T')[0],
+                      amount: '${isExpense ? '-' : '+'}${tx['amount']} ETB',
+                      isExpense: isExpense,
+                      onTap: () => Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (context) => const TransactionDetailScreen())
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            const Text('Today', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textSecondary)),
-            const SizedBox(height: 16),
-            _TransactionItem(
-              title: 'Ride to Stadium',
-              subtitle: '10:30 AM',
-              amount: '-15.00 ETB',
-              isExpense: true,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TransactionDetailScreen())),
-            ),
-            const SizedBox(height: 16),
-            _TransactionItem(
-              title: 'Wallet Top-up',
-              subtitle: '08:45 AM',
-              amount: '+500.00 ETB',
-              isExpense: false,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TransactionDetailScreen())),
-            ),
-            
-            const SizedBox(height: 32),
-            const Text('Yesterday', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textSecondary)),
-            const SizedBox(height: 16),
-            _TransactionItem(
-              title: 'Ride to Bole',
-              subtitle: '09:15 PM',
-              amount: '-25.00 ETB',
-              isExpense: true,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TransactionDetailScreen())),
-            ),
-            const SizedBox(height: 16),
-            _TransactionItem(
-              title: 'Ride from Bole',
-              subtitle: '08:15 AM',
-              amount: '-25.00 ETB',
-              isExpense: true,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TransactionDetailScreen())),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/trip_provider.dart';
+import 'trip_details_screen.dart';
 
 class RouteSelectionScreen extends StatefulWidget {
   const RouteSelectionScreen({super.key});
@@ -9,8 +13,14 @@ class RouteSelectionScreen extends StatefulWidget {
 }
 
 class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
+  int _selectedRouteIndex = -1;
+  bool _isSubmitting = false;
+
   @override
   Widget build(BuildContext context) {
+    final tripProvider = context.watch<TripProvider>();
+    final authProvider = context.watch<AuthProvider>();
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -34,7 +44,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
             width: double.infinity,
             height: double.infinity,
             color: const Color(0xFFE5E7EB),
-            child: Center(
+            child: const Center(
               child: Icon(Icons.map_outlined, size: 100, color: Colors.black12),
             ),
           ),
@@ -73,8 +83,10 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                     icon: Icons.location_on_rounded,
                     color: Colors.red,
                     title: 'Destination',
-                    value: 'Select Destination',
-                    isPlaceholder: true,
+                    value: _selectedRouteIndex != -1 
+                        ? tripProvider.routes[_selectedRouteIndex]['endLocation'] 
+                        : 'Select Destination',
+                    isPlaceholder: _selectedRouteIndex == -1,
                   ),
                 ],
               ),
@@ -85,7 +97,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: 400,
+              height: 420,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -111,45 +123,82 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                       ),
                     ),
                   ),
-                  const Text(
-                    'Select Route',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Select Route',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      TextButton(
+                        onPressed: () => tripProvider.fetchRoutes(authProvider.token!),
+                        child: const Text('Refresh'),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   Expanded(
-                    child: ListView(
-                      children: [
-                        _RouteCard(
-                          title: 'Bole 1',
-                          subtitle: 'Megenagna -> Stadium',
-                          fare: '15.00 ETB',
-                          time: '12 mins away',
-                          isSelected: true,
-                          onTap: () {},
-                        ),
-                        const SizedBox(height: 12),
-                        _RouteCard(
-                          title: 'Bole 5',
-                          subtitle: 'Megenagna -> Bole',
-                          fare: '25.00 ETB',
-                          time: '5 mins away',
-                          onTap: () {},
-                        ),
-                        const SizedBox(height: 12),
-                        _RouteCard(
-                          title: 'German Terminal',
-                          subtitle: 'Megenagna -> CMC',
-                          fare: '20.00 ETB',
-                          time: '8 mins away',
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
+                    child: tripProvider.isLoading 
+                        ? const Center(child: CircularProgressIndicator())
+                        : tripProvider.routes.isEmpty
+                            ? const Center(child: Text('No routes available'))
+                            : ListView.separated(
+                                itemCount: tripProvider.routes.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final route = tripProvider.routes[index];
+                                  return _RouteCard(
+                                    title: route['name'] ?? 'Route ${index + 1}',
+                                    subtitle: '${route['startLocation']} -> ${route['endLocation']}',
+                                    fare: '${route['baseFare']} ETB',
+                                    time: '${route['estimatedDuration']} mins',
+                                    isSelected: _selectedRouteIndex == index,
+                                    onTap: () {
+                                      setState(() => _selectedRouteIndex = index);
+                                    },
+                                  );
+                                },
+                              ),
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, '/confirm-payment'),
-                    child: const Text('Confirm Selection'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_selectedRouteIndex == -1 || _isSubmitting)
+                          ? null
+                          : () async {
+                              setState(() => _isSubmitting = true);
+                              try {
+                                final route = tripProvider.routes[_selectedRouteIndex];
+                                final token = authProvider.token!;
+                                
+                                // Fetch vehicles for this route
+                                await tripProvider.fetchVehiclesForRoute(route['id'].toString(), token);
+                                
+                                if (mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TripDetailsScreen(
+                                        route: route,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) setState(() => _isSubmitting = false);
+                              }
+                            },
+                      child: _isSubmitting 
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Confirm Selection'),
+                    ),
                   ),
                 ],
               ),

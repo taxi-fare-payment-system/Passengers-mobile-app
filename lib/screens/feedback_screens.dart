@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/feedback_provider.dart';
 
 class RateTripScreen extends StatefulWidget {
   const RateTripScreen({super.key});
@@ -74,7 +77,7 @@ class _RateTripScreenState extends State<RateTripScreen> {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackFormScreen())) : null,
+              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: 'dummy-trip-id',))) : null,
               child: const Text('Submit Rating'),
             ),
             const SizedBox(height: 16),
@@ -101,7 +104,8 @@ class _RateTripScreenState extends State<RateTripScreen> {
 }
 
 class FeedbackFormScreen extends StatefulWidget {
-  const FeedbackFormScreen({super.key});
+  final String tripId;
+  const FeedbackFormScreen({super.key, required this.tripId});
 
   @override
   State<FeedbackFormScreen> createState() => _FeedbackFormScreenState();
@@ -109,9 +113,20 @@ class FeedbackFormScreen extends StatefulWidget {
 
 class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   final List<String> _selectedTags = [];
+  final TextEditingController _commentController = TextEditingController();
+  int _rating = 5; // Default or passed from previous screen
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final feedbackProvider = context.watch<FeedbackProvider>();
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -159,6 +174,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
             const Text('Write a Comment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 16),
             TextField(
+              controller: _commentController,
               maxLines: 5,
               decoration: InputDecoration(
                 hintText: 'Share your experience with the driver...',
@@ -170,18 +186,44 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
             ),
             const SizedBox(height: 48),
             ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Thank you for your feedback!'),
-                    backgroundColor: AppTheme.primaryColor,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                );
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-              child: const Text('Submit Feedback'),
+              onPressed: feedbackProvider.isSubmitting
+                  ? null
+                  : () async {
+                      try {
+                        await feedbackProvider.submitFeedback(
+                          tripId: widget.tripId,
+                          rating: _rating,
+                          tags: _selectedTags,
+                          comment: _commentController.text,
+                          token: auth.token!,
+                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Thank you for your feedback!'),
+                              backgroundColor: AppTheme.primaryColor,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                          Navigator.popUntil(context, (route) => route.isFirst);
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: feedbackProvider.isSubmitting
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Submit Feedback'),
             ),
           ],
         ),

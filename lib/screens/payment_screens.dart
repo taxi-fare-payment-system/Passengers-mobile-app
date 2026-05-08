@@ -6,6 +6,10 @@ class ConfirmPaymentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final tripId = args?['trip_id'] ?? 'unknown';
+    final amount = args?['amount'] ?? 15.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -34,9 +38,9 @@ class ConfirmPaymentScreen extends StatelessWidget {
                 children: [
                   const Text('Trip Fare', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                   const SizedBox(height: 8),
-                  const Text(
-                    'ETB 15.00',
-                    style: TextStyle(
+                  Text(
+                    'ETB ${amount.toStringAsFixed(2)}',
+                    style: const TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -73,7 +77,9 @@ class ConfirmPaymentScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const PaymentPinScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => PaymentPinScreen(tripId: tripId, amount: amount),
+                  ),
                 );
               },
               child: const Text('Pay Now'),
@@ -125,7 +131,9 @@ class _PaymentMethodSelector extends StatelessWidget {
 }
 
 class PaymentPinScreen extends StatelessWidget {
-  const PaymentPinScreen({super.key});
+  final String tripId;
+  final double amount;
+  const PaymentPinScreen({super.key, required this.tripId, required this.amount});
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +178,11 @@ class PaymentPinScreen extends StatelessWidget {
                 if (index == 10) return _KeyButton('0', onTap: () {});
                 if (index == 11) return IconButton(onPressed: () {}, icon: const Icon(Icons.backspace_outlined, size: 28));
                 return _KeyButton('${index + 1}', onTap: () {
-                  if (index == 2) {
-                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProcessingPaymentScreen()));
+                  if (index == 2) { // Simulate correct PIN for demo
+                     Navigator.pushReplacement(
+                       context, 
+                       MaterialPageRoute(builder: (context) => ProcessingPaymentScreen(tripId: tripId, amount: amount))
+                     );
                   }
                 });
               },
@@ -199,7 +210,9 @@ class _KeyButton extends StatelessWidget {
 }
 
 class ProcessingPaymentScreen extends StatefulWidget {
-  const ProcessingPaymentScreen({super.key});
+  final String tripId;
+  final double amount;
+  const ProcessingPaymentScreen({super.key, required this.tripId, required this.amount});
 
   @override
   State<ProcessingPaymentScreen> createState() => _ProcessingPaymentScreenState();
@@ -209,9 +222,36 @@ class _ProcessingPaymentScreenState extends State<ProcessingPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PaymentSuccessScreen()));
-    });
+    _pay();
+  }
+
+  Future<void> _pay() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final tripProvider = context.read<TripProvider>();
+      
+      final transactionId = await tripProvider.payFare(
+        tripId: widget.tripId,
+        amount: widget.amount,
+        userId: auth.user?['id'].toString() ?? '',
+        phone: auth.user?['phone'] ?? '',
+        token: auth.token!,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
+            amount: widget.amount, 
+            transactionId: transactionId,
+          ))
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PaymentCancelledScreen()));
+      }
+    }
   }
 
   @override
@@ -247,10 +287,13 @@ class _ProcessingPaymentScreenState extends State<ProcessingPaymentScreen> {
 }
 
 class PaymentSuccessScreen extends StatelessWidget {
-  const PaymentSuccessScreen({super.key});
+  final double amount;
+  final String transactionId;
+  const PaymentSuccessScreen({super.key, required this.amount, required this.transactionId});
 
   @override
   Widget build(BuildContext context) {
+    final trip = context.read<TripProvider>().currentTrip;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -282,15 +325,15 @@ class PaymentSuccessScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _ReceiptRow(label: 'Amount Paid', value: '15.00 ETB'),
+                    _ReceiptRow(label: 'Amount Paid', value: '${amount.toStringAsFixed(2)} ETB'),
                     const Divider(height: 32),
-                    _ReceiptRow(label: 'To', value: 'Dawit K.'),
+                    _ReceiptRow(label: 'Driver', value: trip?['driver_name'] ?? 'Assigned Driver'),
                     const SizedBox(height: 12),
-                    _ReceiptRow(label: 'Trip Destination', value: 'Current Area'),
+                    _ReceiptRow(label: 'Trip ID', value: '#${trip?['id']?.toString().substring(0, 8) ?? 'TRIP'}'),
                     const SizedBox(height: 12),
-                    _ReceiptRow(label: 'Transaction ID', value: '#TXN123456789'),
+                    _ReceiptRow(label: 'Transaction ID', value: '#${transactionId.substring(0, 12)}'),
                     const SizedBox(height: 12),
-                    _ReceiptRow(label: 'Date & Time', value: 'Jan 24, 2024 • 11:35 AM'),
+                    _ReceiptRow(label: 'Date & Time', value: DateTime.now().toString().split('.')[0]),
                   ],
                 ),
               ),

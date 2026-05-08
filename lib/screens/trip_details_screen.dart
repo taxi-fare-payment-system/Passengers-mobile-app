@@ -1,11 +1,32 @@
-import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/trip_provider.dart';
 
-class TripDetailsScreen extends StatelessWidget {
-  const TripDetailsScreen({super.key});
+class TripDetailsScreen extends StatefulWidget {
+  final dynamic route;
+  const TripDetailsScreen({super.key, required this.route});
+
+  @override
+  State<TripDetailsScreen> createState() => _TripDetailsScreenState();
+}
+
+class _TripDetailsScreenState extends State<TripDetailsScreen> {
+  int _selectedVehicleIndex = -1;
+  bool _isBooking = false;
+
+  @override
+  void dispose() {
+    // Stop polling when leaving the screen
+    Provider.of<TripProvider>(context, listen: false).stopTripPolling();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final tripProvider = context.watch<TripProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final trip = tripProvider.currentTrip;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -21,11 +42,14 @@ class TripDetailsScreen extends StatelessWidget {
             ),
           ),
         ),
-        title: const Text('Trip Details', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        title: Text(
+          trip != null ? 'Trip Status: ${trip['status']}' : 'Confirm Booking',
+          style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+        ),
       ),
       body: Stack(
         children: [
-          // Map Placeholder (Full background)
+          // Map Placeholder
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -35,185 +59,206 @@ class TripDetailsScreen extends StatelessWidget {
             ),
           ),
           
-          // Trip Info Content
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 120), // Space for AppBar
-                
-                // Trip Summary Card
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+          // Content
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: trip == null ? 450 : 500,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20)],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                    ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'Completed',
-                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                            ),
-                          ),
-                          const Text(
-                            '24 Jan 2024, 10:35 AM',
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        '15.00 ETB',
-                        style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
-                      ),
-                      const Divider(height: 40),
-                      
-                      // Driver Info
-                      InkWell(
-                        onTap: () => Navigator.pushNamed(context, '/driver-profile'),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              const CircleAvatar(
-                                radius: 24,
-                                backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=driver1'),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Dawit K.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                    Row(
+                  if (trip == null) ...[
+                    const Text('Select Available Vehicle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: tripProvider.vehicles.isEmpty
+                          ? const Center(child: Text('No vehicles available on this route right now'))
+                          : ListView.separated(
+                              itemCount: tripProvider.vehicles.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final v = tripProvider.vehicles[index];
+                                return InkWell(
+                                  onTap: () => setState(() => _selectedVehicleIndex = index),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: _selectedVehicleIndex == index ? AppTheme.primaryColor : Colors.grey[200]!,
+                                        width: _selectedVehicleIndex == index ? 2 : 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      color: _selectedVehicleIndex == index ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
+                                    ),
+                                    child: Row(
                                       children: [
-                                        const Icon(Icons.star_rounded, color: Colors.orange, size: 16),
-                                        const Text(' 5.0 rating', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                                        const Icon(Icons.directions_car_filled, color: AppTheme.primaryColor),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(v['plateNumber'] ?? 'Unknown Plate', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                              Text('Driver: ${v['driverName'] ?? 'Assigned soon'}', style: const TextStyle(fontSize: 12)),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  const Text('Toyota Vitz', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const Text('2-A34567', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                                ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: (_selectedVehicleIndex == -1 || _isBooking)
+                            ? null
+                            : () async {
+                                setState(() => _isBooking = true);
+                                try {
+                                  final vehicle = tripProvider.vehicles[_selectedVehicleIndex];
+                                  await tripProvider.createTrip({
+                                    'route_id': widget.route['id'],
+                                    'vehicle_id': vehicle['id'],
+                                    'passenger_id': authProvider.user?['id'],
+                                    'start_location': widget.route['startLocation'],
+                                    'end_location': widget.route['endLocation'],
+                                    'estimated_fare': widget.route['baseFare'],
+                                  }, authProvider.token!);
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                                  }
+                                } finally {
+                                  if (mounted) setState(() => _isBooking = false);
+                                }
+                              },
+                        child: _isBooking ? const CircularProgressIndicator(color: Colors.white) : const Text('Book Now'),
+                      ),
+                    ),
+                  ] else ...[
+                    // Trip Status View
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            trip['status'] ?? 'PENDING',
+                            style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                        Text(
+                          'Estimated Arrival: 5 mins',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 30,
+                          backgroundColor: AppTheme.surfaceColor,
+                          child: Icon(Icons.person, size: 30, color: AppTheme.primaryColor),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(trip['driver_name'] ?? 'Finding Driver...', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                              Text(
+                                tripProvider.vehicleDetails != null 
+                                  ? '${tripProvider.vehicleDetails!['metadata']?['model'] ?? 'Vehicle'} • ${tripProvider.vehicleDetails!['plateNumber']}' 
+                                  : 'Loading vehicle details...',
+                                style: const TextStyle(color: AppTheme.textSecondary),
                               ),
                             ],
                           ),
                         ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.call, color: Colors.green),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    _buildTimelineItem(
+                      icon: Icons.my_location_rounded,
+                      color: AppTheme.primaryColor,
+                      location: trip['start_location'] ?? widget.route['startLocation'],
+                      time: 'Pickup',
+                      isFirst: true,
+                    ),
+                    _buildTimelineItem(
+                      icon: Icons.location_on_rounded,
+                      color: Colors.red,
+                      location: trip['end_location'] ?? widget.route['endLocation'],
+                      time: 'Dropoff',
+                      isLast: true,
+                    ),
+                    const Spacer(),
+                    if (trip['status'] == 'WAITING_FOR_PASSENGER')
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                          child: const Text('Show QR to Driver'),
+                        ),
+                      )
+                    else if (trip['status'] == 'COMPLETED' || trip['status'] == 'ENDED')
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context, 
+                              '/confirm-payment',
+                              arguments: {
+                                'trip_id': trip['id'],
+                                'amount': double.tryParse(trip['estimated_fare']?.toString() ?? '0') ?? 0.0,
+                              },
+                            );
+                          },
+                          child: const Text('Pay Fare'),
+                        ),
                       ),
-                      const SizedBox(height: 32),
-                      
-                      // Timeline
-                      _buildTimelineItem(
-                        icon: Icons.my_location_rounded,
-                        color: AppTheme.primaryColor,
-                        location: 'Megenagna Station',
-                        time: '10:15 AM',
-                        isFirst: true,
-                      ),
-                      _buildTimelineItem(
-                        icon: Icons.location_on_rounded,
-                        color: Colors.red,
-                        location: 'Stadium Station',
-                        time: '10:35 AM',
-                        isLast: true,
-                      ),
-                      
-                      const Divider(height: 48),
-                      
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Payment Method', style: TextStyle(color: AppTheme.textSecondary)),
-                          Row(
-                            children: [
-                              const Icon(Icons.account_balance_wallet_rounded, size: 16, color: AppTheme.primaryColor),
-                              const SizedBox(width: 8),
-                              const Text('WuloPay Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {},
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              child: const Text('Download Receipt', style: TextStyle(color: AppTheme.textPrimary)),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () => Navigator.pushNamed(context, '/rate-trip'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              child: const Text('Rate Trip'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      const Divider(),
-                      const SizedBox(height: 16),
-                      
-                      _buildHelpRow(icon: Icons.help_outline_rounded, title: 'Need help with a trip?', color: AppTheme.primaryColor),
-                      const SizedBox(height: 16),
-                      _buildHelpRow(icon: Icons.report_problem_outlined, title: 'Report a problem', color: Colors.red),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-              ],
+                  ],
+                ],
+              ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpRow({required IconData icon, required String title, required Color color}) {
-    return InkWell(
-      onTap: () {},
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 16),
-          Text(title, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-          const Spacer(),
-          Icon(Icons.arrow_forward_ios, size: 14, color: color.withOpacity(0.5)),
         ],
       ),
     );

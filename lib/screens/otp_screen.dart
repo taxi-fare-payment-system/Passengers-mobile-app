@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
 class OTPScreen extends StatefulWidget {
@@ -98,14 +100,51 @@ class _OTPScreenState extends State<OTPScreen> {
               ),
             ),
             const Spacer(),
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-              child: const Text('Verify & Continue'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        final phone = ModalRoute.of(context)!.settings.arguments as String;
+                        final code = _pinController.text;
+
+                        if (code.length != 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter the 6-digit code')),
+                          );
+                          return;
+                        }
+
+                        setState(() => _isLoading = true);
+                        try {
+                          await context.read<AuthProvider>().verifyOTP(phone, code);
+                          if (mounted) {
+                            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(e.toString())),
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isLoading = false);
+                        }
+                      },
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Verify & Continue'),
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               'By continuing, you agree to our Terms of Service and Privacy Policy.',
-              textAlign: Manager.center,
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondary.withOpacity(0.6),
                   ),

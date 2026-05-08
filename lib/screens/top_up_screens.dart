@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/wallet_provider.dart';
 
 class TopUpScreen extends StatefulWidget {
   const TopUpScreen({super.key});
@@ -77,7 +81,50 @@ class _TopUpScreenState extends State<TopUpScreen> {
             ),
             const SizedBox(height: 48),
             ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TopUpRedirectScreen())),
+              onPressed: () async {
+                final amountText = _amountController.text.trim();
+                if (amountText.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter an amount')));
+                  return;
+                }
+
+                final amount = double.tryParse(amountText);
+                if (amount == null || amount <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
+                  return;
+                }
+
+                try {
+                  final auth = context.read<AuthProvider>();
+                  final walletProvider = context.read<WalletProvider>();
+                  
+                  // For demo, we need the wallet ID. Usually we'd fetch it with balance.
+                  // Let's assume we fetch it in WalletProvider and store it.
+                  // For now, I'll update WalletProvider to store the wallet ID.
+                  
+                  final checkoutUrl = await walletProvider.initiateTopup(
+                    userId: auth.user?['id'].toString() ?? '',
+                    amount: amount,
+                    phone: auth.user?['phone'] ?? '',
+                    firstName: 'Passenger', // Placeholder as names are missing from auth model
+                    lastName: 'User',
+                    token: auth.token!,
+                  );
+
+                  if (mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TopUpRedirectScreen(checkoutUrl: checkoutUrl, amount: amount),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                  }
+                }
+              },
               child: const Text('Proceed to Payment'),
             ),
           ],
@@ -136,7 +183,9 @@ class _PaymentMethodTile extends StatelessWidget {
 }
 
 class TopUpRedirectScreen extends StatefulWidget {
-  const TopUpRedirectScreen({super.key});
+  final String checkoutUrl;
+  final double amount;
+  const TopUpRedirectScreen({super.key, required this.checkoutUrl, required this.amount});
 
   @override
   State<TopUpRedirectScreen> createState() => _TopUpRedirectScreenState();
@@ -146,9 +195,32 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 4), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TopUpSuccessScreen()));
-    });
+    _launchAndPoll();
+  }
+
+  Future<void> _launchAndPoll() async {
+    final url = Uri.parse(widget.checkoutUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+      
+      // While user is in browser, start polling for balance change in background
+      final auth = context.read<AuthProvider>();
+      final wallet = context.read<WalletProvider>();
+      
+      await wallet.pollBalanceChange(auth.user?['id'].toString() ?? '', auth.token!);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => TopUpSuccessScreen(amount: widget.amount)),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch payment URL')));
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override
@@ -180,10 +252,12 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
 }
 
 class TopUpSuccessScreen extends StatelessWidget {
-  const TopUpSuccessScreen({super.key});
+  final double amount;
+  const TopUpSuccessScreen({super.key, required this.amount});
 
   @override
   Widget build(BuildContext context) {
+    final wallet = context.watch<WalletProvider>();
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -213,13 +287,13 @@ class TopUpSuccessScreen extends StatelessWidget {
                   children: [
                     const Text('Total Top-Up Amount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                     const SizedBox(height: 8),
-                    const Text('1,000.00 ETB', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                    Text('${amount.toStringAsFixed(2)} ETB', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
                     const Divider(height: 48),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text('New Wallet Balance', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                        Text('1,450.75 ETB', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      children: [
+                        const Text('New Wallet Balance', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        Text('${wallet.balance ?? '0.00'} ETB', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                       ],
                     ),
                   ],

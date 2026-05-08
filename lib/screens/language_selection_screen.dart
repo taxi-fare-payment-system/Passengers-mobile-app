@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 
 class LanguageSelectionScreen extends StatelessWidget {
@@ -44,14 +45,20 @@ class LanguageSelectionScreen extends StatelessWidget {
               const SizedBox(height: 32),
               _LanguageButton(
                 title: 'አማርኛ (Amharic)',
-                onTap: () => Navigator.pushNamed(context, '/login'),
-                isActive: true,
+                onTap: () {
+                  context.setLocale(const Locale('am'));
+                  Navigator.pushNamed(context, '/login');
+                },
+                isActive: context.locale.languageCode == 'am',
               ),
               const SizedBox(height: 16),
               _LanguageButton(
                 title: 'English',
-                onTap: () => Navigator.pushNamed(context, '/login'),
-                isActive: false,
+                onTap: () {
+                  context.setLocale(const Locale('en'));
+                  Navigator.pushNamed(context, '/login');
+                },
+                isActive: context.locale.languageCode == 'en',
               ),
               const Spacer(flex: 2),
               Text(

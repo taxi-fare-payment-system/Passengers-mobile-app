@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
+                    enabled: !_isLoading,
                     decoration: const InputDecoration(
                       hintText: '91 234 5678',
                     ),
@@ -99,9 +103,45 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/otp'),
-              child: const Text('Send Code'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        final phone = _phoneController.text.trim();
+                        if (phone.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter your phone number')),
+                          );
+                          return;
+                        }
+
+                        setState(() => _isLoading = true);
+                        try {
+                          final fullPhone = '0$phone'; // Backend expects 09...
+                          await context.read<AuthProvider>().sendOTP(fullPhone);
+                          if (mounted) {
+                            Navigator.pushNamed(context, '/otp', arguments: fullPhone);
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(e.toString())),
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isLoading = false);
+                        }
+                      },
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Send Code'),
+              ),
             ),
             const SizedBox(height: 24),
             Center(

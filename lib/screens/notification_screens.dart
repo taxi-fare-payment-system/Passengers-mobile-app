@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/notification_provider.dart';
 
-class NotificationCenterScreen extends StatelessWidget {
+class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
 
   @override
+  State<NotificationCenterScreen> createState() => _NotificationCenterScreenState();
+}
+
+class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      final notifyProvider = context.read<NotificationProvider>();
+      notifyProvider.fetchNotifications(auth.token!);
+      notifyProvider.connectToStream(auth.user?['id'].toString() ?? '', auth.token!);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final notifyProvider = context.watch<NotificationProvider>();
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -16,56 +38,77 @@ class NotificationCenterScreen extends StatelessWidget {
         leading: const BackButton(color: Colors.black),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              // Implementation for mark all read
+            },
             child: const Text('Mark all read', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.w600, fontSize: 13)),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        children: [
-          const Text('New', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
-          const SizedBox(height: 16),
-          _NotificationItem(
-            icon: Icons.check_circle_rounded,
-            iconColor: Colors.green,
-            title: 'Payment Successful',
-            body: 'Your payment of 15.00 ETB for the ride to Stadium was successful.',
-            time: '2 mins ago',
-            isRead: false,
-          ),
-          const SizedBox(height: 16),
-          _NotificationItem(
-            icon: Icons.directions_car_rounded,
-            iconColor: AppTheme.primaryColor,
-            title: 'Driver Arriving',
-            body: 'Your driver Dawit is 2 minutes away from your pickup point.',
-            time: '15 mins ago',
-            isRead: false,
-          ),
-          const SizedBox(height: 32),
-          const Text('Earlier', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
-          const SizedBox(height: 16),
-          _NotificationItem(
-            icon: Icons.local_offer_rounded,
-            iconColor: Colors.orange,
-            title: 'Weekend Special!',
-            body: 'Get 20% off on your next 3 rides this weekend. Use code WULOPROMO.',
-            time: '2 hours ago',
-            isRead: true,
-          ),
-          const SizedBox(height: 16),
-          _NotificationItem(
-            icon: Icons.system_update_rounded,
-            iconColor: Colors.blue,
-            title: 'App Update Available',
-            body: 'A new version of WuloPay is available with improved performance and new features.',
-            time: '1 day ago',
-            isRead: true,
-          ),
-        ],
-      ),
+      body: notifyProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : notifyProvider.notifications.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_off_rounded, size: 64, color: Colors.grey[300]),
+                      const SizedBox(height: 16),
+                      const Text('No notifications yet', style: TextStyle(color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  itemCount: notifyProvider.notifications.length,
+                  itemBuilder: (context, index) {
+                    final n = notifyProvider.notifications[index];
+                    final isRead = n['status'] == 'read';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: InkWell(
+                        onTap: isRead ? null : () => notifyProvider.markAsRead(n['id'].toString(), auth.token!),
+                        onLongPress: !isRead ? null : () => notifyProvider.markAsUnread(n['id'].toString(), auth.token!),
+                        child: _NotificationItem(
+                          icon: _getIconForType(n['type']),
+                          iconColor: _getColorForType(n['type']),
+                          title: n['title'] ?? 'Notification',
+                          body: n['content'] ?? '',
+                          time: _formatTime(n['created_at']),
+                          isRead: isRead,
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
+  }
+
+  IconData _getIconForType(String? type) {
+    switch (type) {
+      case 'payment_success': return Icons.check_circle_rounded;
+      case 'trip_update': return Icons.directions_car_rounded;
+      case 'promo': return Icons.local_offer_rounded;
+      default: return Icons.notifications_rounded;
+    }
+  }
+
+  Color _getColorForType(String? type) {
+    switch (type) {
+      case 'payment_success': return Colors.green;
+      case 'trip_update': return AppTheme.primaryColor;
+      case 'promo': return Colors.orange;
+      default: return Colors.blue;
+    }
+  }
+
+  String _formatTime(String? timestamp) {
+    if (timestamp == null) return 'now';
+    final date = DateTime.tryParse(timestamp) ?? DateTime.now();
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }
 

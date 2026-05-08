@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/document_provider.dart';
 
 class ProfileSetupScreen extends StatelessWidget {
   const ProfileSetupScreen({super.key});
@@ -81,11 +86,32 @@ class ProfileSetupScreen extends StatelessWidget {
   }
 }
 
-class EditProfileScreen extends StatelessWidget {
+class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  File? _selectedFile;
+
+  Future<void> _pickDocument() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _selectedFile = File(pickedFile.path));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final docProvider = context.watch<DocumentProvider>();
+    final user = auth.user;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -98,6 +124,7 @@ class EditProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
             Center(
@@ -105,7 +132,7 @@ class EditProfileScreen extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 50,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=samuel'),
+                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=passenger'),
                   ),
                   Positioned(
                     bottom: 0,
@@ -121,11 +148,95 @@ class EditProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             
-            const _ProfileInputField(label: 'Full Name', initialValue: 'Samuel Abera'),
+            _ProfileInputField(label: 'Full Name', initialValue: user?['name'] ?? 'Passenger User'),
             const SizedBox(height: 20),
-            const _ProfileInputField(label: 'Email Address', initialValue: 'samuel.abera@example.com'),
+            _ProfileInputField(label: 'Phone Number', initialValue: user?['phone'] ?? '+251 900 000 000', readOnly: true),
+            
+            const SizedBox(height: 40),
+            const Divider(),
+            const SizedBox(height: 32),
+            const Text('Change Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _ProfileInputField(label: 'Current Password', hint: '••••••••', controller: _currentPasswordController, obscureText: true),
+            const SizedBox(height: 16),
+            _ProfileInputField(label: 'New Password', hint: '••••••••', controller: _newPasswordController, obscureText: true),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () async {
+                  try {
+                    await auth.changePassword(_currentPasswordController.text, _newPasswordController.text);
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully')));
+                  } catch (e) {
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                  }
+                },
+                child: const Text('Update Password'),
+              ),
+            ),
+
+            const SizedBox(height: 40),
+            const Divider(),
+            const SizedBox(height: 32),
+            const Text('Identity Verification', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Upload a copy of your National ID or Passport to verify your account.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
             const SizedBox(height: 20),
-            const _ProfileInputField(label: 'Phone Number', initialValue: '+251 91 234 5678', readOnly: true),
+            
+            InkWell(
+              onTap: _pickDocument,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2), dashStyle: const DashStyle(array: [5, 5])),
+                ),
+                child: _selectedFile == null 
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.upload_file_rounded, color: AppTheme.textSecondary, size: 32),
+                        SizedBox(height: 8),
+                        Text('Click to select document', style: TextStyle(color: AppTheme.textSecondary)),
+                      ],
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.file(_selectedFile!, fit: BoxFit.cover),
+                    ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_selectedFile != null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: docProvider.isUploading ? null : () async {
+                    try {
+                      await docProvider.uploadDocument(
+                        userId: user?['id']?.toString() ?? '',
+                        userRole: 'passenger',
+                        documentType: 'national_id',
+                        file: _selectedFile!,
+                        token: auth.token!,
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Document uploaded successfully')));
+                        setState(() => _selectedFile = null);
+                      }
+                    } catch (e) {
+                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                    }
+                  },
+                  child: docProvider.isUploading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Upload Document'),
+                ),
+              ),
             
             const SizedBox(height: 80),
             ElevatedButton(
@@ -144,8 +255,17 @@ class _ProfileInputField extends StatelessWidget {
   final String? hint;
   final String? initialValue;
   final bool readOnly;
+  final TextEditingController? controller;
+  final bool obscureText;
 
-  const _ProfileInputField({required this.label, this.hint, this.initialValue, this.readOnly = false});
+  const _ProfileInputField({
+    required this.label, 
+    this.hint, 
+    this.initialValue, 
+    this.readOnly = false,
+    this.controller,
+    this.obscureText = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -155,8 +275,10 @@ class _ProfileInputField extends StatelessWidget {
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
         const SizedBox(height: 8),
         TextFormField(
+          controller: controller,
           initialValue: initialValue,
           readOnly: readOnly,
+          obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hint,
             filled: true,

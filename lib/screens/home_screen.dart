@@ -1,12 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/wallet_provider.dart';
+import '../providers/trip_provider.dart';
+import 'route_selection_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+  }
+
+  Future<void> _fetchData() async {
+    final auth = context.read<AuthProvider>();
+    final token = auth.token;
+    final userId = auth.user?['id'].toString();
+
+    if (token != null && userId != null) {
+      context.read<WalletProvider>().fetchBalance(userId, token);
+      context.read<TripProvider>().fetchRoutes(token);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final wallet = context.watch<WalletProvider>();
+    final trip = context.watch<TripProvider>();
     return Scaffold(
       body: Stack(
         children: [
@@ -30,7 +62,7 @@ class HomeScreen extends StatelessWidget {
             left: 20,
             right: 20,
             child: Row(
-              mainAxisAlignment: MainManager.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -53,7 +85,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Hi, Samuel',
+                        'Hi, ${auth.user?['phone'] ?? 'Samuel'}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -62,10 +94,10 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -73,7 +105,16 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.notifications_outlined, color: AppTheme.textPrimary),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.account_balance_wallet_outlined, size: 18, color: AppTheme.primaryColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        wallet.balance != null ? '${wallet.balance} ETB' : '...',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -83,7 +124,7 @@ class HomeScreen extends StatelessWidget {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: 320,
+              height: 350,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -134,23 +175,36 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Row(
-                    mainAxisAlignment: MainManager.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Recent Trips',
+                        'Active Routes (${trip.routes.length})',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
                       ),
                       TextButton(
-                        onPressed: () {},
-                        child: const Text('View All'),
+                        onPressed: _fetchData,
+                        child: const Text('Refresh'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _TripItem(
-                    title: 'Megenagna -> Stadium',
-                    subtitle: '24 Jan 2024 • 10:30 AM',
-                    amount: '15.00 ETB',
+                  Expanded(
+                    child: trip.isLoading 
+                      ? const Center(child: CircularProgressIndicator())
+                      : trip.routes.isEmpty
+                        ? const Center(child: Text('No active routes found'))
+                        : ListView.separated(
+                            itemCount: trip.routes.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final r = trip.routes[index];
+                              return _TripItem(
+                                title: '${r['startLocation']} -> ${r['endLocation']}',
+                                subtitle: 'Fare: ${r['baseFare']} ETB',
+                                amount: '${r['distance']} KM',
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),

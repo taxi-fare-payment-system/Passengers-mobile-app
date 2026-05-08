@@ -1,11 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/wallet_provider.dart';
 
-class TransactionDetailScreen extends StatelessWidget {
-  const TransactionDetailScreen({super.key});
+class TransactionDetailScreen extends StatefulWidget {
+  final String transactionId;
+  const TransactionDetailScreen({super.key, required this.transactionId});
+
+  @override
+  State<TransactionDetailScreen> createState() => _TransactionDetailScreenState();
+}
+
+class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
+  Map<String, dynamic>? _detail;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDetail();
+  }
+
+  Future<void> _fetchDetail() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final wallet = context.read<WalletProvider>();
+      final detail = await wallet.fetchTransactionDetail(widget.transactionId, auth.token!);
+      if (mounted) setState(() { _detail = detail; _isLoading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(appBar: AppBar(), body: const Center(child: CircularProgressIndicator()));
+    }
+
+    if (_error != null) {
+      return Scaffold(appBar: AppBar(), body: Center(child: Text(_error!)));
+    }
+
+    final tx = _detail!;
+    final isExpense = tx['reason'] == 'fare';
+    final date = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -14,9 +57,6 @@ class TransactionDetailScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: const BackButton(color: Colors.black),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.share_outlined, color: Colors.black)),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -25,13 +65,23 @@ class TransactionDetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.check_circle_rounded, size: 64, color: Colors.green),
+              decoration: BoxDecoration(color: (isExpense ? Colors.red : Colors.green).withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(
+                isExpense ? Icons.north_east_rounded : Icons.check_circle_rounded, 
+                size: 64, 
+                color: isExpense ? Colors.red : Colors.green
+              ),
             ),
             const SizedBox(height: 24),
-            const Text('Payment Successful', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              isExpense ? 'Trip Payment' : 'Top-up Successful', 
+              style: TextStyle(color: isExpense ? Colors.red : Colors.green, fontWeight: FontWeight.bold, fontSize: 16)
+            ),
             const SizedBox(height: 8),
-            const Text('15.00 ETB', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+            Text(
+              '${isExpense ? '-' : '+'}${tx['amount']} ETB', 
+              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)
+            ),
             const SizedBox(height: 48),
             
             Container(
@@ -43,21 +93,21 @@ class TransactionDetailScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _DetailRow(label: 'To', value: 'Bole Taxi (2-A34567)'),
+                  _DetailRow(label: isExpense ? 'To' : 'From', value: isExpense ? 'Driver' : tx['payment_method'] ?? 'External Provider'),
                   const SizedBox(height: 16),
-                  _DetailRow(label: 'From', value: 'Samuel A. (Wallet)'),
+                  _DetailRow(label: 'Reason', value: tx['reason'] ?? 'N/A'),
                   const SizedBox(height: 16),
-                  _DetailRow(label: 'Date', value: '24 Jan 2024'),
+                  _DetailRow(label: 'Date', value: DateFormat('dd MMM yyyy').format(date)),
                   const SizedBox(height: 16),
-                  _DetailRow(label: 'Time', value: '10:35 AM'),
+                  _DetailRow(label: 'Time', value: DateFormat('hh:mm a').format(date)),
                   const SizedBox(height: 16),
-                  _DetailRow(label: 'Transaction ID', value: '#TXN987654321'),
+                  _DetailRow(label: 'Transaction ID', value: '#${tx['id'].toString().substring(0, 12)}'),
                   const Divider(height: 48),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Total Amount', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
-                      const Text('15.00 ETB', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryColor)),
+                      Text('${tx['amount']} ETB', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryColor)),
                     ],
                   ),
                 ],

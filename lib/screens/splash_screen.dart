@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,11 +14,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/language');
-      }
-    });
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    // Wait for splash animation or just a bit of time
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (!mounted) return;
+
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.tryAutoLogin();
+
+    if (!mounted) return;
+
+    if (authProvider.isAuthenticated) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      Navigator.pushReplacementNamed(context, '/language');
+    }
   }
 
   @override
