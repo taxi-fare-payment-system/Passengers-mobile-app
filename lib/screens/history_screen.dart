@@ -44,7 +44,7 @@ class _TripsList extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       itemCount: 10,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context) {
+      itemBuilder: (context, index) {
         return InkWell(
           onTap: () => Navigator.pushNamed(context, '/trip-details'),
           child: _HistoryItem(

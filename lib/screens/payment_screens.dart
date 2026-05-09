@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/trip_provider.dart';
 
 class ConfirmPaymentScreen extends StatelessWidget {
   const ConfirmPaymentScreen({super.key});

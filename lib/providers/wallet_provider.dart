@@ -40,24 +40,7 @@ class WalletProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchTransactions(String token) async {
-    _isLoading = true;
-    notifyListeners();
 
-    try {
-      // Wallet service proxies transactions from payment service
-      final response = await ApiService.get('/wallet/transactions', token: token);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        _transactions = data['items'] ?? [];
-      }
-    } catch (e) {
-      debugPrint('Error fetching transactions: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
 
   Future<String> initiateTopup({
     required String userId,
@@ -130,6 +113,40 @@ class WalletProvider with ChangeNotifier {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to fetch transaction detail');
+    }
+  }
+
+  Future<void> transferFunds({
+    required String fromWalletId,
+    required String toWalletId,
+    required double amount,
+    required String recipientName,
+    String? message,
+    required String token,
+  }) async {
+    _isTransferring = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.post(
+        '/payment/api/v1/payments/transfer',
+        {
+          'sender_wallet_id': fromWalletId,
+          'receiver_wallet_id': toWalletId,
+          'amount': amount,
+          'recipient_name': recipientName,
+          'reason': message ?? 'P2P Transfer',
+        },
+        token: token,
+      );
+
+      if (response.statusCode != 200) {
+        final error = jsonDecode(response.body)['message'] ?? 'Transfer failed';
+        throw Exception(error);
+      }
+    } finally {
+      _isTransferring = false;
+      notifyListeners();
     }
   }
 }

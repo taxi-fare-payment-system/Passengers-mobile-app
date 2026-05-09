@@ -13,6 +13,8 @@ import 'screens/feedback_screens.dart';
 import 'screens/payment_methods_screen.dart';
 import 'screens/driver_profile_screen.dart';
 import 'screens/transfer_screen.dart';
+import 'screens/top_up_screens.dart';
+import 'screens/transaction_history_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/trip_provider.dart';
@@ -63,7 +65,10 @@ class WuloPayApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/otp': (context) => const OTPScreen(),
         '/home': (context) => const MainNavigation(),
-        '/trip-details': (context) => const TripDetailsScreen(),
+        '/trip-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return TripDetailsScreen(route: args?['route']);
+        },
         '/confirm-payment': (context) => const ConfirmPaymentScreen(),
         '/rate-trip': (context) => const RateTripScreen(),
         '/payment-methods': (context) => const PaymentMethodsScreen(),

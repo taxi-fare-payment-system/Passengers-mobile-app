@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -27,7 +28,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
     if (token != null && userId != null) {
       context.read<WalletProvider>().fetchBalance(userId, token);
-      context.read<WalletProvider>().fetchTransactions(token);
+      context.read<WalletProvider>().fetchTransactions(userId, token);
     }
   }
 
@@ -147,7 +148,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       isExpense: isExpense,
                       onTap: () => Navigator.push(
                         context, 
-                        MaterialPageRoute(builder: (context) => const TransactionDetailScreen())
+                        MaterialPageRoute(builder: (context) => TransactionDetailScreen(transactionId: tx['id'].toString()))
                       ),
                     );
                   },

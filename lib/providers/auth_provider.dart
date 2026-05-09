@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final _storage = const Flutter_secure_storage();
+  final _storage = const FlutterSecureStorage();
   String? _token;
   Map<String, dynamic>? _user;
 

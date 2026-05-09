@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 class ApiService {
-  // Using 10.0.2.2 for Android Emulator to reach localhost
-  // For physical devices or other platforms, use your machine's IP address.
-  static const String baseUrl = 'http://10.0.2.2:8080'; // Gateway port
+  static const String baseUrl = 'http://10.0.2.2:8080';
 
   static Future<http.Response> post(String path, Map<String, dynamic> data, {String? token}) async {
     final url = Uri.parse('$baseUrl$path');
@@ -35,6 +32,19 @@ class ApiService {
       headers['Authorization'] = 'Bearer $token';
     }
     return await http.patch(
+      url,
+      headers: headers,
+      body: jsonEncode(data),
+    );
+  }
+
+  static Future<http.Response> put(String path, Map<String, dynamic> data, {String? token}) async {
+    final url = Uri.parse('$baseUrl$path');
+    final headers = {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return await http.put(
       url,
       headers: headers,
       body: jsonEncode(data),

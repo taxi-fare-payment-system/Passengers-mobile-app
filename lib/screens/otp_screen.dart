@@ -13,6 +13,7 @@ class OTPScreen extends StatefulWidget {
 
 class _OTPScreenState extends State<OTPScreen> {
   final _pinController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +75,7 @@ class _OTPScreenState extends State<OTPScreen> {
               child: Column(
                 children: [
                   Row(
-                    mainAxisAlignment: MainManager.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.timer_outlined, size: 16, color: AppTheme.textSecondary),
                       const SizedBox(width: 8),

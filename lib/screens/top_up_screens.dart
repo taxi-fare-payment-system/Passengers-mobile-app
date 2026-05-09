@@ -230,7 +230,7 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Column(
-            mainAxisAlignment: MainManager.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.security_rounded, size: 80, color: AppTheme.primaryColor),
               const SizedBox(height: 32),
