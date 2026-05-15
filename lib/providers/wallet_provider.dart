@@ -143,9 +143,10 @@ class WalletProvider with ChangeNotifier {
 
   Future<void> transferFunds({
     required String fromWalletId,
-    required String toWalletId,
+    String? toWalletId,
+    String? recipientPhone,
     required double amount,
-    required String recipientName,
+    String? recipientName,
     String? message,
     required String token,
   }) async {
@@ -153,19 +154,19 @@ class WalletProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.post(
-        '/api/v1/wallet/transfer', // Updated to go through public wallet proxy if available
+      final response = await ApiService.put(
+        '/api/v1/wallet/$fromWalletId/transfer',
         {
-          'sender_wallet_id': fromWalletId,
-          'receiver_wallet_id': toWalletId,
+          if (toWalletId != null) 'receiver_wallet_id': toWalletId,
+          if (recipientPhone != null) 'receiver_phone': recipientPhone,
           'amount': amount,
-          'recipient_name': recipientName,
+          if (recipientName != null) 'recipient_name': recipientName,
           'reason': message ?? 'P2P Transfer',
         },
         token: token,
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body)['message'] ?? 'Transfer failed';
         throw Exception(error);
       }

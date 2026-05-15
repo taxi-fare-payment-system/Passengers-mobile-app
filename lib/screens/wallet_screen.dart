@@ -67,6 +67,36 @@ class _WalletScreenState extends State<WalletScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/top-up'),
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: Text('top_up'.tr()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      foregroundColor: AppTheme.primaryColor,
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/transfer'),
+                    icon: const Icon(Icons.send_rounded),
+                    label: Text('transfer'.tr()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.withOpacity(0.1),
+                      foregroundColor: Colors.orange,
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 32),
             Text('recent_transactions'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),

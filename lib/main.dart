@@ -18,6 +18,7 @@ import 'screens/top_up_screens.dart';
 import 'screens/transaction_history_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/verification_screen.dart';
+import 'screens/profile_management_screens.dart';
 import 'providers/auth_provider.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/trip_provider.dart';
@@ -84,6 +85,7 @@ class WuloPayApp extends StatelessWidget {
         '/transfer': (context) => const TransferScreen(),
         '/notifications': (context) => const NotificationScreen(),
         '/verification': (context) => const VerificationScreen(),
+        '/edit-profile': (context) => EditProfileScreen(),
       },
     );
   }

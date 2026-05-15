@@ -95,9 +95,29 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   File? _selectedFile;
+
+  @override
+  void initState() {
+    super.initState();
+    final auth = context.read<AuthProvider>();
+    final user = auth.user;
+    _nameController.text = user?['display_name'] ?? user?['name'] ?? '';
+    _emailController.text = user?['email'] ?? '';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickDocument() async {
     final picker = ImagePicker();
@@ -149,7 +169,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 48),
             
-            _ProfileInputField(label: 'full_name'.tr(), initialValue: user?['display_name'] ?? user?['name'] ?? 'passenger_user'.tr()),
+            _ProfileInputField(label: 'full_name'.tr(), controller: _nameController),
+            const SizedBox(height: 20),
+            _ProfileInputField(label: 'email_address'.tr(), controller: _emailController),
             const SizedBox(height: 20),
             _ProfileInputField(label: 'phone_number'.tr(), initialValue: user?['phone'] ?? user?['phone_number'] ?? '+251 900 000 000', readOnly: true),
             
@@ -199,10 +221,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: _selectedFile == null 
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.upload_file_rounded, color: AppTheme.textSecondary, size: 32),
                         SizedBox(height: 8),
-                        Text('click_to_select_doc'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
+                        Text('click_to_select_doc'.tr(), style: TextStyle(color: AppTheme.textSecondary)),
                       ],
                     )
                   : ClipRRect(
@@ -216,11 +238,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: docProvider.isUploading ? null : () async {
+                  onPressed: docProvider.isLoading ? null : () async {
                     try {
                       await docProvider.uploadDocument(
                         userId: user?['id']?.toString() ?? '',
-                        userRole: 'passenger',
                         documentType: 'national_id',
                         file: _selectedFile!,
                         token: auth.token!,
@@ -233,16 +254,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
                     }
                   },
-                  child: docProvider.isUploading 
-                    ? const CircularProgressIndicator(color: Colors.white)
+                  child: docProvider.isLoading 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : Text('upload_document'.tr()),
                 ),
               ),
             
             const SizedBox(height: 80),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('save_changes'.tr()),
+              onPressed: auth.isLoading ? null : () async {
+                try {
+                  await auth.updateProfile(
+                    displayName: _nameController.text,
+                    email: _emailController.text,
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('profile_updated_success'.tr())));
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                }
+              },
+              child: auth.isLoading 
+                ? const CircularProgressIndicator(color: Colors.white)
+                : Text('save_changes'.tr()),
             ),
           ],
         ),

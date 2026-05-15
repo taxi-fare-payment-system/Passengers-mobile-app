@@ -14,17 +14,13 @@ class TransferScreen extends StatefulWidget {
 
 class _TransferScreenState extends State<TransferScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _recipientIdController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _messageController = TextEditingController();
 
   @override
   void dispose() {
-    _recipientIdController.dispose();
+    _phoneController.dispose();
     _amountController.dispose();
-    _nameController.dispose();
-    _messageController.dispose();
     super.dispose();
   }
 
@@ -52,28 +48,16 @@ class _TransferScreenState extends State<TransferScreen> {
               Text('recipient_details'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _recipientIdController,
+                controller: _phoneController,
                 decoration: InputDecoration(
-                  labelText: 'Recipient Wallet ID',
-                  hintText: 'Enter 10-digit ID',
+                  labelText: 'phone_number'.tr(),
+                  hintText: '09xxxxxxxx',
                   filled: true,
                   fillColor: AppTheme.surfaceColor,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Full Name',
-                  hintText: 'Recipient\'s name',
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                ),
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                keyboardType: TextInputType.phone,
+                validator: (value) => value == null || value.isEmpty ? 'required'.tr() : null,
               ),
               const SizedBox(height: 32),
               Text('amount'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -81,7 +65,7 @@ class _TransferScreenState extends State<TransferScreen> {
               TextFormField(
                 controller: _amountController,
                 decoration: InputDecoration(
-                  labelText: 'Amount (ETB)',
+                  labelText: 'amount_etb'.tr(),
                   prefixText: 'ETB ',
                   filled: true,
                   fillColor: AppTheme.surfaceColor,
@@ -90,23 +74,11 @@ class _TransferScreenState extends State<TransferScreen> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Required';
+                  if (value == null || value.isEmpty) return 'required'.tr();
                   final amt = double.tryParse(value);
-                  if (amt == null || amt <= 0) return 'Invalid amount';
+                  if (amt == null || amt <= 0) return 'invalid_amount'.tr();
                   return null;
                 },
-              ),
-              const SizedBox(height: 32),
-              TextFormField(
-                controller: _messageController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: 'Message (Optional)',
-                  hintText: 'What\'s this for?',
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                ),
               ),
               const SizedBox(height: 48),
               SizedBox(
@@ -120,10 +92,8 @@ class _TransferScreenState extends State<TransferScreen> {
                             try {
                               await walletProvider.transferFunds(
                                 fromWalletId: walletProvider.walletId!,
-                                toWalletId: _recipientIdController.text,
+                                recipientPhone: _phoneController.text,
                                 amount: double.parse(_amountController.text),
-                                recipientName: _nameController.text,
-                                message: _messageController.text,
                                 token: auth.token!,
                               );
                               if (mounted) {
@@ -145,7 +115,7 @@ class _TransferScreenState extends State<TransferScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: walletProvider.isTransferring
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : Text('send_money'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),

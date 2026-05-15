@@ -181,4 +181,36 @@ class AuthProvider with ChangeNotifier {
       throw Exception(jsonDecode(response.body)['message'] ?? 'Failed to change password');
     }
   }
+
+  Future<void> updateProfile({required String displayName, String? email}) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await ApiService.patch(
+        '/api/v1/auth/profile',
+        {
+          'display_name': displayName,
+          if (email != null) 'email': email,
+        },
+        token: _token,
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final data = (body is Map && body.containsKey('data')) ? body['data'] : body;
+        
+        // Update local user data
+        final updatedUser = data['user'] ?? (data.containsKey('display_name') ? data : null);
+        if (updatedUser != null) {
+          _user = {...?_user, ...updatedUser};
+        }
+        notifyListeners();
+      } else {
+        throw Exception(jsonDecode(response.body)['message'] ?? 'Failed to update profile');
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

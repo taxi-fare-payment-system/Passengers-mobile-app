@@ -266,5 +266,19 @@
   "qr_based_taxi_payments": "በQR ኮድ የሚፈጸም የታክሲ ክፍያ",
   "enter_qr_manually": "የQR ኮድ በእጅ ያስገቡ",
   "pay_fare": "ክፍያ ፈጽም",
-  "scan_or_enter_qr": "QR ኮዱን ይቃኙ ወይም በእጅ ያስገቡ"
+  "scan_or_enter_qr": "QR ኮዱን ይቃኙ ወይም በእጅ ያስገቡ",
+  "profile_updated_success": "የግል መረጃዎ በተሳካ ሁኔታ ተቀይሯል!",
+  "password_updated_success": "የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!",
+  "transfer_funds": "ገንዘብ ያስተላልፉ",
+  "transfer": "ዝውውር",
+  "recipient_details": "የተቀባይ መረጃ",
+  "recipient_wallet_id": "የተቀባይ ዋሌት መታወቂያ",
+  "enter_10_digit_id": "ባለ 10 አሃዝ መታወቂያ ያስገቡ",
+  "recipient_name": "የተቀባይ ስም",
+  "recipient_name_hint": "የተቀባዩን ስም ያስገቡ",
+  "amount_etb": "መጠን (ETB)",
+  "message_optional": "መልዕክት (ከተፈለገ)",
+  "whats_this_for": "ይህ ለምንድነው?",
+  "send_money": "ገንዘብ ላክ",
+  "transfer_successful": "ዝውውሩ ተሳክቷል!"
 }

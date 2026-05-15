@@ -266,5 +266,19 @@
   "qr_based_taxi_payments": "QR-Based Taxi Payments",
   "enter_qr_manually": "Enter QR Code Manually",
   "pay_fare": "Pay Fare",
-  "scan_or_enter_qr": "Scan or Enter QR Code"
+  "scan_or_enter_qr": "Scan or Enter QR Code",
+  "profile_updated_success": "Profile updated successfully!",
+  "password_updated_success": "Password updated successfully!",
+  "transfer_funds": "Transfer Funds",
+  "transfer": "Transfer",
+  "recipient_details": "Recipient Details",
+  "recipient_wallet_id": "Recipient Wallet ID",
+  "enter_10_digit_id": "Enter 10-digit ID",
+  "recipient_name": "Recipient Name",
+  "recipient_name_hint": "Recipient's name",
+  "amount_etb": "Amount (ETB)",
+  "message_optional": "Message (Optional)",
+  "whats_this_for": "What's this for?",
+  "send_money": "Send Money",
+  "transfer_successful": "Transfer Successful!"
 }
