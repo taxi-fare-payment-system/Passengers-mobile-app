@@ -196,6 +196,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                           tags: _selectedTags,
                           comment: _commentController.text,
                           token: auth.token!,
+                          headers: auth.headers,
                         );
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

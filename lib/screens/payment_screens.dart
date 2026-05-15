@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
 import '../providers/wallet_provider.dart';
+import 'feedback_screens.dart';
 
 class ConfirmPaymentScreen extends StatefulWidget {
   const ConfirmPaymentScreen({super.key});
@@ -264,8 +265,23 @@ class PaymentSuccessScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  onPressed: () => Navigator.pushReplacement(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const RateTripScreen())
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Rate Your Trip', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
                   onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                  child: const Text('Back to Home'),
+                  child: const Text('Back to Home', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

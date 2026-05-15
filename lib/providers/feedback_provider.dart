@@ -11,24 +11,26 @@ class FeedbackProvider with ChangeNotifier {
     required List<String> tags,
     required String comment,
     required String token,
+    Map<String, String>? headers,
   }) async {
     _isSubmitting = true;
     notifyListeners();
 
     try {
-      // Assuming Trip Service handles feedback as per common patterns
       final response = await ApiService.post(
-        '/api/v1/trips/$tripId/feedback',
+        '/api/v1/feedback',
         {
+          'trip_id': tripId,
           'rating': rating,
           'tags': tags,
           'comment': comment,
         },
         token: token,
+        extraHeaders: headers,
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Failed to submit feedback');
+        throw Exception('Failed to submit feedback: ${response.body}');
       }
     } finally {
       _isSubmitting = false;
