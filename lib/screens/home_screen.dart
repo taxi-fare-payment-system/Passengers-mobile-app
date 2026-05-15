@@ -198,6 +198,73 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildActiveTripCard(BuildContext context, TripProvider trip) {
+    final t = trip.currentTrip!;
+    final stops = t['route']?['stops'] as List<dynamic>? ?? [];
+    final currentIdx = int.tryParse(t['currentStopIndex']?.toString() ?? '0') ?? 0;
+    final currentStop = stops.isNotEmpty && currentIdx < stops.length ? stops[currentIdx]['name'] : 'In transit';
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppTheme.primaryColor, Color(0xFF4F46E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(
+                backgroundColor: Colors.white24,
+                child: Icon(Icons.local_taxi_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Ongoing Trip', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    Text(
+                      'Next: $currentStop',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
+                child: const Text('Live', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: stops.isEmpty ? 0.5 : (currentIdx + 1) / stops.length,
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDashboardContent(BuildContext context) {
     final trip = context.watch<TripProvider>();
     return Align(
@@ -222,7 +289,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const SizedBox(height: 24),
+            if (trip.currentTrip != null) ...[
+              _buildActiveTripCard(context, trip),
+              const SizedBox(height: 24),
+            ],
             Row(
               children: [
                 Expanded(
@@ -237,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: InkWell(
-                    onTap: () => Navigator.pushNamed(context, '/routes'),
+                    onTap: () => _fetchData(),
                     child: _ActionCard(
                       icon: Icons.map_outlined,
                       title: 'Find Taxi',

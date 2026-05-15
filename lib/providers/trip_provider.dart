@@ -19,10 +19,10 @@ class TripProvider with ChangeNotifier {
   Map<String, dynamic>? get vehicleDetails => _vehicleDetails;
   Map<String, dynamic>? get currentTrip => _currentTrip;
 
-  void startTripPolling(String tripId, String token) {
+  void startTripPolling(String tripId, String token, {Map<String, String>? headers}) {
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      fetchTripStatus(tripId, token);
+      fetchTripStatus(tripId, token, headers: headers);
     });
   }
 
@@ -98,15 +98,23 @@ class TripProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchTripStatus(String tripId, String token) async {
+  Future<void> fetchTripStatus(String tripId, String token, {Map<String, String>? headers}) async {
     try {
-      final response = await ApiService.get('/api/v1/trips/$tripId', token: token);
+      final response = await ApiService.get('/api/v1/trips/$tripId', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
         final newTrip = jsonDecode(response.body);
         _currentTrip = newTrip;
         
+        // Fetch route details if not included in the trip response
+        if (_currentTrip != null && _currentTrip!['route'] == null && _currentTrip!['route_id'] != null) {
+          final routeResp = await ApiService.get('/api/v1/routes/${_currentTrip!['route_id']}', token: token, extraHeaders: headers);
+          if (routeResp.statusCode == 200) {
+            _currentTrip!['route'] = jsonDecode(routeResp.body);
+          }
+        }
+        
         if (newTrip != null && newTrip['vehicle_id'] != null) {
-          fetchVehicleDetails(newTrip['vehicle_id'].toString(), token);
+          fetchVehicleDetails(newTrip['vehicle_id'].toString(), token, headers: headers);
         }
         
         // Stop polling if trip is finished
@@ -120,9 +128,9 @@ class TripProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchVehicleDetails(String vehicleId, String token) async {
+  Future<void> fetchVehicleDetails(String vehicleId, String token, {Map<String, String>? headers}) async {
     try {
-      final response = await ApiService.get('/api/v1/vehicles/$vehicleId', token: token);
+      final response = await ApiService.get('/api/v1/vehicles/$vehicleId', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
         _vehicleDetails = jsonDecode(response.body);
         notifyListeners();
@@ -138,6 +146,7 @@ class TripProvider with ChangeNotifier {
     required String walletId,
     required String driverId,
     required String token,
+    Map<String, String>? headers,
   }) async {
     print('Trip Debug: Initiating payment for Trip: $tripId, Amount: $amount');
     final response = await ApiService.post(
@@ -149,6 +158,7 @@ class TripProvider with ChangeNotifier {
         'message': 'Fare payment for trip $tripId',
       },
       token: token,
+      extraHeaders: headers,
     );
 
     if (response.statusCode == 200) {
@@ -166,6 +176,7 @@ class TripProvider with ChangeNotifier {
     required String tripId,
     required int destinationStopIndex,
     required String token,
+    Map<String, String>? headers,
   }) async {
     try {
       final response = await ApiService.post(
@@ -174,6 +185,7 @@ class TripProvider with ChangeNotifier {
           'destinationStopIndex': destinationStopIndex,
         },
         token: token,
+        extraHeaders: headers,
       );
 
       if (response.statusCode == 200) {

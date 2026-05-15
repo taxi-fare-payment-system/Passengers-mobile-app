@@ -53,6 +53,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         walletId: wallet.walletId ?? '',
         driverId: tripProvider.currentTrip?['driver_id']?.toString() ?? '',
         token: auth.token!,
+        headers: auth.headers,
       );
 
       if (mounted) {
@@ -141,6 +142,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                           tripId: tripId,
                           destinationStopIndex: index,
                           token: auth.token!,
+                          headers: auth.headers,
                         );
                         setState(() => _amountController.text = price.toStringAsFixed(2));
                       } catch (e) {
