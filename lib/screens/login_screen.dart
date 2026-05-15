@@ -12,7 +12,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +104,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            Text(
+              'Password',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              enabled: !_isLoading,
+              decoration: InputDecoration(
+                hintText: '••••••••',
+                suffixIcon: IconButton(
+                  icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -110,19 +132,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? null
                     : () async {
                         final phone = _phoneController.text.trim();
-                        if (phone.isEmpty) {
+                        final password = _passwordController.text.trim();
+                        
+                        if (phone.isEmpty || password.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter your phone number')),
+                            const SnackBar(content: Text('Please enter phone and password')),
                           );
                           return;
                         }
 
                         setState(() => _isLoading = true);
                         try {
-                          final fullPhone = '0$phone'; // Backend expects 09...
-                          await context.read<AuthProvider>().sendOTP(fullPhone);
+                          final fullPhone = '0$phone';
+                          await context.read<AuthProvider>().login(fullPhone, password);
                           if (mounted) {
-                            Navigator.pushNamed(context, '/otp', arguments: fullPhone);
+                            Navigator.pushReplacementNamed(context, '/home');
                           }
                         } catch (e) {
                           if (mounted) {
@@ -140,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Send Code'),
+                    : const Text('Login'),
               ),
             ),
             const SizedBox(height: 24),

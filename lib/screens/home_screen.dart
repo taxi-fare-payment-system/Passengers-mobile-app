@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchData() async {
     final auth = context.read<AuthProvider>();
     final token = auth.token;
-    final userId = auth.user?['id'].toString();
+    final userId = auth.user?['id']?.toString();
 
     if (token != null && userId != null) {
       context.read<WalletProvider>().fetchBalance(userId, token);
@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Hi, ${auth.user?['phone'] ?? 'Samuel'}',
+                        'Hi, ${auth.user?['display_name'] ?? auth.user?['name'] ?? auth.user?['phone'] ?? auth.user?['phone_number'] ?? 'User'}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

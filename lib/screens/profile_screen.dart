@@ -59,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        user?['name'] ?? 'Passenger User',
+                        user?['display_name'] ?? user?['name'] ?? 'Passenger User',
                         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                       ),
                       if (auth.isVerified) ...[
@@ -69,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    user?['phone'] ?? '+251 900 000 000',
+                    user?['phone'] ?? user?['phone_number'] ?? '+251 900 000 000',
                     style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 ],

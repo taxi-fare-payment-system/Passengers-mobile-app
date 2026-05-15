@@ -48,13 +48,46 @@ class AuthProvider with ChangeNotifier {
     });
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      _token = data['token'];
-      _user = data['user'];
-      await _storage.write(key: 'token', value: _token);
-      notifyListeners();
+      print('Auth Debug: Response body: ${response.body}');
+      final body = jsonDecode(response.body);
+      final data = (body is Map && body.containsKey('data')) ? body['data'] : body;
+      
+      _token = data['token'] ?? body['token'];
+      _user = data['user'] ?? (data.containsKey('phone') || data.containsKey('display_name') ? data : null);
+      
+      print('Auth Debug: Extracted User: $_user');
+      
+      if (_token != null) {
+        await _storage.write(key: 'token', value: _token);
+        notifyListeners();
+      }
     } else {
+      print('Auth Debug: Error response: ${response.body}');
       throw Exception(jsonDecode(response.body)['message'] ?? 'Verification failed');
+    }
+  }
+
+  Future<void> login(String phone, String password) async {
+    final response = await ApiService.post('/api/v1/auth/login', {
+      'phone': phone,
+      'password': password,
+    });
+
+    if (response.statusCode == 200) {
+      print('Auth Debug (login): Response body: ${response.body}');
+      final body = jsonDecode(response.body);
+      final data = (body is Map && body.containsKey('data')) ? body['data'] : body;
+      
+      _token = data['token'] ?? body['token'];
+      _user = data['user'] ?? (data.containsKey('phone') || data.containsKey('display_name') ? data : null);
+      
+      if (_token != null) {
+        await _storage.write(key: 'token', value: _token);
+        notifyListeners();
+      }
+    } else {
+      print('Auth Debug (login): Error response: ${response.body}');
+      throw Exception(jsonDecode(response.body)['message'] ?? 'Login failed');
     }
   }
 
@@ -72,9 +105,17 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await ApiService.get('/api/v1/auth/me', token: _token);
       if (response.statusCode == 200) {
-        _user = jsonDecode(response.body);
+        print('Auth Debug (me): Response body: ${response.body}');
+        final body = jsonDecode(response.body);
+        _user = (body is Map && body.containsKey('data')) ? body['data'] : body;
+        // If there's a nested 'user' object, use it
+        if (_user != null && _user!.containsKey('user')) {
+          _user = _user!['user'];
+        }
+        print('Auth Debug (me): Extracted User: $_user');
         notifyListeners();
       } else {
+        print('Auth Debug (me): Error response: ${response.body}');
         await logout();
       }
     } catch (e) {

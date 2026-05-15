@@ -13,13 +13,20 @@ class TripDetailsScreen extends StatefulWidget {
 }
 
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
+  late TripProvider _tripProvider;
   int _selectedVehicleIndex = -1;
   bool _isBooking = false;
 
   @override
+  void initState() {
+    super.initState();
+    _tripProvider = Provider.of<TripProvider>(context, listen: false);
+  }
+
+  @override
   void dispose() {
     // Stop polling when leaving the screen
-    Provider.of<TripProvider>(context, listen: false).stopTripPolling();
+    _tripProvider.stopTripPolling();
     super.dispose();
   }
 

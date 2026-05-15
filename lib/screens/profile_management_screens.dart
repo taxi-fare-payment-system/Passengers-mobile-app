@@ -148,9 +148,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 48),
             
-            _ProfileInputField(label: 'Full Name', initialValue: user?['name'] ?? 'Passenger User'),
+            _ProfileInputField(label: 'Full Name', initialValue: user?['display_name'] ?? user?['name'] ?? 'Passenger User'),
             const SizedBox(height: 20),
-            _ProfileInputField(label: 'Phone Number', initialValue: user?['phone'] ?? '+251 900 000 000', readOnly: true),
+            _ProfileInputField(label: 'Phone Number', initialValue: user?['phone'] ?? user?['phone_number'] ?? '+251 900 000 000', readOnly: true),
             
             const SizedBox(height: 40),
             const Divider(),

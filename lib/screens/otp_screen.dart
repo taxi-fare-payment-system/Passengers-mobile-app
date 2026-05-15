@@ -107,7 +107,18 @@ class _OTPScreenState extends State<OTPScreen> {
                 onPressed: _isLoading
                     ? null
                     : () async {
-                        final phone = ModalRoute.of(context)!.settings.arguments as String;
+                        final args = ModalRoute.of(context)!.settings.arguments;
+                        String phone;
+                        String? password;
+                        
+                        if (args is String) {
+                          phone = args;
+                        } else {
+                          final map = args as Map<String, dynamic>;
+                          phone = map['phone'];
+                          password = map['password'];
+                        }
+
                         final code = _pinController.text;
 
                         if (code.length != 6) {
@@ -120,6 +131,12 @@ class _OTPScreenState extends State<OTPScreen> {
                         setState(() => _isLoading = true);
                         try {
                           await context.read<AuthProvider>().verifyOTP(phone, code);
+                          
+                          // If we have a password (from registration), log in now to get the token
+                          if (password != null) {
+                            await context.read<AuthProvider>().login(phone, password);
+                          }
+                          
                           if (mounted) {
                             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
                           }

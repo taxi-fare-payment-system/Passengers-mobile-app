@@ -155,7 +155,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // After registration, the backend usually sends OTP.
       // We'll navigate to OTP screen.
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/otp', arguments: fullPhone);
+        Navigator.pushReplacementNamed(
+          context,
+          '/otp',
+          arguments: {
+            'phone': fullPhone,
+            'password': password,
+          },
+        );
       }
     } catch (e) {
       if (mounted) {
