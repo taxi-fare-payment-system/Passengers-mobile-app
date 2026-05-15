@@ -263,5 +263,8 @@
   "enter_otp_msg_short": "እባክዎ 6 አሃዝ ኮድ ያስገቡ",
   "verify_continue": "አረጋግጥ እና ቀጥል",
   "by_continuing_agree_generic": "በመቀጠልዎ በአገልግሎት ውላችን እና በግላዊነት ፖሊሲያችን ተስማምተዋል።",
-  "qr_based_taxi_payments": "በQR ኮድ የሚፈጸም የታክሲ ክፍያ"
+  "qr_based_taxi_payments": "በQR ኮድ የሚፈጸም የታክሲ ክፍያ",
+  "enter_qr_manually": "የQR ኮድ በእጅ ያስገቡ",
+  "pay_fare": "ክፍያ ፈጽም",
+  "scan_or_enter_qr": "QR ኮዱን ይቃኙ ወይም በእጅ ያስገቡ"
 }

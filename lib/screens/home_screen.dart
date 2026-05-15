@@ -76,41 +76,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   final tripProvider = context.read<TripProvider>();
                   final qrProvider = context.read<QRProvider>();
                   
-                  // 1. Verify QR Code
-                  final isValid = await qrProvider.verifyQRCode(code, auth.token!, headers: auth.headers);
-                  
-                  if (!isValid) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('invalid_qr_code'.tr()))
-                      );
-                    }
-                    return;
-                  }
-
-                  // 2. Extract Trip ID and Fetch Status
-                  final tripId = code.split('/').last;
-                  try {
-                    await tripProvider.fetchTripStatus(tripId, auth.token!);
-                    if (mounted) {
-                      Navigator.pushNamed(
-                        context, 
-                        '/confirm-payment', 
-                        arguments: {'trip_id': tripId}
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${'error_loading_trip'.tr()}: $e'))
-                      );
-                    }
-                  }
+                  _handleQRValue(code, qrProvider, auth, tripProvider);
                 }
               }
             },
           ),
           _buildScannerOverlay(context),
+          // Manual Input Button for Computer/Debug
+          Positioned(
+            bottom: 40,
+            left: 24,
+            right: 24,
+            child: ElevatedButton.icon(
+              onPressed: () => _showManualQRDialog(),
+              icon: const Icon(Icons.keyboard_rounded),
+              label: Text('enter_qr_manually'.tr()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.primaryColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
           Positioned(
             top: 60,
             left: 20,
@@ -121,6 +108,89 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _showManualQRDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('enter_qr_manually'.tr()),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Paste QR value here'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('cancel'.tr())),
+          ElevatedButton(
+            onPressed: () {
+              final val = controller.text.trim();
+              if (val.isNotEmpty) {
+                Navigator.pop(context);
+                // Simulate scan detection
+                final qrProvider = this.context.read<QRProvider>();
+                final auth = this.context.read<AuthProvider>();
+                final tripProvider = this.context.read<TripProvider>();
+                
+                _handleQRValue(val, qrProvider, auth, tripProvider);
+              }
+            },
+            child: Text('confirm'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleQRValue(String code, QRProvider qrProvider, AuthProvider auth, TripProvider tripProvider) async {
+    // 1. Verify QR Code
+    final isValid = await qrProvider.verifyQRCode(code, auth.token!, headers: auth.headers);
+    
+    if (!isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('invalid_qr_code'.tr()))
+        );
+      }
+      return;
+    }
+
+    // 2. Handle QR based on content
+    try {
+      if (code.contains('/')) {
+        // Trip URL format
+        final tripId = code.split('/').last;
+        await tripProvider.fetchTripStatus(tripId, auth.token!);
+        if (mounted) {
+          Navigator.pushNamed(
+            context, 
+            '/confirm-payment', 
+            arguments: {'trip_id': tripId}
+          );
+        }
+      } else {
+        // Driver QR format (JSON or ID)
+        final driverInfo = await qrProvider.getDriverFromQR(code, auth.token!);
+        if (driverInfo != null && driverInfo['driver_id'] != null) {
+          final driverId = driverInfo['driver_id'];
+          await tripProvider.fetchActiveTripByDriver(driverId, auth.token!);
+          
+          if (mounted && tripProvider.currentTrip != null) {
+            Navigator.pushNamed(
+              context, 
+              '/confirm-payment', 
+              arguments: {'trip_id': tripProvider.currentTrip!['id']}
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')))
+        );
+      }
+    }
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -332,6 +402,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _showManualQRDialog(),
+              child: _ActionCard(
+                icon: Icons.qr_code_scanner_rounded,
+                title: 'pay_fare'.tr(),
+                subtitle: 'scan_or_enter_qr'.tr(),
+                color: Colors.green.withOpacity(0.05),
+                iconColor: Colors.green,
+              ),
             ),
             const SizedBox(height: 32),
             Row(

@@ -98,6 +98,35 @@ class TripProvider with ChangeNotifier {
     }
   }
 
+  Future<void> fetchActiveTripByDriver(String driverId, String token, {Map<String, String>? headers}) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      // Find active trip for this driver
+      final response = await ApiService.get('/api/v1/trips/active?driver_id=$driverId', token: token, extraHeaders: headers);
+      if (response.statusCode == 200) {
+        final tripData = jsonDecode(response.body);
+        _currentTrip = tripData;
+        
+        // Fetch vehicle details too
+        final vId = tripData['vehicle_id'] ?? tripData['vehicleId'];
+        if (vId != null) {
+          fetchVehicleDetails(vId.toString(), token, headers: headers);
+        }
+        
+        notifyListeners();
+      } else {
+        throw Exception('No active trip found for this driver');
+      }
+    } catch (e) {
+      debugPrint('Error fetching active trip by driver: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchTripStatus(String tripId, String token, {Map<String, String>? headers}) async {
     try {
       final response = await ApiService.get('/api/v1/trips/$tripId', token: token, extraHeaders: headers);

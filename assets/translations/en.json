@@ -263,5 +263,8 @@
   "enter_otp_msg_short": "Please enter the 6-digit code",
   "verify_continue": "Verify & Continue",
   "by_continuing_agree_generic": "By continuing, you agree to our Terms of Service and Privacy Policy.",
-  "qr_based_taxi_payments": "QR-Based Taxi Payments"
+  "qr_based_taxi_payments": "QR-Based Taxi Payments",
+  "enter_qr_manually": "Enter QR Code Manually",
+  "pay_fare": "Pay Fare",
+  "scan_or_enter_qr": "Scan or Enter QR Code"
 }
