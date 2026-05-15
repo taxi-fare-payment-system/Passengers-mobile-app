@@ -113,8 +113,13 @@ class TripProvider with ChangeNotifier {
           }
         }
         
-        if (newTrip != null && newTrip['vehicle_id'] != null) {
-          fetchVehicleDetails(newTrip['vehicle_id'].toString(), token, headers: headers);
+        final vId = newTrip?['vehicle_id'] ?? newTrip?['vehicleId'];
+        if (vId != null) {
+          fetchVehicleDetails(vId.toString(), token, headers: headers);
+        } else if (newTrip?['driver_id'] != null || newTrip?['driverId'] != null) {
+          // Fallback: Fetch vehicle assigned to driver
+          final dId = newTrip?['driver_id'] ?? newTrip?['driverId'];
+          _fetchVehicleByDriver(dId.toString(), token, headers: headers);
         }
         
         // Stop polling if trip is finished
@@ -137,6 +142,18 @@ class TripProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error fetching vehicle details: $e');
+    }
+  }
+
+  Future<void> _fetchVehicleByDriver(String driverId, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.get('/api/v1/vehicles/drivers/$driverId', token: token, extraHeaders: headers);
+      if (response.statusCode == 200) {
+        _vehicleDetails = jsonDecode(response.body);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching vehicle by driver: $e');
     }
   }
 
@@ -200,24 +217,10 @@ class TripProvider with ChangeNotifier {
     }
   }
 
+  // Trip history for passengers is derived from wallet transactions where reason = 'fare'
+  // We'll let the UI handle filtering from the WalletProvider instead of calling a non-existent endpoint.
   Future<void> fetchTripHistory(String token, {Map<String, String>? headers}) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final response = await ApiService.get('/api/v1/trips/history', token: token, extraHeaders: headers);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        _tripHistory = data['items'] ?? [];
-        print('Trip Debug: Fetched ${_tripHistory.length} history items');
-      } else {
-        print('Trip Debug: History error: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Error fetching trip history: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    // No-op: Trip history is managed via WalletProvider
+    print('Trip Debug: fetchTripHistory is now managed via WalletProvider transactions');
   }
 }

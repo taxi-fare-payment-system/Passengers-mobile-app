@@ -7,11 +7,13 @@ class AuthProvider with ChangeNotifier {
   final _storage = const FlutterSecureStorage();
   String? _token;
   Map<String, dynamic>? _user;
+  bool _isLoading = false;
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
   bool get isAuthenticated => _token != null;
   bool get isVerified => _user?['is_verified'] ?? false;
+  bool get isLoading => _isLoading;
   
   Map<String, String> get headers {
     final Map<String, String> h = {};
@@ -26,12 +28,14 @@ class AuthProvider with ChangeNotifier {
     required String phone,
     required String password,
     required String displayName,
+    String? subCityId,
   }) async {
     final response = await ApiService.post('/api/v1/auth/register', {
       'phone': phone,
       'password': password,
       'display_name': displayName,
       'role': 'passenger',
+      if (subCityId != null) 'sub_city_id': int.tryParse(subCityId) ?? subCityId,
     });
 
     if (response.statusCode != 201) {
@@ -73,6 +77,38 @@ class AuthProvider with ChangeNotifier {
     } else {
       print('Auth Debug: Error response: ${response.body}');
       throw Exception(jsonDecode(response.body)['message'] ?? 'Verification failed');
+    }
+  }
+
+  List<dynamic> _subCities = [];
+  List<dynamic> get subCities => _subCities;
+
+  Future<void> fetchSubCities() async {
+    try {
+      final response = await ApiService.get('/api/v1/auth/subcities');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _subCities = data is List ? data : (data['items'] ?? data['data'] ?? []);
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Auth Debug: Fetch sub-cities failed: $e');
+    }
+  }
+
+  Future<void> resetPassword(String phone) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.post('/api/v1/auth/password-reset', {'phone': phone});
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final error = jsonDecode(response.body)['message'] ?? 'Reset failed';
+        throw Exception(error);
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

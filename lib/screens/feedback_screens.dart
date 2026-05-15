@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feedback_provider.dart';
@@ -22,7 +23,7 @@ class _RateTripScreenState extends State<RateTripScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: const BackButton(color: Colors.black),
-        title: const Text('Rate Your Trip', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('rate_your_trip'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Padding(
@@ -47,15 +48,15 @@ class _RateTripScreenState extends State<RateTripScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
-              'How was your ride?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              'how_was_ride'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Your feedback will help us improve the driving experience.',
+            Text(
+              'feedback_help_improve'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: const TextStyle(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 40),
             Row(
@@ -78,12 +79,12 @@ class _RateTripScreenState extends State<RateTripScreen> {
             const Spacer(),
             ElevatedButton(
               onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: 'dummy-trip-id',))) : null,
-              child: const Text('Submit Rating'),
+              child: Text('submit_rating'.tr()),
             ),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-              child: const Text('Skip', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+              child: Text('skip'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -93,11 +94,11 @@ class _RateTripScreenState extends State<RateTripScreen> {
 
   String _getRatingText() {
     switch (_rating) {
-      case 1: return 'Poor';
-      case 2: return 'Fair';
-      case 3: return 'Good';
-      case 4: return 'Very Good';
-      case 5: return 'Excellent';
+      case 1: return 'poor'.tr();
+      case 2: return 'fair'.tr();
+      case 3: return 'good'.tr();
+      case 4: return 'very_good'.tr();
+      case 5: return 'excellent'.tr();
       default: return '';
     }
   }
@@ -130,7 +131,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Add Feedback', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('add_feedback'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -141,24 +142,24 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Thanks for the rating!',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            Text(
+              'thanks_for_rating'.tr(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Tell us more about your ride. What was great or could be improved?',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            Text(
+              'tell_us_more'.tr(),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 32),
-            const Text('Optional Comments', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('optional_comments'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 16),
             Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                'Safe Driving', 'Clean Taxi', 'Polite Driver', 'Great Music',
-                'Helpful', 'Punctual', 'Good Route', 'Fair Price'
+                'safe_driving'.tr(), 'clean_taxi'.tr(), 'polite_driver'.tr(), 'great_music'.tr(),
+                'helpful'.tr(), 'punctual'.tr(), 'good_route'.tr(), 'fair_price'.tr()
               ].map((tag) => _TagChip(
                 label: tag,
                 isSelected: _selectedTags.contains(tag),
@@ -171,13 +172,13 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
               )).toList(),
             ),
             const SizedBox(height: 32),
-            const Text('Write a Comment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('write_comment'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 16),
             TextField(
               controller: _commentController,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Share your experience with the driver...',
+                hintText: 'share_experience_hint'.tr(),
                 filled: true,
                 fillColor: AppTheme.surfaceColor,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
@@ -201,7 +202,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Thank you for your feedback!'),
+                              content: Text('feedback_submitted_thanks'.tr()),
                               backgroundColor: AppTheme.primaryColor,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -224,7 +225,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                     },
               child: feedbackProvider.isSubmitting
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Submit Feedback'),
+                  : Text('submit_feedback'.tr()),
             ),
           ],
         ),

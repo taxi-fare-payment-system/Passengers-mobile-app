@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 
 class DriverProfileScreen extends StatelessWidget {
@@ -9,7 +10,7 @@ class DriverProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Driver Profile', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('driver_profile'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -30,9 +31,9 @@ class DriverProfileScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _StatItem(label: 'Rating', value: '4.8', icon: Icons.star_rounded, iconColor: Colors.orange),
-                _StatItem(label: 'Trips', value: '1.2k', icon: Icons.directions_car_rounded, iconColor: AppTheme.primaryColor),
-                _StatItem(label: 'Experience', value: '4 yrs', icon: Icons.timer_rounded, iconColor: Colors.blue),
+                _StatItem(label: 'rating'.tr(), value: '4.8', icon: Icons.star_rounded, iconColor: Colors.orange),
+                _StatItem(label: 'trips'.tr(), value: '1.2k', icon: Icons.directions_car_rounded, iconColor: AppTheme.primaryColor),
+                _StatItem(label: 'experience'.tr(), value: '4 ${'yrs'.tr()}', icon: Icons.timer_rounded, iconColor: Colors.blue),
               ],
             ),
             const SizedBox(height: 32),
@@ -42,7 +43,7 @@ class DriverProfileScreen extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
-                    label: const Text('Send Message'),
+                    label: Text('send_message'.tr()),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -64,9 +65,9 @@ class DriverProfileScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 40),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Text('About Driver', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              child: Text('about_driver'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -77,8 +78,8 @@ class DriverProfileScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Recent Reviews', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                TextButton(onPressed: () {}, child: const Text('See All')),
+                Text('recent_reviews'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                TextButton(onPressed: () {}, child: Text('see_all'.tr())),
               ],
             ),
             const SizedBox(height: 16),

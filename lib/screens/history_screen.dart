@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
+import '../providers/wallet_provider.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -9,18 +12,19 @@ class HistoryScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('History', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+          title: Text('history'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
           elevation: 0,
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppTheme.primaryColor,
             unselectedLabelColor: AppTheme.textSecondary,
             indicatorColor: AppTheme.primaryColor,
             indicatorWeight: 3,
             tabs: [
-              Tab(text: 'Trips'),
-              Tab(text: 'Payments'),
+              Tab(text: 'trips'.tr()),
+              Tab(text: 'payments'.tr()),
             ],
           ),
         ),
@@ -40,20 +44,34 @@ class _TripsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wallet = context.watch<WalletProvider>();
+    final tripFares = wallet.transactions.where((tx) => tx['reason'] == 'fare' || tx['type'] == 'fare_payment').toList();
+
+    if (wallet.isLoading && tripFares.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (tripFares.isEmpty) {
+      return Center(child: Text('no_trips_found'.tr()));
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.all(24),
-      itemCount: 10,
+      itemCount: tripFares.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
+        final tx = tripFares[index];
+        final DateTime dt = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+        
         return InkWell(
-          onTap: () => Navigator.pushNamed(context, '/trip-details'),
+          onTap: () => Navigator.pushNamed(context, '/trip-details', arguments: tx['metadata']?['trip_id']),
           child: _HistoryItem(
             icon: Icons.directions_car_rounded,
-            title: 'Megenagna to Stadium',
-            date: '24 Jan 2024',
-            time: '10:30 AM',
-            amount: '15.00 ETB',
-            status: 'Completed',
+            title: tx['metadata']?['route_name'] ?? 'taxi_ride'.tr(),
+            date: DateFormat('dd MMM yyyy').format(dt),
+            time: DateFormat('hh:mm a').format(dt),
+            amount: '${tx['amount']} ETB',
+            status: tx['status'] == 'completed' || tx['status'] == 'success' ? 'completed'.tr() : 'pending'.tr(),
           ),
         );
       },
@@ -66,19 +84,34 @@ class _PaymentsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wallet = context.watch<WalletProvider>();
+    final transactions = wallet.transactions;
+
+    if (wallet.isLoading && transactions.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (transactions.isEmpty) {
+      return Center(child: Text('no_payments_found'.tr()));
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.all(24),
-      itemCount: 5,
+      itemCount: transactions.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
+        final tx = transactions[index];
+        final DateTime dt = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+        final isCredit = tx['type'] == 'topup' || tx['type'] == 'transfer_in';
+
         return _HistoryItem(
-          icon: Icons.account_balance_wallet_rounded,
-          title: 'Wallet Top-up',
-          date: '23 Jan 2024',
-          time: '04:15 PM',
-          amount: '500.00 ETB',
-          status: 'Successful',
-          isCredit: true,
+          icon: isCredit ? Icons.account_balance_wallet_rounded : Icons.payments_rounded,
+          title: tx['reason'] ?? (isCredit ? 'wallet_top_up'.tr() : 'payment'.tr()),
+          date: DateFormat('dd MMM yyyy').format(dt),
+          time: DateFormat('hh:mm a').format(dt),
+          amount: '${tx['amount']} ETB',
+          status: tx['status'] == 'completed' || tx['status'] == 'success' ? 'successful'.tr() : 'pending'.tr(),
+          isCredit: isCredit,
         );
       },
     );
@@ -106,7 +139,7 @@ class _HistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isCompleted = status == 'Completed' || status == 'Successful';
+    final bool isCompleted = status == 'completed'.tr() || status == 'successful'.tr();
     
     return Container(
       padding: const EdgeInsets.all(16),

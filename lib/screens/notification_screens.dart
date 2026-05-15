@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/notification_provider.dart';
@@ -31,7 +32,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Notifications', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('notifications'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -41,7 +42,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             onPressed: () {
               // Implementation for mark all read
             },
-            child: const Text('Mark all read', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.w600, fontSize: 13)),
+            child: Text('mark_all_read'.tr(), style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.w600, fontSize: 13)),
           ),
         ],
       ),
@@ -54,7 +55,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     children: [
                       Icon(Icons.notifications_off_rounded, size: 64, color: Colors.grey[300]),
                       const SizedBox(height: 16),
-                      const Text('No notifications yet', style: TextStyle(color: AppTheme.textSecondary)),
+                      Text('no_notifications_yet'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
                 )
@@ -72,7 +73,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         child: _NotificationItem(
                           icon: _getIconForType(n['type']),
                           iconColor: _getColorForType(n['type']),
-                          title: n['title'] ?? 'Notification',
+                          title: n['title'] ?? 'notification'.tr(),
                           body: n['content'] ?? '',
                           time: _formatTime(n['created_at']),
                           isRead: isRead,
@@ -106,9 +107,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     if (timestamp == null) return 'now';
     final date = DateTime.tryParse(timestamp) ?? DateTime.now();
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}${ 'm_ago'.tr()}';
+    if (diff.inHours < 24) return '${diff.inHours}${ 'h_ago'.tr()}';
+    return '${diff.inDays}${ 'd_ago'.tr()}';
   }
 }
 
@@ -193,7 +194,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Notification Settings', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('notification_settings'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -202,26 +203,26 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          const Text('Push Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text('push_notifications'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
           _buildSwitchTile(
-            'All Notifications',
-            'Receive all push notifications from the app',
+            'all_notifications'.tr(),
+            'receive_all_notifications_desc'.tr(),
             _pushNotifications,
             (v) => setState(() => _pushNotifications = v),
           ),
           const SizedBox(height: 32),
-          const Text('Activity Alerts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
+          Text('activity_alerts'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
           const SizedBox(height: 12),
-          _buildSwitchTile('Payment Alerts', 'Get notified about transactions', _paymentAlerts, (v) => setState(() => _paymentAlerts = v)),
-          _buildSwitchTile('Trip Updates', 'Status of your rides', _tripUpdates, (v) => setState(() => _tripUpdates = v)),
-          _buildSwitchTile('Promotions & Offers', 'Exclusive deals and discounts', _promoOffers, (v) => setState(() => _promoOffers = v)),
-          _buildSwitchTile('System Announcements', 'Important app updates', _systemAnnouncements, (v) => setState(() => _systemAnnouncements = v)),
+          _buildSwitchTile('payment_alerts'.tr(), 'get_notified_transactions_desc'.tr(), _paymentAlerts, (v) => setState(() => _paymentAlerts = v)),
+          _buildSwitchTile('trip_updates'.tr(), 'status_rides_desc'.tr(), _tripUpdates, (v) => setState(() => _tripUpdates = v)),
+          _buildSwitchTile('promotions_offers'.tr(), 'exclusive_deals_desc'.tr(), _promoOffers, (v) => setState(() => _promoOffers = v)),
+          _buildSwitchTile('system_announcements'.tr(), 'important_app_updates_desc'.tr(), _systemAnnouncements, (v) => setState(() => _systemAnnouncements = v)),
           const SizedBox(height: 32),
-          const Text('Communication Channels', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
+          Text('communication_channels'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
           const SizedBox(height: 12),
-          _buildSwitchTile('SMS Notifications', 'Get updates via text message', _smsNotifications, (v) => setState(() => _smsNotifications = v)),
-          _buildSwitchTile('Email Updates', 'Monthly summaries and reports', _emailUpdates, (v) => setState(() => _emailUpdates = v)),
+          _buildSwitchTile('sms_notifications'.tr(), 'get_updates_sms_desc'.tr(), _smsNotifications, (v) => setState(() => _smsNotifications = v)),
+          _buildSwitchTile('email_updates'.tr(), 'monthly_summaries_desc'.tr(), _emailUpdates, (v) => setState(() => _emailUpdates = v)),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -47,14 +48,14 @@ class _OTPScreenState extends State<OTPScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Verify Your Phone',
+              'verify_phone'.tr(),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Enter the 6-digit code sent to +251 91 234 5678',
+              '${'enter_otp_msg'.tr()} +251 91 234 5678',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 48),
@@ -80,7 +81,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       const Icon(Icons.timer_outlined, size: 16, color: AppTheme.textSecondary),
                       const SizedBox(width: 8),
                       Text(
-                        'Resend code in 00:55',
+                        '${'resend_code_in'.tr()} 00:55',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -88,8 +89,8 @@ class _OTPScreenState extends State<OTPScreen> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {},
-                    child: const Text(
-                      'Change phone number',
+                    child: Text(
+                      'change_phone_number'.tr(),
                       style: TextStyle(
                         color: AppTheme.primaryColor,
                         fontWeight: FontWeight.w600,
@@ -123,7 +124,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
                         if (code.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter the 6-digit code')),
+                            SnackBar(content: Text('enter_otp_msg_short'.tr())),
                           );
                           return;
                         }
@@ -156,12 +157,12 @@ class _OTPScreenState extends State<OTPScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Verify & Continue'),
+                    : Text('verify_continue'.tr()),
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'By continuing, you agree to our Terms of Service and Privacy Policy.',
+              'by_continuing_agree_generic'.tr(),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondary.withOpacity(0.6),

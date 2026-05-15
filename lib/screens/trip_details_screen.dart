@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
-
 class TripDetailsScreen extends StatefulWidget {
   final dynamic route;
   const TripDetailsScreen({super.key, required this.route});
@@ -52,7 +52,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           ),
         ),
         title: Text(
-          trip != null ? 'Trip Status: ${trip['status']}' : 'Confirm Booking',
+          trip != null ? '${'trip_status'.tr()}: ${trip['status']}' : 'confirm_booking'.tr(),
           style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
@@ -97,11 +97,11 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     ),
                   ),
                   if (trip == null) ...[
-                    const Text('Select Available Vehicle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('select_available_vehicle'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     Expanded(
                       child: tripProvider.vehicles.isEmpty
-                          ? const Center(child: Text('No vehicles available on this route right now'))
+                          ? Center(child: Text('no_vehicles_available'.tr()))
                           : ListView.separated(
                               itemCount: tripProvider.vehicles.length,
                               separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -127,8 +127,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text(v['plateNumber'] ?? 'Unknown Plate', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                              Text('Driver: ${v['driverName'] ?? 'Assigned soon'}', style: const TextStyle(fontSize: 12)),
+                                              Text(v['plateNumber'] ?? 'unknown_plate'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                              Text('${'driver'.tr()}: ${v['driverName'] ?? 'assigned_soon'.tr()}', style: const TextStyle(fontSize: 12)),
                                             ],
                                           ),
                                         ),
@@ -165,7 +165,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                   if (mounted) setState(() => _isBooking = false);
                                 }
                               },
-                        child: _isBooking ? const CircularProgressIndicator(color: Colors.white) : const Text('Book Now'),
+                        child: _isBooking ? const CircularProgressIndicator(color: Colors.white) : Text('book_now'.tr()),
                       ),
                     ),
                   ] else ...[
@@ -185,7 +185,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           ),
                         ),
                         Text(
-                          'Estimated Arrival: 5 mins',
+                          'estimated_arrival'.tr(),
                           style: TextStyle(color: Colors.grey[600], fontSize: 12),
                         ),
                       ],
@@ -205,7 +205,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(trip['driver_name'] ?? 'Finding Driver...', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                              Text(trip['driver_name'] ?? 'finding_driver'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                               Text(
                                 tripProvider.vehicleDetails != null 
                                   ? '${tripProvider.vehicleDetails!['metadata']?['model'] ?? 'Vehicle'} • ${tripProvider.vehicleDetails!['plateNumber']}' 
@@ -226,14 +226,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       icon: Icons.my_location_rounded,
                       color: AppTheme.primaryColor,
                       location: trip['start_location'] ?? widget.route['startLocation'],
-                      time: 'Pickup',
+                      time: 'pickup'.tr(),
                       isFirst: true,
                     ),
                     _buildTimelineItem(
                       icon: Icons.location_on_rounded,
                       color: Colors.red,
                       location: trip['end_location'] ?? widget.route['endLocation'],
-                      time: 'Dropoff',
+                      time: 'dropoff'.tr(),
                       isLast: true,
                     ),
                     const Spacer(),
@@ -243,7 +243,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         child: ElevatedButton(
                           onPressed: () {},
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                          child: const Text('Show QR to Driver'),
+                          child: Text('show_qr_to_driver'.tr()),
                         ),
                       )
                     else if (trip['status'] == 'COMPLETED' || trip['status'] == 'ENDED')
@@ -260,7 +260,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                               },
                             );
                           },
-                          child: const Text('Pay Fare'),
+                          child: Text('pay_fare'.tr()),
                         ),
                       ),
                   ],

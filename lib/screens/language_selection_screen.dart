@@ -28,17 +28,17 @@ class LanguageSelectionScreen extends StatelessWidget {
                     ),
               ),
               Text(
-                'Cashless Taxi fare',
+                'cashless_taxi_fare'.tr(),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const Spacer(),
               Text(
-                'Choose Language',
+                'choose_language'.tr(),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               Text(
-                'Select your preferred language to continue',
+                'select_preferred_language'.tr(),
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -47,7 +47,11 @@ class LanguageSelectionScreen extends StatelessWidget {
                 title: 'አማርኛ (Amharic)',
                 onTap: () {
                   context.setLocale(const Locale('am'));
-                  Navigator.pushNamed(context, '/login');
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
                 },
                 isActive: context.locale.languageCode == 'am',
               ),
@@ -56,13 +60,17 @@ class LanguageSelectionScreen extends StatelessWidget {
                 title: 'English',
                 onTap: () {
                   context.setLocale(const Locale('en'));
-                  Navigator.pushNamed(context, '/login');
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
                 },
                 isActive: context.locale.languageCode == 'en',
               ),
               const Spacer(flex: 2),
               Text(
-                'SECURE & SEAMLESS PAYMENTS',
+                'secure_seamless_payments'.tr(),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       letterSpacing: 1.5,
                       fontWeight: FontWeight.bold,

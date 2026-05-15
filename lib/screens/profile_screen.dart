@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -16,7 +17,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Profile', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        title: Text('profile'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -59,7 +60,7 @@ class ProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        user?['display_name'] ?? user?['name'] ?? 'Passenger User',
+                        user?['display_name'] ?? user?['name'] ?? 'passenger_user'.tr(),
                         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                       ),
                       if (auth.isVerified) ...[
@@ -98,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('WuloPay Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text('wulopay_balance'.tr(), style: const TextStyle(color: Colors.white70, fontSize: 12)),
                       const SizedBox(height: 4),
                       Text('${wallet.balance ?? '0.00'} ETB', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                     ],
@@ -112,7 +113,7 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Top Up'),
+                    child: Text('top_up'.tr()),
                   ),
                 ],
               ),
@@ -122,28 +123,28 @@ class ProfileScreen extends StatelessWidget {
             // Settings Menu
             _buildSection(
               context,
-              'ACCOUNT',
+              'account'.tr(),
               [
-                _ProfileTile(icon: Icons.person_outline_rounded, title: 'Edit Profile', onTap: () => Navigator.pushNamed(context, '/edit-profile')),
-                _ProfileTile(icon: Icons.history_rounded, title: 'Trip History', onTap: () => Navigator.pushNamed(context, '/transaction-history')),
-                _ProfileTile(icon: Icons.payment_rounded, title: 'Payment Methods', onTap: () => Navigator.pushNamed(context, '/payment-methods')),
+                _ProfileTile(icon: Icons.person_outline_rounded, title: 'edit_profile'.tr(), onTap: () => Navigator.pushNamed(context, '/edit-profile')),
+                _ProfileTile(icon: Icons.history_rounded, title: 'trip_history'.tr(), onTap: () => Navigator.pushNamed(context, '/transaction-history')),
+                _ProfileTile(icon: Icons.payment_rounded, title: 'payment_methods'.tr(), onTap: () => Navigator.pushNamed(context, '/payment-methods')),
               ],
             ),
             _buildSection(
               context,
-              'PREFERENCES',
+              'preferences'.tr(),
               [
-                _ProfileTile(icon: Icons.language_rounded, title: 'Language', subtitle: 'English', onTap: () => Navigator.pushNamed(context, '/language')),
-                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notification Settings', onTap: () {}),
-                _ProfileTile(icon: Icons.security_rounded, title: 'Security (PIN/Biometric)', onTap: () {}),
+                _ProfileTile(icon: Icons.language_rounded, title: 'language'.tr(), subtitle: 'English', onTap: () => Navigator.pushNamed(context, '/language')),
+                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'notification_settings'.tr(), onTap: () {}),
+                _ProfileTile(icon: Icons.security_rounded, title: 'security_pin_biometric'.tr(), onTap: () {}),
               ],
             ),
             _buildSection(
               context,
-              'SUPPORT',
+              'support'.tr(),
               [
-                _ProfileTile(icon: Icons.help_outline_rounded, title: 'Help Center', onTap: () {}),
-                _ProfileTile(icon: Icons.info_outline_rounded, title: 'About WuloPay', onTap: () {}),
+                _ProfileTile(icon: Icons.help_outline_rounded, title: 'help_center'.tr(), onTap: () {}),
+                _ProfileTile(icon: Icons.info_outline_rounded, title: 'about_wulopay'.tr(), onTap: () {}),
               ],
             ),
             
@@ -155,7 +156,7 @@ class ProfileScreen extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, '/login');
                 },
                 icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                label: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                label: Text('log_out'.tr(), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                 style: TextButton.styleFrom(
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(
@@ -165,7 +166,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Text('Version 1.0.0', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            Text('${'version'.tr()} 1.0.0', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
             const SizedBox(height: 40),
           ],
         ),

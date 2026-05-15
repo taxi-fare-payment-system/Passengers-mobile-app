@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
@@ -9,7 +10,7 @@ class PaymentMethodsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Payment Methods', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('payment_methods'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -18,35 +19,35 @@ class PaymentMethodsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          const Text('Primary Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
+          Text('primary_method'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
           const SizedBox(height: 16),
           _PaymentMethodItem(
             icon: Icons.account_balance_wallet_rounded,
-            title: 'WuloPay Wallet',
-            subtitle: 'Balance: 450.00 ETB',
+            title: 'wulopay_wallet'.tr(),
+            subtitle: '${'balance'.tr()}: 450.00 ETB',
             isSelected: true,
           ),
           const SizedBox(height: 32),
-          const Text('Other Methods', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
+          Text('other_methods'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
           const SizedBox(height: 16),
           _PaymentMethodItem(
             icon: Icons.account_balance_rounded,
             title: 'Telebirr',
-            subtitle: 'Connected',
+            subtitle: 'connected'.tr(),
             isSelected: false,
           ),
           const SizedBox(height: 12),
           _PaymentMethodItem(
             icon: Icons.credit_card_rounded,
             title: 'Mastercard •••• 4567',
-            subtitle: 'Expires 05/26',
+            subtitle: '${'expires'.tr()} 05/26',
             isSelected: false,
           ),
           const SizedBox(height: 32),
           OutlinedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.add_rounded),
-            label: const Text('Add New Method'),
+            label: Text('add_new_method'.tr()),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

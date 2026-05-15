@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -14,7 +15,7 @@ class ProfileSetupScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Profile Setup', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('profile_setup'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -49,18 +50,18 @@ class ProfileSetupScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Upload Profile Photo', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('upload_profile_photo'.tr(), style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 48),
             
-            const _ProfileInputField(label: 'Full Name', hint: 'e.g. Samuel Abera'),
+            _ProfileInputField(label: 'full_name'.tr(), hint: 'full_name_hint'.tr()),
             const SizedBox(height: 20),
-            const _ProfileInputField(label: 'Email Address', hint: 'e.g. samuel@example.com'),
+            _ProfileInputField(label: 'email_address'.tr(), hint: 'email_hint'.tr()),
             const SizedBox(height: 20),
             
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Default Payment Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
+                Text('default_payment_method'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   decoration: InputDecoration(
@@ -68,7 +69,7 @@ class ProfileSetupScreen extends StatelessWidget {
                     fillColor: AppTheme.surfaceColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   ),
-                  hint: const Text('Select Method'),
+                  hint: Text('select_method'.tr()),
                   items: ['WuloPay Wallet', 'Telebirr', 'CBE Birr', 'Card'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
                   onChanged: (v) {},
                 ),
@@ -77,7 +78,7 @@ class ProfileSetupScreen extends StatelessWidget {
             const SizedBox(height: 80),
             ElevatedButton(
               onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-              child: const Text('Save & Continue'),
+              child: Text('save_continue'.tr()),
             ),
           ],
         ),
@@ -115,7 +116,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Edit Profile', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('edit_profile'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -148,18 +149,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 48),
             
-            _ProfileInputField(label: 'Full Name', initialValue: user?['display_name'] ?? user?['name'] ?? 'Passenger User'),
+            _ProfileInputField(label: 'full_name'.tr(), initialValue: user?['display_name'] ?? user?['name'] ?? 'passenger_user'.tr()),
             const SizedBox(height: 20),
-            _ProfileInputField(label: 'Phone Number', initialValue: user?['phone'] ?? user?['phone_number'] ?? '+251 900 000 000', readOnly: true),
+            _ProfileInputField(label: 'phone_number'.tr(), initialValue: user?['phone'] ?? user?['phone_number'] ?? '+251 900 000 000', readOnly: true),
             
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 32),
-            const Text('Change Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('change_password'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            _ProfileInputField(label: 'Current Password', hint: '••••••••', controller: _currentPasswordController, obscureText: true),
+            _ProfileInputField(label: 'current_password'.tr(), hint: '••••••••', controller: _currentPasswordController, obscureText: true),
             const SizedBox(height: 16),
-            _ProfileInputField(label: 'New Password', hint: '••••••••', controller: _newPasswordController, obscureText: true),
+            _ProfileInputField(label: 'new_password'.tr(), hint: '••••••••', controller: _newPasswordController, obscureText: true),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -167,21 +168,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onPressed: () async {
                   try {
                     await auth.changePassword(_currentPasswordController.text, _newPasswordController.text);
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully')));
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('password_updated_success'.tr())));
                   } catch (e) {
                     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 },
-                child: const Text('Update Password'),
+                child: Text('update_password'.tr()),
               ),
             ),
 
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 32),
-            const Text('Identity Verification', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('identity_verification'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Upload a copy of your National ID or Passport to verify your account.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+            Text('upload_id_instruction'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
             const SizedBox(height: 20),
             
             InkWell(
@@ -201,7 +202,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       children: const [
                         Icon(Icons.upload_file_rounded, color: AppTheme.textSecondary, size: 32),
                         SizedBox(height: 8),
-                        Text('Click to select document', style: TextStyle(color: AppTheme.textSecondary)),
+                        Text('click_to_select_doc'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
                       ],
                     )
                   : ClipRRect(
@@ -225,7 +226,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         token: auth.token!,
                       );
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Document uploaded successfully')));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('doc_uploaded_success'.tr())));
                         setState(() => _selectedFile = null);
                       }
                     } catch (e) {
@@ -234,14 +235,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                   child: docProvider.isUploading 
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Upload Document'),
+                    : Text('upload_document'.tr()),
                 ),
               ),
             
             const SizedBox(height: 80),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Save Changes'),
+              child: Text('save_changes'.tr()),
             ),
           ],
         ),

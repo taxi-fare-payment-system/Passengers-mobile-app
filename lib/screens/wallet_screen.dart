@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -36,7 +37,7 @@ class _WalletScreenState extends State<WalletScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('My Wallet', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('my_wallet'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -57,7 +58,7 @@ class _WalletScreenState extends State<WalletScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  Text('available_balance'.tr(), style: const TextStyle(color: Colors.white70, fontSize: 13)),
                   const SizedBox(height: 8),
                   Text(
                     '${wallet.balance ?? '0.00'} ETB',
@@ -67,13 +68,13 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('recent_transactions'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             
             if (wallet.isLoading && wallet.transactions.isEmpty)
               const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
             else if (wallet.transactions.isEmpty)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No transactions yet')))
+              Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('no_transactions_yet'.tr())))
             else
               ...wallet.transactions.take(5).map((tx) {
                 final isExpense = tx['sender_wallet_id'] == wallet.walletId || tx['reason'] == 'fare';
@@ -94,7 +95,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          tx['reason'] == 'fare' ? 'Taxi Fare' : 'Top-up',
+                          tx['reason'] == 'fare' ? 'taxi_fare'.tr() : 'top_up'.tr(),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),

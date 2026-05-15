@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -20,7 +22,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Top Up Wallet', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        title: Text('top_up_wallet'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: const BackButton(color: Colors.black),
@@ -30,7 +32,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Enter Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('enter_amount'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 12),
             TextField(
               controller: _amountController,
@@ -54,7 +56,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
               )).toList(),
             ),
             const SizedBox(height: 32),
-            const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('payment_method'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 16),
             _PaymentMethodTile(
               title: 'Telebirr',
@@ -84,13 +86,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
               onPressed: () async {
                 final amountText = _amountController.text.trim();
                 if (amountText.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter an amount')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_amount'.tr())));
                   return;
                 }
 
                 final amount = double.tryParse(amountText);
                 if (amount == null || amount <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_valid_amount'.tr())));
                   return;
                 }
 
@@ -124,7 +126,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   }
                 }
               },
-              child: const Text('Proceed to Payment'),
+              child: Text('proceed_to_payment'.tr()),
             ),
           ],
         ),
@@ -254,12 +256,12 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
             children: [
               const Icon(Icons.security_rounded, size: 80, color: AppTheme.primaryColor),
               const SizedBox(height: 32),
-              const Text('Securing Transaction', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text('securing_transaction'.tr(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              const Text(
-                'You are being redirected to your payment provider to complete the transaction.',
+              Text(
+                'redirecting_to_payment'.tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: const TextStyle(color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 48),
               const CircularProgressIndicator(color: AppTheme.primaryColor),
@@ -292,9 +294,9 @@ class TopUpSuccessScreen extends StatelessWidget {
                 child: const Icon(Icons.check_circle_rounded, size: 80, color: Colors.green),
               ),
               const SizedBox(height: 32),
-              const Text('Top-Up Successful!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('top_up_successful'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              const Text('Your wallet has been credited successfully.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary)),
+              Text('wallet_credited_successfully'.tr(), textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textSecondary)),
               const SizedBox(height: 48),
               Container(
                 width: double.infinity,
@@ -305,14 +307,14 @@ class TopUpSuccessScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text('Total Top-Up Amount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    Text('total_top_up_amount'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                     const SizedBox(height: 8),
                     Text('${amount.toStringAsFixed(2)} ETB', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
                     const Divider(height: 48),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('New Wallet Balance', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        Text('new_wallet_balance'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                         Text('${wallet.balance ?? '0.00'} ETB', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                       ],
                     ),
@@ -322,12 +324,12 @@ class TopUpSuccessScreen extends StatelessWidget {
               const SizedBox(height: 64),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Back to Wallet'),
+                child: Text('back_to_wallet'.tr()),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                child: const Text('Go to Home', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('go_to_home'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),

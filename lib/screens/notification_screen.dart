@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -36,7 +37,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Notifications', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('notifications'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -45,7 +46,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           if (notificationProvider.notifications.isNotEmpty)
             TextButton(
               onPressed: () => notificationProvider.markAllAsRead(auth.token!, headers: auth.headers),
-              child: const Text('Read All', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+              child: Text('read_all'.tr(), style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
             ),
         ],
       ),
@@ -69,7 +70,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           children: [
             Icon(Icons.notifications_none_rounded, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            const Text('No notifications yet', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+            Text('no_notifications_yet'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
           ],
         ),
       );
@@ -123,7 +124,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            notification['title'] ?? 'Notification',
+                            notification['title'] ?? 'notification'.tr(),
                             style: TextStyle(
                               fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                               fontSize: 14,

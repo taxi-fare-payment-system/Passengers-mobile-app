@@ -101,60 +101,41 @@ class WalletProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchTransactions(String userId, String token, {String? reason, String? status, String? sort, Map<String, String>? headers}) async {
+  Future<void> fetchTransactions(String userId, String token, {Map<String, String>? headers}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final List<dynamic> allTx = [];
-      
-      // Try the direct payments endpoint with payer_user_id filter (based on backend code)
-      try {
-        final respPayments = await ApiService.get('/api/v1/payments/transactions?payer_user_id=$userId', token: token, extraHeaders: headers);
-        if (respPayments.statusCode == 200) {
-          final data = jsonDecode(respPayments.body);
-          allTx.addAll(data is List ? data : (data['data'] ?? data['items'] ?? []));
-        } else {
-          print('Wallet Debug: Direct Payments (payer_user_id) failed: ${respPayments.body}');
-        }
-      } catch (e) {
-        print('Wallet Debug: Direct Payments catch: $e');
+      final response = await ApiService.get('/api/v1/wallet/transactions?limit=50', token: token, extraHeaders: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> allTx = data is List ? data : (data['data'] ?? data['items'] ?? []);
+        
+        // Sort and update
+        allTx.sort((a, b) {
+          final dateA = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
+          final dateB = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime.now();
+          return dateB.compareTo(dateA);
+        });
+
+        _transactions = allTx;
+        print('Wallet Debug: Fetched ${_transactions.length} transactions');
+      } else {
+        print('Wallet Debug: Transaction fetch failed status ${response.statusCode}: ${response.body}');
       }
-
-      // If that failed, try the wallet proxy as a secondary fallback
-      if (allTx.isEmpty) {
-        try {
-          final respSent = await ApiService.get('/api/v1/wallet/transactions?sender_wallet_id=$_walletId', token: token, extraHeaders: headers);
-          if (respSent.statusCode == 200) {
-            final data = jsonDecode(respSent.body);
-            allTx.addAll(data is List ? data : (data['data'] ?? []));
-          }
-        } catch (e) {
-          print('Wallet Debug: Wallet Proxy failed: $e');
-        }
-      }
-
-      // Sort and update
-      allTx.sort((a, b) {
-        final dateA = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
-        final dateB = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime.now();
-        return dateB.compareTo(dateA);
-      });
-
-      _transactions = allTx;
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
-      print('Wallet Debug (tx): Final Error: $e');
+      print('Wallet Debug (tx): Error: $e');
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<Map<String, dynamic>> fetchTransactionDetail(String txId, String token) async {
-    final response = await ApiService.get('/api/v1/wallet/transactions?sender_wallet_id=$_walletId&transaction_id=$txId', token: token);
+    final response = await ApiService.get('/api/v1/wallet/transactions/$txId', token: token);
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      return data is Map ? data : (data['data'] ?? data);
     } else {
       throw Exception('Failed to fetch transaction detail');
     }

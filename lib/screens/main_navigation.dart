@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'wallet_screen.dart';
@@ -35,22 +36,22 @@ class _MainNavigationState extends State<MainNavigation> {
         selectedItemColor: AppTheme.primaryColor,
         unselectedItemColor: AppTheme.textSecondary,
         elevation: 8,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner_rounded),
-            label: 'Home',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            label: 'home'.tr(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_rounded),
-            label: 'Wallet',
+            icon: const Icon(Icons.account_balance_wallet_rounded),
+            label: 'wallet'.tr(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.history_rounded),
-            label: 'History',
+            icon: const Icon(Icons.history_rounded),
+            label: 'history'.tr(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_rounded),
+            label: 'profile'.tr(),
           ),
         ],
       ),

@@ -3,12 +3,14 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
 import '../providers/trip_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/qr_provider.dart';
+import 'vehicle_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -80,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (!isValid) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Invalid QR Code. Please scan a valid taxi QR.'))
+                        SnackBar(content: Text('invalid_qr_code'.tr()))
                       );
                     }
                     return;
@@ -100,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error loading trip: $e'))
+                        SnackBar(content: Text('${'error_loading_trip'.tr()}: $e'))
                       );
                     }
                   }
@@ -143,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                'Hi, ${auth.user?['name'] ?? 'Passenger'}',
+                '${'hi'.tr()}, ${auth.user?['name'] ?? 'passenger'.tr()}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
@@ -202,65 +204,77 @@ class _HomeScreenState extends State<HomeScreen> {
     final t = trip.currentTrip!;
     final stops = t['route']?['stops'] as List<dynamic>? ?? [];
     final currentIdx = int.tryParse(t['currentStopIndex']?.toString() ?? '0') ?? 0;
-    final currentStop = stops.isNotEmpty && currentIdx < stops.length ? stops[currentIdx]['name'] : 'In transit';
+    final currentStop = stops.isNotEmpty && currentIdx < stops.length ? stops[currentIdx]['name'] : 'in_transit'.tr();
     
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.primaryColor, Color(0xFF4F46E5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                backgroundColor: Colors.white24,
-                child: Icon(Icons.local_taxi_rounded, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Ongoing Trip', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    Text(
-                      'Next: $currentStop',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
-                child: const Text('Live', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: stops.isEmpty ? 0.5 : (currentIdx + 1) / stops.length,
-              backgroundColor: Colors.white24,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 6,
+    return InkWell(
+      onTap: () {
+        if (trip.vehicleDetails != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VehicleDetailsScreen(vehicle: trip.vehicleDetails!),
             ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppTheme.primaryColor, Color(0xFF4F46E5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryColor.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.local_taxi_rounded, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ongoing_trip'.tr(), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text(
+                        '${'next'.tr()}: $currentStop',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
+                  child: Text('live'.tr(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Progress Bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: stops.isEmpty ? 0.5 : (currentIdx + 1) / stops.length,
+                backgroundColor: Colors.white24,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 6,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -298,8 +312,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.qr_code_2_rounded,
-                    title: 'My QR',
-                    subtitle: 'Show to pay',
+                    title: 'my_qr'.tr(),
+                    subtitle: 'show_to_pay'.tr(),
                     color: AppTheme.primaryColor.withOpacity(0.05),
                     iconColor: AppTheme.primaryColor,
                   ),
@@ -310,8 +324,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () => _fetchData(),
                     child: _ActionCard(
                       icon: Icons.map_outlined,
-                      title: 'Find Taxi',
-                      subtitle: 'Routes',
+                      title: 'find_taxi'.tr(),
+                      subtitle: 'routes'.tr(),
                       color: Colors.orange.withOpacity(0.05),
                       iconColor: Colors.orange,
                     ),
@@ -324,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Available Routes',
+                  'available_routes'.tr(),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 IconButton(
@@ -337,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: trip.isLoading 
                 ? const Center(child: CircularProgressIndicator())
                 : trip.routes.isEmpty
-                  ? const Center(child: Text('No routes available'))
+                  ? Center(child: Text('no_routes_available'.tr()))
                   : ListView.separated(
                       padding: const EdgeInsets.only(top: 12),
                       itemCount: trip.routes.length,
@@ -346,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         final r = trip.routes[index];
                         return _TripItem(
                           title: '${r['startLocation']} → ${r['endLocation']}',
-                          subtitle: 'Base Fare: ${r['baseFare']} ETB',
+                          subtitle: '${'base_fare'.tr()}: ${r['baseFare']} ETB',
                           amount: '${r['distance']} km',
                         );
                       },

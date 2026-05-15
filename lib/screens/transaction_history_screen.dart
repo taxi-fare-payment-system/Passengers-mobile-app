@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -36,18 +37,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Transactions', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          title: Text('transactions'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
           elevation: 0,
           leading: const BackButton(color: Colors.black),
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppTheme.primaryColor,
             unselectedLabelColor: AppTheme.textSecondary,
             indicatorColor: AppTheme.primaryColor,
             tabs: [
-              Tab(text: 'All'),
-              Tab(text: 'Payments'),
-              Tab(text: 'Top-ups'),
+              Tab(text: 'all'.tr()),
+              Tab(text: 'payments'.tr()),
+              Tab(text: 'top_ups'.tr()),
             ],
           ),
         ),
@@ -77,7 +78,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           children: [
             Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 48, color: Colors.grey[200]),
             const SizedBox(height: 16),
-            Text(isTrip ? 'No rides found' : 'No transactions found', style: const TextStyle(color: AppTheme.textSecondary)),
+            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
           ],
         ),
       );
@@ -119,7 +120,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isTrip ? '${tx['startLocation']} → ${tx['endLocation']}' : (tx['reason'] == 'fare' ? 'Taxi Fare' : 'Wallet Top-up'),
+                      isTrip ? '${tx['startLocation']} → ${tx['endLocation']}' : (tx['reason'] == 'fare' ? 'taxi_fare'.tr() : 'wallet_top_up'.tr()),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

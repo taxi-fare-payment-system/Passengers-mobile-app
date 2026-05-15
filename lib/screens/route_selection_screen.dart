@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
@@ -72,8 +73,8 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                   _buildLocationRow(
                     icon: Icons.my_location_rounded,
                     color: AppTheme.primaryColor,
-                    title: 'Current Location',
-                    value: 'Megenagna Station',
+                    title: 'current_location'.tr(),
+                    value: 'Megenagna Station', // Placeholder, could be dynamic
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12.0),
@@ -82,10 +83,10 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                   _buildLocationRow(
                     icon: Icons.location_on_rounded,
                     color: Colors.red,
-                    title: 'Destination',
+                    title: 'destination'.tr(),
                     value: _selectedRouteIndex != -1 
                         ? tripProvider.routes[_selectedRouteIndex]['endLocation'] 
-                        : 'Select Destination',
+                        : 'select_destination'.tr(),
                     isPlaceholder: _selectedRouteIndex == -1,
                   ),
                 ],
@@ -126,13 +127,13 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Select Route',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      Text(
+                        'select_route'.tr(),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       TextButton(
                         onPressed: () => tripProvider.fetchRoutes(authProvider.token!),
-                        child: const Text('Refresh'),
+                        child: Text('refresh'.tr()),
                       ),
                     ],
                   ),
@@ -141,17 +142,17 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                     child: tripProvider.isLoading 
                         ? const Center(child: CircularProgressIndicator())
                         : tripProvider.routes.isEmpty
-                            ? const Center(child: Text('No routes available'))
+                            ? Center(child: Text('no_routes_available'.tr()))
                             : ListView.separated(
                                 itemCount: tripProvider.routes.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
                                   final route = tripProvider.routes[index];
                                   return _RouteCard(
-                                    title: route['name'] ?? 'Route ${index + 1}',
+                                    title: route['name'] ?? '${'route'.tr()} ${index + 1}',
                                     subtitle: '${route['startLocation']} -> ${route['endLocation']}',
                                     fare: '${route['baseFare']} ETB',
-                                    time: '${route['estimatedDuration']} mins',
+                                    time: '${route['estimatedDuration']} ${'mins'.tr()}',
                                     isSelected: _selectedRouteIndex == index,
                                     onTap: () {
                                       setState(() => _selectedRouteIndex = index);
@@ -197,7 +198,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                             },
                       child: _isSubmitting 
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Confirm Selection'),
+                          : Text('confirm_selection'.tr()),
                     ),
                   ),
                 ],

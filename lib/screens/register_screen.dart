@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -15,6 +16,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _selectedSubCityId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().fetchSubCities();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,22 +41,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create Account',
+              'create_account'.tr(),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Join Wulo Pay as a passenger',
+              'join_wulo_pay'.tr(),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 32),
-            _buildTextField('Full Name', _nameController, hint: 'e.g. Abebe Kebede'),
+            _buildTextField('full_name'.tr(), _nameController, hint: 'full_name_hint'.tr()),
             const SizedBox(height: 20),
             _buildPhoneField(),
             const SizedBox(height: 20),
-            _buildTextField('Password', _passwordController, hint: '••••••••', obscureText: true),
+            _buildTextField('password'.tr(), _passwordController, hint: '••••••••', obscureText: true),
+            const SizedBox(height: 20),
+            _buildSubCityField(),
             const SizedBox(height: 48),
             SizedBox(
               width: double.infinity,
@@ -58,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Sign Up'),
+                    : Text('sign_up'.tr()),
               ),
             ),
             const SizedBox(height: 24),
@@ -66,13 +78,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: RichText(
-                  text: const TextSpan(
-                    text: 'Already have an account? ',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                  text: TextSpan(
+                    text: '${'already_have_account'.tr()} ',
+                    style: const TextStyle(color: AppTheme.textSecondary),
                     children: [
                       TextSpan(
-                        text: 'Login',
-                        style: TextStyle(
+                        text: 'login'.tr(),
+                        style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
                         ),
@@ -85,6 +97,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSubCityField() {
+    final subCities = context.watch<AuthProvider>().subCities;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('select_subcity'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedSubCityId,
+              isExpanded: true,
+               hint: Text('choose_area'.tr()),
+              onChanged: (val) => setState(() => _selectedSubCityId = val),
+              items: subCities.map((sc) => DropdownMenuItem<String>(
+                value: sc['id']?.toString(),
+                child: Text(sc['name'] ?? 'Unknown'),
+              )).toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -107,7 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Phone Number', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        Text('phone_number'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -139,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text.trim();
 
     if (name.isEmpty || phone.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('fill_all_fields_msg'.tr())));
       return;
     }
 
@@ -150,6 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             phone: fullPhone,
             password: password,
             displayName: name,
+            subCityId: _selectedSubCityId,
           );
       
       // After registration, the backend usually sends OTP.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -35,7 +36,7 @@ class _TransferScreenState extends State<TransferScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Transfer Funds', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('transfer_funds'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -48,7 +49,7 @@ class _TransferScreenState extends State<TransferScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Recipient Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('recipient_details'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _recipientIdController,
@@ -75,7 +76,7 @@ class _TransferScreenState extends State<TransferScreen> {
                 validator: (value) => value == null || value.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 32),
-              const Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('amount'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
@@ -127,7 +128,7 @@ class _TransferScreenState extends State<TransferScreen> {
                               );
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Transfer successful!'), backgroundColor: Colors.green),
+                                  SnackBar(content: Text('transfer_successful'.tr()), backgroundColor: Colors.green),
                                 );
                                 Navigator.pop(context);
                               }
@@ -145,7 +146,7 @@ class _TransferScreenState extends State<TransferScreen> {
                   ),
                   child: walletProvider.isTransferring
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Send Money', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      : Text('send_money'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

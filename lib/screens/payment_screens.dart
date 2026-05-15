@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -86,7 +87,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Confirm Payment', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('confirm_payment'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: const BackButton(color: Colors.black),
@@ -105,7 +106,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
               ),
               child: Column(
                 children: [
-                  const Text('Enter Amount (ETB)', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  Text('enter_amount_etb'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _amountController,
@@ -122,12 +123,12 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             ),
             
             const SizedBox(height: 32),
-            const Text('Where are you getting off?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('where_getting_off'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             
             // Stops List
             if (stops.isEmpty)
-              const Text('No route information available', style: TextStyle(color: AppTheme.textSecondary))
+              Text('no_route_info'.tr(), style: const TextStyle(color: AppTheme.textSecondary))
             else
               ...List.generate(stops.length, (index) {
                 final stop = stops[index];
@@ -169,7 +170,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: Text(
-                              stop['name'] ?? 'Unknown Stop',
+                              stop['name'] ?? 'unknown_stop'.tr(),
                               style: TextStyle(
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
@@ -204,14 +205,14 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                 ),
                 child: _isPaying 
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Pay Fare', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  : Text('pay_fare'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 16),
             Center(
               child: TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+                child: Text('cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -239,10 +240,10 @@ class PaymentSuccessScreen extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle_rounded, size: 100, color: Colors.green),
               const SizedBox(height: 32),
-              const Text('Payment Successful!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('payment_successful'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Text(
-                'You have paid ETB ${amount.toStringAsFixed(2)} for your trip.',
+                'paid_for_trip'.tr(args: [amount.toStringAsFixed(2)]),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16),
               ),
@@ -255,7 +256,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text('Transaction ID', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                    Text('transaction_id'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                     const SizedBox(height: 4),
                     Text(transactionId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
@@ -273,7 +274,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Rate Your Trip', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('rate_your_trip'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 12),
@@ -281,7 +282,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                  child: const Text('Back to Home', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+                  child: Text('back_to_home'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
