@@ -21,7 +21,7 @@ class WalletProvider with ChangeNotifier {
 
     try {
       final response = await ApiService.get(
-        '/wallet/users/$userId?type=passenger',
+        '/api/v1/wallet/users/$userId?type=passenger',
         token: token,
       );
 
@@ -43,22 +43,19 @@ class WalletProvider with ChangeNotifier {
 
 
   Future<String> initiateTopup({
-    required String userId,
+    required String walletId,
     required double amount,
-    required String phone,
-    required String firstName,
-    required String lastName,
+    String? phone,
+    String? email,
     required String token,
   }) async {
-    final response = await ApiService.post(
-      '/payment/api/v1/payments/initiate',
+    final response = await ApiService.put(
+      '/api/v1/wallet/$walletId/topup',
       {
         'amount': amount,
-        'reason': 'wallet topup',
-        'payer_user_id': userId,
         'phone_number': phone,
-        'first_name': firstName,
-        'last_name': lastName,
+        'email': email,
+        'message': 'Wallet topup',
       },
       token: token,
     );
@@ -89,7 +86,7 @@ class WalletProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      String url = '/payment/transactions?payer_user_id=$userId';
+      String url = '/api/v1/wallet/transactions?sender_wallet_id=$_walletId';
       if (reason != null) url += '&reason=$reason';
       if (status != null) url += '&status=$status';
       if (sort != null) url += '&sort=$sort';
@@ -108,7 +105,7 @@ class WalletProvider with ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> fetchTransactionDetail(String txId, String token) async {
-    final response = await ApiService.get('/payment/api/v1/payments/receipts/$txId', token: token);
+    final response = await ApiService.get('/api/v1/wallet/transactions?sender_wallet_id=$_walletId&transaction_id=$txId', token: token);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {

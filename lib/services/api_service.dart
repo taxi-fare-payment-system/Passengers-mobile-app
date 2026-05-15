@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080';
+  static const String baseUrl = 'https://api-gateway-production-0bf2.up.railway.app';
 
   static Future<http.Response> post(String path, Map<String, dynamic> data, {String? token}) async {
     final url = Uri.parse('$baseUrl$path');

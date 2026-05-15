@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
+import '../providers/wallet_provider.dart';
 
 class ConfirmPaymentScreen extends StatelessWidget {
   const ConfirmPaymentScreen({super.key});
@@ -232,12 +233,13 @@ class _ProcessingPaymentScreenState extends State<ProcessingPaymentScreen> {
     try {
       final auth = context.read<AuthProvider>();
       final tripProvider = context.read<TripProvider>();
+      final walletProvider = context.read<WalletProvider>();
       
       final transactionId = await tripProvider.payFare(
         tripId: widget.tripId,
         amount: widget.amount,
-        userId: auth.user?['id'].toString() ?? '',
-        phone: auth.user?['phone'] ?? '',
+        walletId: walletProvider.walletId ?? '',
+        driverId: tripProvider.currentTrip?['driver_id']?.toString() ?? '',
         token: auth.token!,
       );
 

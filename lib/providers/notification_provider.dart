@@ -19,7 +19,7 @@ class NotificationProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.get('/notifications/notifications', token: token);
+      final response = await ApiService.get('/api/v1/notifications', token: token);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _notifications = data['items'] ?? [];
@@ -35,7 +35,7 @@ class NotificationProvider with ChangeNotifier {
 
   Future<void> markAsRead(String id, String token) async {
     try {
-      final response = await ApiService.patch('/notifications/notifications/$id/read', {}, token: token);
+      final response = await ApiService.patch('/api/v1/notifications/$id/read', {}, token: token);
       if (response.statusCode == 200) {
         final index = _notifications.indexWhere((n) => n['id'] == id);
         if (index != -1) {
@@ -51,7 +51,7 @@ class NotificationProvider with ChangeNotifier {
 
   Future<void> markAsUnread(String id, String token) async {
     try {
-      final response = await ApiService.put('/notifications/notifications/$id/unread', {}, token: token);
+      final response = await ApiService.put('/api/v1/notifications/$id/unread', {}, token: token);
       if (response.statusCode == 200) {
         final index = _notifications.indexWhere((n) => n['id'] == id);
         if (index != -1) {
@@ -73,7 +73,7 @@ class NotificationProvider with ChangeNotifier {
     // For this task, we'll simulate the real-time aspect or use a simple poll if SSE is not ready.
     // However, I will implement the client-side SSE connection logic.
     
-    final url = '${ApiService.baseUrl}/notifications/notifications/stream?user_id=$userId';
+    final url = '${ApiService.baseUrl}/api/v1/notifications/stream?user_id=$userId';
     
     // Using a simple HTTP request for SSE if supported by the server
     final client = http.Client();

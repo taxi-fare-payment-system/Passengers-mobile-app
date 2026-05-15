@@ -181,19 +181,22 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 40),
             Center(
-              child: RichText(
-                text: TextSpan(
-                  text: 'New here? ',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  children: [
-                    TextSpan(
-                      text: 'Create Account',
-                      style: const TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.bold,
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/register'),
+                child: RichText(
+                  text: TextSpan(
+                    text: 'New here? ',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    children: [
+                      TextSpan(
+                        text: 'Create Account',
+                        style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

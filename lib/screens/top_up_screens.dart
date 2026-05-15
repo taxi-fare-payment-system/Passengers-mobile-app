@@ -103,11 +103,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   // For now, I'll update WalletProvider to store the wallet ID.
                   
                   final checkoutUrl = await walletProvider.initiateTopup(
-                    userId: auth.user?['id'].toString() ?? '',
+                    walletId: walletProvider.walletId ?? '',
                     amount: amount,
-                    phone: auth.user?['phone'] ?? '',
-                    firstName: 'Passenger', // Placeholder as names are missing from auth model
-                    lastName: 'User',
+                    phone: auth.user?['phone'],
+                    email: auth.user?['email'],
                     token: auth.token!,
                   );
 

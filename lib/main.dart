@@ -6,6 +6,7 @@ import 'screens/splash_screen.dart';
 import 'screens/language_selection_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/otp_screen.dart';
+import 'screens/register_screen.dart';
 import 'screens/main_navigation.dart';
 import 'screens/trip_details_screen.dart';
 import 'screens/payment_screens.dart';
@@ -63,6 +64,7 @@ class WuloPayApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/language': (context) => const LanguageSelectionScreen(),
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
         '/otp': (context) => const OTPScreen(),
         '/home': (context) => const MainNavigation(),
         '/trip-details': (context) {

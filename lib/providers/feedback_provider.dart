@@ -18,7 +18,7 @@ class FeedbackProvider with ChangeNotifier {
     try {
       // Assuming Trip Service handles feedback as per common patterns
       final response = await ApiService.post(
-        '/trip/trips/$tripId/feedback',
+        '/api/v1/trips/$tripId/feedback',
         {
           'rating': rating,
           'tags': tags,

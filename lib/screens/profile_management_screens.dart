@@ -193,7 +193,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2), dashStyle: const DashStyle(array: [5, 5])),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
                 ),
                 child: _selectedFile == null 
                   ? Column(

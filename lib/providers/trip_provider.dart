@@ -40,7 +40,7 @@ class TripProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.get('/routes/routes', token: token);
+      final response = await ApiService.get('/api/v1/routes', token: token);
       if (response.statusCode == 200) {
         _routes = jsonDecode(response.body);
       } else {
@@ -59,7 +59,7 @@ class TripProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.get('/routes/routes/$routeId/vehicles', token: token);
+      final response = await ApiService.get('/api/v1/routes/$routeId/vehicles', token: token);
       if (response.statusCode == 200) {
         _vehicles = jsonDecode(response.body);
       }
@@ -76,7 +76,7 @@ class TripProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.post('/trip/trips', tripData, token: token);
+      final response = await ApiService.post('/api/v1/trips', tripData, token: token);
       if (response.statusCode == 201) {
         _currentTrip = jsonDecode(response.body);
         if (_currentTrip != null && _currentTrip!['id'] != null) {
@@ -96,7 +96,7 @@ class TripProvider with ChangeNotifier {
 
   Future<void> fetchTripStatus(String tripId, String token) async {
     try {
-      final response = await ApiService.get('/trip/trips/$tripId', token: token);
+      final response = await ApiService.get('/api/v1/trips/$tripId', token: token);
       if (response.statusCode == 200) {
         final newTrip = jsonDecode(response.body);
         _currentTrip = newTrip;
@@ -118,7 +118,7 @@ class TripProvider with ChangeNotifier {
 
   Future<void> fetchVehicleDetails(String vehicleId, String token) async {
     try {
-      final response = await ApiService.get('/vehicle/vehicles/$vehicleId', token: token);
+      final response = await ApiService.get('/api/v1/vehicles/$vehicleId', token: token);
       if (response.statusCode == 200) {
         _vehicleDetails = jsonDecode(response.body);
         notifyListeners();
@@ -131,27 +131,24 @@ class TripProvider with ChangeNotifier {
   Future<String> payFare({
     required String tripId,
     required double amount,
-    required String userId,
-    required String phone,
+    required String walletId,
+    required String driverId,
     required String token,
   }) async {
     final response = await ApiService.post(
-      '/payment/api/v1/payments/initiate',
+      '/api/v1/trips/$tripId/payments/initiate',
       {
         'amount': amount,
-        'reason': 'fare',
-        'trip_id': tripId,
-        'payer_user_id': userId,
-        'phone_number': phone,
-        'first_name': 'Passenger', // Placeholder
-        'last_name': 'User',
+        'wallet_id': walletId,
+        'driver_id': driverId,
+        'message': 'Fare payment for trip $tripId',
       },
       token: token,
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['transaction_id'];
+      return data['transactionId'] ?? data['transaction_id'];
     } else {
       final error = jsonDecode(response.body)['message'] ?? 'Payment failed';
       throw Exception(error);
@@ -165,7 +162,7 @@ class TripProvider with ChangeNotifier {
   }) async {
     try {
       final response = await ApiService.post(
-        '/trip/trips/$tripId/quotes/price',
+        '/api/v1/trips/$tripId/quotes/price',
         {
           'destinationStopIndex': destinationStopIndex,
         },

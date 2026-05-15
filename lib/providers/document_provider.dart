@@ -18,7 +18,7 @@ class DocumentProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final uri = Uri.parse('${ApiService.baseUrl}/document/documents/upload');
+      final uri = Uri.parse('${ApiService.baseUrl}/api/v1/documents/upload');
       final request = http.MultipartRequest('POST', uri);
       
       request.headers['Authorization'] = 'Bearer $token';
