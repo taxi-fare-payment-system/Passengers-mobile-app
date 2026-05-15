@@ -7,11 +7,13 @@ class TripProvider with ChangeNotifier {
   List<dynamic> _routes = [];
   bool _isLoading = false;
   List<dynamic> _vehicles = [];
+  List<dynamic> _tripHistory = [];
   Map<String, dynamic>? _vehicleDetails;
   Map<String, dynamic>? _currentTrip;
   Timer? _pollingTimer;
 
   List<dynamic> get routes => _routes;
+  List<dynamic> get tripHistory => _tripHistory;
   bool get isLoading => _isLoading;
   List<dynamic> get vehicles => _vehicles;
   Map<String, dynamic>? get vehicleDetails => _vehicleDetails;
@@ -35,15 +37,17 @@ class TripProvider with ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> fetchRoutes(String token) async {
+  Future<void> fetchRoutes(String token, {Map<String, String>? headers}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response = await ApiService.get('/api/v1/routes', token: token);
+      final response = await ApiService.get('/api/v1/routes', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
-        _routes = jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        _routes = data['items'] ?? [];
       } else {
+        print('Trip Debug: Error fetching routes: ${response.body}');
         throw Exception('Failed to fetch routes');
       }
     } catch (e) {
@@ -135,6 +139,7 @@ class TripProvider with ChangeNotifier {
     required String driverId,
     required String token,
   }) async {
+    print('Trip Debug: Initiating payment for Trip: $tripId, Amount: $amount');
     final response = await ApiService.post(
       '/api/v1/trips/$tripId/payments/initiate',
       {
@@ -147,9 +152,11 @@ class TripProvider with ChangeNotifier {
     );
 
     if (response.statusCode == 200) {
+      print('Trip Debug: Payment successful: ${response.body}');
       final data = jsonDecode(response.body);
       return data['transactionId'] ?? data['transaction_id'];
     } else {
+      print('Trip Debug: Payment failed status ${response.statusCode}: ${response.body}');
       final error = jsonDecode(response.body)['message'] ?? 'Payment failed';
       throw Exception(error);
     }
@@ -178,6 +185,27 @@ class TripProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error fetching price quote: $e');
       rethrow;
+    }
+  }
+
+  Future<void> fetchTripHistory(String token, {Map<String, String>? headers}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.get('/api/v1/trips/history', token: token, extraHeaders: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _tripHistory = data['items'] ?? [];
+        print('Trip Debug: Fetched ${_tripHistory.length} history items');
+      } else {
+        print('Trip Debug: History error: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching trip history: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 }

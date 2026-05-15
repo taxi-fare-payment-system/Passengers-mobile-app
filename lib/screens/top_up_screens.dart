@@ -199,24 +199,45 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
 
   Future<void> _launchAndPoll() async {
     final url = Uri.parse(widget.checkoutUrl);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    try {
+      // On mobile, we can't easily intercept URL changes with url_launcher's inAppWebView.
+      // However, we can use a small delay and then start polling.
+      // If we had the webview_flutter plugin, we could do more.
       
-      // While user is in browser, start polling for balance change in background
+      await launchUrl(
+        url,
+        mode: LaunchMode.inAppWebView,
+        webViewConfiguration: const WebViewConfiguration(
+          enableJavaScript: true,
+          enableDomStorage: true,
+        ),
+      );
+      
+      // Start polling for balance change immediately
       final auth = context.read<AuthProvider>();
       final wallet = context.read<WalletProvider>();
       
-      await wallet.pollBalanceChange(auth.user?['id'].toString() ?? '', auth.token!);
+      print('Wallet Debug: Redirecting to Chapa. Starting background poll...');
+      
+      // We poll in the background. Even if the user sees a "Forbidden" error in the browser,
+      // the app will detect the balance change and navigate to the success screen.
+      await wallet.pollBalanceChange(auth.user?['id']?.toString() ?? auth.user?['user_id']?.toString() ?? '', auth.token!);
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => TopUpSuccessScreen(amount: widget.amount)),
-        );
+        // If we reach here, it means pollBalanceChange finished (either balance increased or timed out)
+        if (double.parse(wallet.balance ?? '0') > 0) {
+           Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TopUpSuccessScreen(amount: widget.amount)),
+          );
+        } else {
+          // If it timed out but they closed the webview, just go back
+          Navigator.pop(context);
+        }
       }
-    } else {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch payment URL')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
         Navigator.pop(context);
       }
     }

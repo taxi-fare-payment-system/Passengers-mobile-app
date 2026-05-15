@@ -13,6 +13,15 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => _token != null;
   bool get isVerified => _user?['is_verified'] ?? false;
   
+  Map<String, String> get headers {
+    final Map<String, String> h = {};
+    final userId = (_user?['id'] ?? _user?['user_id'])?.toString();
+    if (userId != null) h['X-User-ID'] = userId;
+    final role = _user?['role']?.toString();
+    if (role != null) h['X-User-Role'] = role;
+    return h;
+  }
+  
   Future<void> register({
     required String phone,
     required String password,

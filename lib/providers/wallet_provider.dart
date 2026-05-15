@@ -15,7 +15,7 @@ class WalletProvider with ChangeNotifier {
   List<dynamic> _transactions = [];
   List<dynamic> get transactions => _transactions;
 
-  Future<void> fetchBalance(String userId, String token) async {
+  Future<void> fetchBalance(String userId, String token, {Map<String, String>? headers}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -23,13 +23,20 @@ class WalletProvider with ChangeNotifier {
       final response = await ApiService.get(
         '/api/v1/wallet/users/$userId?type=passenger',
         token: token,
+        extraHeaders: headers,
       );
 
       if (response.statusCode == 200) {
+        print('Wallet Debug: Response body: ${response.body}');
         final data = jsonDecode(response.body);
-        _balance = data['balance'];
-        _walletId = data['id'].toString();
+        _balance = data['balance']?.toString();
+        _walletId = (data['id'] ?? data['wallet_id'])?.toString();
+        print('Wallet Debug: Extracted Balance: $_balance, WalletID: $_walletId');
+      } else if (response.statusCode == 404) {
+        print('Wallet Debug: Wallet not found for UserID: $userId');
+        _balance = '0.00';
       } else {
+        print('Wallet Debug: Error response: ${response.body}');
         throw Exception('Failed to fetch balance');
       }
     } catch (e) {
@@ -49,6 +56,7 @@ class WalletProvider with ChangeNotifier {
     String? email,
     required String token,
   }) async {
+    print('Wallet Debug: Initiating topup for $walletId with amount $amount');
     final response = await ApiService.put(
       '/api/v1/wallet/$walletId/topup',
       {
@@ -61,9 +69,11 @@ class WalletProvider with ChangeNotifier {
     );
 
     if (response.statusCode == 200) {
+      print('Wallet Debug (topup): Response body: ${response.body}');
       final data = jsonDecode(response.body);
       return data['checkout_url'];
     } else {
+      print('Wallet Debug (topup): Error response: ${response.body}');
       final error = jsonDecode(response.body)['message'] ?? 'Failed to initiate top-up';
       throw Exception(error);
     }
@@ -71,34 +81,71 @@ class WalletProvider with ChangeNotifier {
 
   Future<void> pollBalanceChange(String userId, String token) async {
     final oldBalance = double.tryParse(_balance ?? '0') ?? 0.0;
+    print('Wallet Debug: Starting poll. Old balance: $oldBalance, UserID: $userId');
     int attempts = 0;
-    while (attempts < 12) { // 1 minute max (5s * 12)
+    while (attempts < 24) { // 2 minutes max (5s * 24)
+      print('Wallet Debug: Polling attempt ${attempts + 1}/24...');
       await fetchBalance(userId, token);
       final newBalance = double.tryParse(_balance ?? '0') ?? 0.0;
-      if (newBalance > oldBalance) break;
+      print('Wallet Debug: Current balance: $newBalance');
+      
+      if (newBalance > oldBalance) {
+        print('Wallet Debug: Balance INCREASE detected!');
+        break;
+      }
       await Future.delayed(const Duration(seconds: 5));
       attempts++;
     }
+    if (attempts >= 24) {
+      print('Wallet Debug: Polling timed out without detecting a change.');
+    }
   }
 
-  Future<void> fetchTransactions(String userId, String token, {String? reason, String? status, String? sort}) async {
+  Future<void> fetchTransactions(String userId, String token, {String? reason, String? status, String? sort, Map<String, String>? headers}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      String url = '/api/v1/wallet/transactions?sender_wallet_id=$_walletId';
-      if (reason != null) url += '&reason=$reason';
-      if (status != null) url += '&status=$status';
-      if (sort != null) url += '&sort=$sort';
+      final List<dynamic> allTx = [];
       
-      final response = await ApiService.get(url, token: token);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        _transactions = data['items'] ?? [];
+      // Try the direct payments endpoint with payer_user_id filter (based on backend code)
+      try {
+        final respPayments = await ApiService.get('/api/v1/payments/transactions?payer_user_id=$userId', token: token, extraHeaders: headers);
+        if (respPayments.statusCode == 200) {
+          final data = jsonDecode(respPayments.body);
+          allTx.addAll(data is List ? data : (data['data'] ?? data['items'] ?? []));
+        } else {
+          print('Wallet Debug: Direct Payments (payer_user_id) failed: ${respPayments.body}');
+        }
+      } catch (e) {
+        print('Wallet Debug: Direct Payments catch: $e');
       }
+
+      // If that failed, try the wallet proxy as a secondary fallback
+      if (allTx.isEmpty) {
+        try {
+          final respSent = await ApiService.get('/api/v1/wallet/transactions?sender_wallet_id=$_walletId', token: token, extraHeaders: headers);
+          if (respSent.statusCode == 200) {
+            final data = jsonDecode(respSent.body);
+            allTx.addAll(data is List ? data : (data['data'] ?? []));
+          }
+        } catch (e) {
+          print('Wallet Debug: Wallet Proxy failed: $e');
+        }
+      }
+
+      // Sort and update
+      allTx.sort((a, b) {
+        final dateA = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
+        final dateB = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime.now();
+        return dateB.compareTo(dateA);
+      });
+
+      _transactions = allTx;
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
-      debugPrint('Error fetching transactions: $e');
-    } finally {
+      print('Wallet Debug (tx): Final Error: $e');
       _isLoading = false;
       notifyListeners();
     }
@@ -126,7 +173,7 @@ class WalletProvider with ChangeNotifier {
 
     try {
       final response = await ApiService.post(
-        '/payment/api/v1/payments/transfer',
+        '/api/v1/wallet/transfer', // Updated to go through public wallet proxy if available
         {
           'sender_wallet_id': fromWalletId,
           'receiver_wallet_id': toWalletId,
