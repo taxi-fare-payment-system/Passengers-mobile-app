@@ -7,6 +7,8 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
 import '../providers/trip_provider.dart';
+import '../providers/notification_provider.dart';
+import '../providers/qr_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (auth.token != null && userId != null) {
       context.read<WalletProvider>().fetchBalance(userId, auth.token!, headers: auth.headers);
       context.read<TripProvider>().fetchRoutes(auth.token!, headers: auth.headers);
+      context.read<NotificationProvider>().fetchNotifications(auth.token!, headers: auth.headers);
     }
   }
 
@@ -69,6 +72,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (code != null) {
                   final auth = context.read<AuthProvider>();
                   final tripProvider = context.read<TripProvider>();
+                  final qrProvider = context.read<QRProvider>();
+                  
+                  // 1. Verify QR Code
+                  final isValid = await qrProvider.verifyQRCode(code, auth.token!, headers: auth.headers);
+                  
+                  if (!isValid) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid QR Code. Please scan a valid taxi QR.'))
+                      );
+                    }
+                    return;
+                  }
+
+                  // 2. Extract Trip ID and Fetch Status
                   final tripId = code.split('/').last;
                   try {
                     await tripProvider.fetchTripStatus(tripId, auth.token!);
@@ -76,13 +94,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.pushNamed(
                         context, 
                         '/confirm-payment', 
-                        arguments: {'trip_id': tripId, 'amount': 15.0}
+                        arguments: {'trip_id': tripId}
                       );
                     }
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Invalid Trip QR: $e'))
+                        SnackBar(content: Text('Error loading trip: $e'))
                       );
                     }
                   }
@@ -131,23 +149,50 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.account_balance_wallet_outlined, size: 18, color: AppTheme.primaryColor),
-              const SizedBox(width: 8),
-              Text(
-                '${wallet.balance ?? '0'} ETB',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none_rounded, color: Colors.black),
+                  onPressed: () => Navigator.pushNamed(context, '/notifications'),
+                ),
+                if (context.watch<NotificationProvider>().unreadCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        '${context.watch<NotificationProvider>().unreadCount}',
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
               ),
-            ],
-          ),
+              child: Row(
+                children: [
+                  const Icon(Icons.account_balance_wallet_outlined, size: 18, color: AppTheme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${wallet.balance ?? '0'} ETB',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

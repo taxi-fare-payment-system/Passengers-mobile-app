@@ -16,9 +16,11 @@ import 'screens/driver_profile_screen.dart';
 import 'screens/transfer_screen.dart';
 import 'screens/top_up_screens.dart';
 import 'screens/transaction_history_screen.dart';
+import 'screens/notification_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/trip_provider.dart';
+import 'providers/qr_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/feedback_provider.dart';
@@ -37,6 +39,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => AuthProvider()),
           ChangeNotifierProvider(create: (_) => WalletProvider()),
           ChangeNotifierProvider(create: (_) => TripProvider()),
+          ChangeNotifierProvider(create: (_) => QRProvider()),
           ChangeNotifierProvider(create: (_) => DocumentProvider()),
           ChangeNotifierProvider(create: (_) => NotificationProvider()),
           ChangeNotifierProvider(create: (_) => FeedbackProvider()),
@@ -78,6 +81,7 @@ class WuloPayApp extends StatelessWidget {
         '/driver-profile': (context) => const DriverProfileScreen(),
         '/transaction-history': (context) => const TransactionHistoryScreen(),
         '/transfer': (context) => const TransferScreen(),
+        '/notifications': (context) => const NotificationScreen(),
       },
     );
   }
