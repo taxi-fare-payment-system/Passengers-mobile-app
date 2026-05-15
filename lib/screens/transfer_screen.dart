@@ -90,11 +90,13 @@ class _TransferScreenState extends State<TransferScreen> {
                       : () async {
                           if (_formKey.currentState!.validate()) {
                             try {
+                              final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString();
                               await walletProvider.transferFunds(
                                 fromWalletId: walletProvider.walletId!,
                                 recipientPhone: _phoneController.text,
                                 amount: double.parse(_amountController.text),
                                 token: auth.token!,
+                                userId: userId,
                               );
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(

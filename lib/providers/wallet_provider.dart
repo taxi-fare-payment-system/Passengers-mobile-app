@@ -149,19 +149,22 @@ class WalletProvider with ChangeNotifier {
     String? recipientName,
     String? message,
     required String token,
+    String? userId,
   }) async {
     _isTransferring = true;
     notifyListeners();
 
     try {
-      final response = await ApiService.put(
-        '/api/v1/wallet/$fromWalletId/transfer',
+      final response = await ApiService.post(
+        '/api/v1/wallet/transfers',
         {
+          'amount': amount,
+          'payer_user_id': userId,
+          'sender_wallet_id': fromWalletId,
           if (toWalletId != null) 'receiver_wallet_id': toWalletId,
           if (recipientPhone != null) 'receiver_phone': recipientPhone,
-          'amount': amount,
-          if (recipientName != null) 'recipient_name': recipientName,
-          'reason': message ?? 'P2P Transfer',
+          if (recipientName != null) 'receiver_full_name': recipientName,
+          'message': message ?? 'P2P Transfer',
         },
         token: token,
       );
