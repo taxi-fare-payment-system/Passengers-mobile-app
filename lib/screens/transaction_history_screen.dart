@@ -34,15 +34,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text('transactions'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.white,
+          title: Text('transactions'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: const BackButton(color: Colors.black),
+          leading: BackButton(color: Theme.of(context).iconTheme.color),
           bottom: TabBar(
             labelColor: AppTheme.primaryColor,
-            unselectedLabelColor: AppTheme.textSecondary,
+            unselectedLabelColor: Theme.of(context).hintColor,
             indicatorColor: AppTheme.primaryColor,
             tabs: [
               Tab(text: 'all'.tr()),
@@ -75,9 +75,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 48, color: Colors.grey[200]),
+            Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 48, color: Theme.of(context).dividerColor),
             const SizedBox(height: 16),
-            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
+            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: TextStyle(color: Theme.of(context).hintColor)),
           ],
         ),
       );
@@ -98,7 +98,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -135,13 +135,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         
                         return tx['reason']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'transaction'.tr();
                       }(),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       DateFormat('MMM dd, HH:mm').format(date),
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                      style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11),
                     ),
                   ],
                 ),
@@ -151,7 +151,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
-                  color: isExpense ? AppTheme.textPrimary : Colors.green,
+                  color: isExpense ? Theme.of(context).textTheme.bodyLarge?.color : Colors.green,
                 ),
               ),
             ],

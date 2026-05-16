@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: const Icon(
@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -226,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       TextSpan(
                         text: 'create_account'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
                         ),

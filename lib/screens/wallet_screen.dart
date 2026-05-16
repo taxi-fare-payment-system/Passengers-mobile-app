@@ -36,10 +36,10 @@ class _WalletScreenState extends State<WalletScreen> {
     final wallet = context.watch<WalletProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('my_wallet'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('my_wallet'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
@@ -117,7 +117,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -153,7 +153,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 
                                 return tx['reason']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'transaction'.tr();
                               }(),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
                             ),
                             if (tx['created_at'] != null)
                               Text(
@@ -167,7 +167,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isExpense ? AppTheme.textPrimary : Colors.green,
+                          color: isExpense ? Theme.of(context).textTheme.bodyLarge?.color : Colors.green,
                         ),
                       ),
                     ],

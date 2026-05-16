@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     if (isDesktop) {
       return Scaffold(
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.keyboard_rounded),
               label: Text('enter_qr_manually'.tr()),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).cardColor,
                 foregroundColor: AppTheme.primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
           ),
@@ -216,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Stack(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded, color: Colors.black),
+                  icon: Icon(Icons.notifications_none_rounded, color: Theme.of(context).iconTheme.color),
                   onPressed: () => Navigator.pushNamed(context, '/notifications'),
                 ),
                 if (context.watch<NotificationProvider>().unreadCount > 0)
@@ -239,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
               ),
@@ -346,9 +346,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         height: 500,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -480,7 +480,7 @@ class _TripItem extends StatelessWidget {
               ],
             ),
           ),
-          Text(amount, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+          Text(amount, style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
         ],
       ),
     );

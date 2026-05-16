@@ -90,6 +90,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       }
 
       if (mounted) {
+        final driverId = tripProvider.currentTrip?['driverId'] ?? tripProvider.currentTrip?['driver_id'];
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -97,6 +98,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
               transactionId: txId, 
               amount: amount,
               tripId: tripId,
+              driverId: driverId,
             ),
           ),
         );
@@ -117,12 +119,12 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     final auth = context.read<AuthProvider>();
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('confirm_payment'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('confirm_payment'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -174,7 +176,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -272,10 +274,10 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
+                            color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9),
+                              color: isSelected ? AppTheme.primaryColor : Theme.of(context).dividerColor,
                               width: 2,
                             ),
                           ),
@@ -356,18 +358,20 @@ class PaymentSuccessScreen extends StatelessWidget {
   final String transactionId;
   final double amount;
   final String tripId;
+  final String? driverId;
 
   const PaymentSuccessScreen({
     super.key, 
     required this.transactionId, 
     required this.amount,
     required this.tripId,
+    this.driverId,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -387,7 +391,7 @@ class PaymentSuccessScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -404,7 +408,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pushReplacement(
                     context, 
-                    MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId))
+                    MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,

@@ -4,10 +4,12 @@ import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feedback_provider.dart';
+import '../providers/driver_provider.dart';
 
 class RateTripScreen extends StatefulWidget {
   final String tripId;
-  const RateTripScreen({super.key, required this.tripId});
+  final String? driverId;
+  const RateTripScreen({super.key, required this.tripId, this.driverId});
 
   @override
   State<RateTripScreen> createState() => _RateTripScreenState();
@@ -33,7 +35,11 @@ class _RateTripScreenState extends State<RateTripScreen> {
           children: [
             const SizedBox(height: 20),
             InkWell(
-              onTap: () => Navigator.pushNamed(context, '/driver-profile'),
+              onTap: () {
+                if (widget.driverId != null) {
+                  Navigator.pushNamed(context, '/driver-profile', arguments: {'driverId': widget.driverId});
+                }
+              },
               child: Column(
                 children: [
                   const CircleAvatar(
@@ -79,7 +85,7 @@ class _RateTripScreenState extends State<RateTripScreen> {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, rating: _rating))) : null,
+              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, driverId: widget.driverId, rating: _rating))) : null,
               child: Text('submit_rating'.tr()),
             ),
             const SizedBox(height: 16),
@@ -107,8 +113,9 @@ class _RateTripScreenState extends State<RateTripScreen> {
 
 class FeedbackFormScreen extends StatefulWidget {
   final String tripId;
+  final String? driverId;
   final int rating;
-  const FeedbackFormScreen({super.key, required this.tripId, required this.rating});
+  const FeedbackFormScreen({super.key, required this.tripId, this.driverId, required this.rating});
 
   @override
   State<FeedbackFormScreen> createState() => _FeedbackFormScreenState();
@@ -134,6 +141,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   @override
   Widget build(BuildContext context) {
     final feedbackProvider = context.watch<FeedbackProvider>();
+    final driverProvider = context.watch<DriverProvider>();
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
@@ -199,14 +207,25 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                   ? null
                   : () async {
                       try {
-                        await feedbackProvider.submitFeedback(
-                          tripId: widget.tripId,
-                          rating: _rating,
-                          tags: _selectedTags,
-                          comment: _commentController.text,
-                          token: auth.token!,
-                          headers: auth.headers,
-                        );
+                        if (widget.driverId != null) {
+                          await driverProvider.submitDriverReview(
+                            driverId: widget.driverId!,
+                            rating: _rating.toDouble(),
+                            message: _commentController.text.isNotEmpty ? _commentController.text : 'No comment provided',
+                            token: auth.token!,
+                            headers: auth.headers,
+                          );
+                        } else {
+                          // Fallback to mock feedback if no driverId
+                          await feedbackProvider.submitFeedback(
+                            tripId: widget.tripId,
+                            rating: _rating,
+                            tags: _selectedTags,
+                            comment: _commentController.text,
+                            token: auth.token!,
+                            headers: auth.headers,
+                          );
+                        }
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

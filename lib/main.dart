@@ -26,6 +26,8 @@ import 'providers/qr_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/feedback_provider.dart';
+import 'providers/theme_provider.dart';
+import 'providers/driver_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,7 @@ void main() async {
       fallbackLocale: const Locale('en'),
       child: MultiProvider(
         providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => AuthProvider()),
           ChangeNotifierProvider(create: (_) => WalletProvider()),
           ChangeNotifierProvider(create: (_) => TripProvider()),
@@ -45,6 +48,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => DocumentProvider()),
           ChangeNotifierProvider(create: (_) => NotificationProvider()),
           ChangeNotifierProvider(create: (_) => FeedbackProvider()),
+          ChangeNotifierProvider(create: (_) => DriverProvider()),
         ],
         child: const WuloPayApp(),
       ),
@@ -57,35 +61,46 @@ class WuloPayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WuloPay',
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/language': (context) => const LanguageSelectionScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/otp': (context) => const OTPScreen(),
-        '/home': (context) => const MainNavigation(),
-        '/trip-details': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return TripDetailsScreen(route: args?['route']);
-        },
-        '/confirm-payment': (context) => const ConfirmPaymentScreen(),
-        '/rate-trip': (context) => const RateTripScreen(),
-        '/payment-methods': (context) => const PaymentMethodsScreen(),
-        '/top-up': (context) => const TopUpScreen(),
-        '/driver-profile': (context) => const DriverProfileScreen(),
-        '/transaction-history': (context) => const TransactionHistoryScreen(),
-        '/transfer': (context) => const TransferScreen(),
-        '/notifications': (context) => const NotificationScreen(),
-        '/verification': (context) => const VerificationScreen(),
-        '/change-password': (context) => const ChangePasswordScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'WuloPay',
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const SplashScreen(),
+            '/language': (context) => const LanguageSelectionScreen(),
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
+            '/otp': (context) => const OTPScreen(),
+            '/home': (context) => const MainNavigation(),
+            '/trip-details': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;              return TripDetailsScreen(route: args?['route']);
+            },
+            '/confirm-payment': (context) => const ConfirmPaymentScreen(),
+            '/rate-trip': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              return RateTripScreen(tripId: args?['tripId'] ?? 'unknown', driverId: args?['driverId']);
+            },
+            '/payment-methods': (context) => const PaymentMethodsScreen(),
+            '/top-up': (context) => const TopUpScreen(),
+            '/driver-profile': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              return DriverProfileScreen(driverId: args?['driverId']);
+            },
+            '/transaction-history': (context) => const TransactionHistoryScreen(),
+            '/transfer': (context) => const TransferScreen(),
+            '/notifications': (context) => const NotificationScreen(),
+            '/verification': (context) => const VerificationScreen(),
+            '/change-password': (context) => const ChangePasswordScreen(),
+          },
+        );
       },
     );
   }

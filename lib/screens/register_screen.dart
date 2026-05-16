@@ -29,11 +29,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -80,7 +80,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: RichText(
                   text: TextSpan(
                     text: '${'already_have_account'.tr()} ',
-                    style: const TextStyle(color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall,
                     children: [
                       TextSpan(
                         text: 'login'.tr(),
@@ -110,7 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
           ),
           child: DropdownButtonHideUnderline(
@@ -156,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Theme.of(context).dividerColor),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text('+251', style: TextStyle(fontWeight: FontWeight.bold)),

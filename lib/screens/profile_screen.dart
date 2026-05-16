@@ -15,10 +15,10 @@ class ProfileScreen extends StatelessWidget {
     final user = auth.user;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('profile'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('profile'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
@@ -34,10 +34,10 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
                           shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                         ),
                         child: const CircleAvatar(
                           radius: 46,
@@ -52,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Text(
                         user?['display_name'] ?? user?['name'] ?? 'passenger_user'.tr(),
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.titleLarge?.color),
                       ),
                       if (auth.isVerified) ...[
                         const SizedBox(width: 8),
@@ -98,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, '/top-up'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).cardColor,
                       foregroundColor: AppTheme.primaryColor,
                       minimumSize: const Size(80, 40),
                       padding: const EdgeInsets.symmetric(horizontal: 16),

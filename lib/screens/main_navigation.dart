@@ -32,9 +32,9 @@ class _MainNavigationState extends State<MainNavigation> {
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textSecondary,
+        unselectedItemColor: Theme.of(context).hintColor,
         elevation: 8,
         items: [
           BottomNavigationBarItem(

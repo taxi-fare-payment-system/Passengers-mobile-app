@@ -1,39 +1,99 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
+import '../providers/driver_provider.dart';
+import '../providers/auth_provider.dart';
 
-class DriverProfileScreen extends StatelessWidget {
-  const DriverProfileScreen({super.key});
+class DriverProfileScreen extends StatefulWidget {
+  final String? driverId;
+  const DriverProfileScreen({super.key, this.driverId});
+
+  @override
+  State<DriverProfileScreen> createState() => _DriverProfileScreenState();
+}
+
+class _DriverProfileScreenState extends State<DriverProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.driverId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final auth = context.read<AuthProvider>();
+        context.read<DriverProvider>().fetchDriverProfile(widget.driverId!, auth.token!, headers: auth.headers);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final driverProvider = context.watch<DriverProvider>();
+    final driver = driverProvider.currentDriverProfile;
+    final isLoading = driverProvider.isLoading;
+
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (driver == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('driver_profile'.tr())),
+        body: Center(child: Text('driver_not_found'.tr())),
+      );
+    }
+
+    final reviews = driver['reviews'] ?? {};
+    final reviewList = reviews['reviews'] as List? ?? [];
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('driver_profile'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('driver_profile'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: const BackButton(color: Colors.black),
+        leading: BackButton(color: Theme.of(context).textTheme.titleLarge?.color),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage('https://api.placeholder.com/150/150'),
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(driver['avatar'] ?? 'https://i.pravatar.cc/150?u=${driver['id']}'),
+                ),
+                if (driver['is_verified'] == true)
+                  const CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.verified, color: Colors.blue, size: 20),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
-            const Text('Dawit K.', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const Text('Toyota Corolla • ABC-123', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            Text(driver['display_name'] ?? 'Unknown Driver', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            if (driver['is_phone_verified'] == true)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.phone_android, size: 14, color: AppTheme.textSecondary),
+                    const SizedBox(width: 4),
+                    Text('phone_verified'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                  ],
+                ),
+              ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _StatItem(label: 'rating'.tr(), value: '4.8', icon: Icons.star_rounded, iconColor: Colors.orange),
-                _StatItem(label: 'trips'.tr(), value: '1.2k', icon: Icons.directions_car_rounded, iconColor: AppTheme.primaryColor),
-                _StatItem(label: 'experience'.tr(), value: '4 ${'yrs'.tr()}', icon: Icons.timer_rounded, iconColor: Colors.blue),
+                _StatItem(label: 'rating'.tr(), value: '${reviews['averageRating'] ?? '0.0'}', icon: Icons.star_rounded, iconColor: Colors.orange),
+                _StatItem(label: 'reviews_count'.tr(), value: '${reviews['count'] ?? 0}', icon: Icons.rate_review_rounded, iconColor: AppTheme.primaryColor),
+                _StatItem(label: 'sub_city'.tr(), value: '${driver['sub_city_id'] ?? '-'}', icon: Icons.location_on_rounded, iconColor: Colors.red),
               ],
             ),
             const SizedBox(height: 32),
@@ -53,7 +113,7 @@ class DriverProfileScreen extends StatelessWidget {
                 const SizedBox(width: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: IconButton(
@@ -67,39 +127,38 @@ class DriverProfileScreen extends StatelessWidget {
             const SizedBox(height: 40),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text('about_driver'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Professional driver with over 4 years of experience in Addis Ababa. Known for punctual arrivals and safe driving practices. Always happy to help with luggage.',
-              style: TextStyle(color: AppTheme.textSecondary, height: 1.5),
-            ),
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('recent_reviews'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                TextButton(onPressed: () {}, child: Text('see_all'.tr())),
-              ],
+              child: Text('recent_reviews'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
             const SizedBox(height: 16),
-            _ReviewItem(
-              name: 'Sarah M.',
-              date: '2 days ago',
-              rating: 5,
-              comment: 'Very polite driver and the car was extremely clean. Highly recommended!',
-            ),
-            const SizedBox(height: 16),
-            _ReviewItem(
-              name: 'John D.',
-              date: '1 week ago',
-              rating: 4,
-              comment: 'Great ride, arrived on time. A bit fast but safe.',
-            ),
+            if (reviewList.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Text('no_reviews_yet'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
+              )
+            else
+              ...reviewList.map((review) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _ReviewItem(
+                  reviewerId: review['reviewer_id'],
+                  date: _formatDate(review['created_at']),
+                  rating: (review['rating'] as num?)?.toInt() ?? 0,
+                  comment: review['message'] ?? '',
+                ),
+              )),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat.yMMMd().format(date);
+    } catch (e) {
+      return dateStr;
+    }
   }
 }
 
@@ -130,13 +189,13 @@ class _StatItem extends StatelessWidget {
 }
 
 class _ReviewItem extends StatelessWidget {
-  final String name;
+  final String? reviewerId;
   final String date;
   final int rating;
   final String comment;
 
   const _ReviewItem({
-    required this.name,
+    required this.reviewerId,
     required this.date,
     required this.rating,
     required this.comment,
@@ -144,10 +203,12 @@ class _ReviewItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final driverProvider = context.read<DriverProvider>();
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -156,7 +217,15 @@ class _ReviewItem extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              reviewerId == null 
+                ? const Text('Anonymous', style: TextStyle(fontWeight: FontWeight.bold))
+                : FutureBuilder<Map<String, dynamic>?>(
+                    future: driverProvider.getPublicProfile(reviewerId!),
+                    builder: (context, snapshot) {
+                      final name = snapshot.data?['name'] ?? 'User';
+                      return Text(name, style: const TextStyle(fontWeight: FontWeight.bold));
+                    },
+                  ),
               Text(date, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
             ],
           ),

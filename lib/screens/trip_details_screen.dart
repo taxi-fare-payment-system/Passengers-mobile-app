@@ -44,16 +44,16 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 16.0),
           child: CircleAvatar(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).cardColor,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
+              icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
               onPressed: () => Navigator.pop(context),
             ),
           ),
         ),
         title: Text(
           trip != null ? '${'trip_status'.tr()}: ${trip['status']}' : 'confirm_booking'.tr(),
-          style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold),
         ),
       ),
       body: Stack(
@@ -74,13 +74,13 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             child: Container(
               height: trip == null ? 450 : 500,
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20)],
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 20)],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,7 +117,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                         width: _selectedVehicleIndex == index ? 2 : 1,
                                       ),
                                       borderRadius: BorderRadius.circular(16),
-                                      color: _selectedVehicleIndex == index ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
+                                      color: _selectedVehicleIndex == index ? AppTheme.primaryColor.withOpacity(0.05) : Theme.of(context).cardColor,
                                     ),
                                     child: Row(
                                       children: [
