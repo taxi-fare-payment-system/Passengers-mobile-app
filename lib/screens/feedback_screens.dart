@@ -6,7 +6,8 @@ import '../providers/auth_provider.dart';
 import '../providers/feedback_provider.dart';
 
 class RateTripScreen extends StatefulWidget {
-  const RateTripScreen({super.key});
+  final String tripId;
+  const RateTripScreen({super.key, required this.tripId});
 
   @override
   State<RateTripScreen> createState() => _RateTripScreenState();
@@ -78,7 +79,7 @@ class _RateTripScreenState extends State<RateTripScreen> {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: 'dummy-trip-id',))) : null,
+              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, rating: _rating))) : null,
               child: Text('submit_rating'.tr()),
             ),
             const SizedBox(height: 16),
@@ -106,7 +107,8 @@ class _RateTripScreenState extends State<RateTripScreen> {
 
 class FeedbackFormScreen extends StatefulWidget {
   final String tripId;
-  const FeedbackFormScreen({super.key, required this.tripId});
+  final int rating;
+  const FeedbackFormScreen({super.key, required this.tripId, required this.rating});
 
   @override
   State<FeedbackFormScreen> createState() => _FeedbackFormScreenState();
@@ -115,7 +117,13 @@ class FeedbackFormScreen extends StatefulWidget {
 class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   final List<String> _selectedTags = [];
   final TextEditingController _commentController = TextEditingController();
-  int _rating = 5; // Default or passed from previous screen
+  late int _rating;
+
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.rating;
+  }
 
   @override
   void dispose() {

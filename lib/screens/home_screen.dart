@@ -391,38 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'available_routes'.tr(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  onPressed: _fetchData,
-                  icon: const Icon(Icons.refresh, size: 20),
-                ),
-              ],
-            ),
-            Expanded(
-              child: trip.isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : trip.routes.isEmpty
-                  ? Center(child: Text('no_routes_available'.tr()))
-                  : ListView.separated(
-                      padding: const EdgeInsets.only(top: 12),
-                      itemCount: trip.routes.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final r = trip.routes[index];
-                        return _TripItem(
-                          title: '${r['startLocation']} → ${r['endLocation']}',
-                          subtitle: '${'base_fare'.tr()}: ${r['baseFare']} ETB',
-                          amount: '${r['distance']} km',
-                        );
-                      },
-                    ),
-            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),

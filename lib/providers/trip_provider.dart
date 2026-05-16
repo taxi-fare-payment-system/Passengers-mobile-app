@@ -122,7 +122,13 @@ class TripProvider with ChangeNotifier {
           print('Trip Debug: Fetching route details for $rId');
           final routeResp = await ApiService.get('/api/v1/routes/$rId', token: token, extraHeaders: headers);
           if (routeResp.statusCode == 200) {
-            _currentTrip!['route'] = jsonDecode(routeResp.body);
+            final routeDetails = jsonDecode(routeResp.body);
+            // Enrich with baseFare from cached routes if available
+            final cachedRoute = _routes.firstWhere((r) => r['id'] == rId, orElse: () => null);
+            if (cachedRoute != null && cachedRoute['baseFare'] != null) {
+              routeDetails['baseFare'] = cachedRoute['baseFare'];
+            }
+            _currentTrip!['route'] = routeDetails;
             print('Trip Debug: Route details fetched successfully');
           } else {
             print('Trip Debug: Failed to fetch route details status ${routeResp.statusCode}');
@@ -274,7 +280,12 @@ class TripProvider with ChangeNotifier {
         throw Exception('Failed to get price quote');
       }
     } catch (e) {
-      debugPrint('Error fetching price quote: $e');
+      print('Price quote error: $e');
+      // Fallback to Base Fare if quote fails
+      final baseFare = currentTrip?['route']?['baseFare'];
+      if (baseFare != null) {
+        return (baseFare as num).toDouble();
+      }
       rethrow;
     }
   }

@@ -281,5 +281,10 @@
   "whats_this_for": "ይህ ለምንድነው?",
   "send_money": "ገንዘብ ላክ",
   "transfer_successful": "ዝውውሩ ተሳክቷል!",
-  "no_upcoming_stops": "ምንም የሚገኙ ፌርማታዎች የሉም"
+  "no_upcoming_stops": "ምንም የሚገኙ ፌርማታዎች የሉም",
+  "p2p_transfer": "የገንዘብ ዝውውር",
+  "confirm_password": "የይለፍ ቃል ያረጋግጡ",
+  "passwords_do_not_match": "የይለፍ ቃሎች አይዛመዱም",
+  "security_instructions": "ይህንን ለውጥ ለመፍቀድ የአሁኑን የይለፍ ቃልዎን ያስገቡ።",
+  "assigned_soon": "በቅርቡ ይመደባል"
 }

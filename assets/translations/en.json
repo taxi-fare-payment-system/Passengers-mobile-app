@@ -281,5 +281,10 @@
   "whats_this_for": "What's this for?",
   "send_money": "Send Money",
   "transfer_successful": "Transfer Successful!",
-  "no_upcoming_stops": "No upcoming stops available"
+  "no_upcoming_stops": "No upcoming stops available",
+  "p2p_transfer": "P2P Transfer",
+  "confirm_password": "Confirm Password",
+  "passwords_do_not_match": "Passwords do not match",
+  "security_instructions": "Enter your current password to authorize this change.",
+  "assigned_soon": "Assigned soon"
 }

@@ -66,6 +66,13 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       final wallet = context.read<WalletProvider>();
       
       final amount = double.tryParse(_amountController.text) ?? 0;
+      if (amount <= 0) {
+        setState(() {
+          _error = 'please_enter_valid_amount'.tr();
+          _isPaying = false;
+        });
+        return;
+      }
       
       final txId = await tripProvider.payFare(
         tripId: tripId,
@@ -86,7 +93,11 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => PaymentSuccessScreen(transactionId: txId, amount: amount),
+            builder: (context) => PaymentSuccessScreen(
+              transactionId: txId, 
+              amount: amount,
+              tripId: tripId,
+            ),
           ),
         );
       }
@@ -118,6 +129,47 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Trip Info Card
+            if (tripProvider.currentTrip != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.local_taxi_rounded, color: AppTheme.primaryColor),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${'driver'.tr()}: ${tripProvider.currentTrip!['driverName'] ?? 'assigned_soon'.tr()}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${tripProvider.currentTrip!['route']?['start']?['metadata']?['name'] ?? '...'} → ${tripProvider.currentTrip!['route']?['end']?['metadata']?['name'] ?? '...'}',
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Amount Input Card
             Container(
               padding: const EdgeInsets.all(24),
@@ -181,14 +233,15 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                 : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []))) 
                 Builder(
                   builder: (context) {
-                    final stopIndex = stop['stopIndex'] ?? stop['index'];
+                    // Normalize stop data (Handles both Route stops and NextStops)
+                    final stopIndex = stop['stopIndex'] ?? stop['index'] ?? stop['sequence'];
                     final isSelected = _selectedStopIndex == stopIndex;
-                    final routeStops = tripProvider.currentTrip?['route']?['stops'] as List<dynamic>? ?? [];
-                    final stopInfo = routeStops.firstWhere(
-                      (s) => s['index'] == stopIndex || s['stopIndex'] == stopIndex,
-                      orElse: () => null,
-                    );
-                    final stopName = stopInfo?['name'] ?? 'Stop $stopIndex';
+                    
+                    // Find name (NextStops has 'name', Route stops have 'metadata.name')
+                    String stopName = stop['name'] ?? 'Stop $stopIndex';
+                    if (stop['metadata']?['name'] != null) {
+                      stopName = stop['metadata']['name'];
+                    }
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -208,6 +261,11 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                               setState(() => _amountController.text = price.toStringAsFixed(2));
                             } catch (e) {
                               print('Price quote error: $e');
+                              // Fallback to Base Fare if quote fails
+                              final baseFare = tripProvider.currentTrip?['route']?['baseFare'];
+                              if (baseFare != null) {
+                                setState(() => _amountController.text = baseFare.toString());
+                              }
                             }
                           }
                         },
@@ -297,8 +355,14 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
 class PaymentSuccessScreen extends StatelessWidget {
   final String transactionId;
   final double amount;
+  final String tripId;
 
-  const PaymentSuccessScreen({super.key, required this.transactionId, required this.amount});
+  const PaymentSuccessScreen({
+    super.key, 
+    required this.transactionId, 
+    required this.amount,
+    required this.tripId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +404,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pushReplacement(
                     context, 
-                    MaterialPageRoute(builder: (context) => const RateTripScreen())
+                    MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId))
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
