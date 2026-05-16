@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -14,13 +15,15 @@ class TransferScreen extends StatefulWidget {
 
 class _TransferScreenState extends State<TransferScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _recipientController = TextEditingController();
   final _amountController = TextEditingController();
+  final _messageController = TextEditingController();
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _recipientController.dispose();
     _amountController.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 
@@ -47,17 +50,35 @@ class _TransferScreenState extends State<TransferScreen> {
             children: [
               Text('recipient_details'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: 'phone_number'.tr(),
-                  hintText: '09xxxxxxxx',
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) => value == null || value.isEmpty ? 'required'.tr() : null,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _recipientController,
+                      decoration: InputDecoration(
+                        labelText: 'recipient_wallet_id'.tr(),
+                        hintText: 'UUID',
+                        filled: true,
+                        fillColor: AppTheme.surfaceColor,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                      validator: (value) => value == null || value.isEmpty ? 'required'.tr() : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    height: 56,
+                    width: 56,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primaryColor),
+                      onPressed: () => _scanRecipientQR(),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               Text('amount'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -80,6 +101,19 @@ class _TransferScreenState extends State<TransferScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 24),
+              Text('message_optional'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _messageController,
+                decoration: InputDecoration(
+                  labelText: 'whats_this_for'.tr(),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+                maxLines: 2,
+              ),
               const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
@@ -90,13 +124,13 @@ class _TransferScreenState extends State<TransferScreen> {
                       : () async {
                           if (_formKey.currentState!.validate()) {
                             try {
-                              final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString();
+                              final token = auth.token!;
                               await walletProvider.transferFunds(
                                 fromWalletId: walletProvider.walletId!,
-                                recipientPhone: _phoneController.text,
+                                toWalletId: _recipientController.text.trim(),
                                 amount: double.parse(_amountController.text),
-                                token: auth.token!,
-                                userId: userId,
+                                message: _messageController.text.isNotEmpty ? _messageController.text : null,
+                                token: token,
                               );
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -123,6 +157,49 @@ class _TransferScreenState extends State<TransferScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+  void _scanRecipientQR() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            const Text('Scan Recipient QR', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: MobileScanner(
+                  onDetect: (capture) {
+                    final List<Barcode> barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty) {
+                      final String? code = barcodes.first.rawValue;
+                      if (code != null) {
+                        setState(() => _recipientController.text = code);
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('cancel'.tr())),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );

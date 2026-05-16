@@ -280,5 +280,6 @@
   "message_optional": "መልዕክት (ከተፈለገ)",
   "whats_this_for": "ይህ ለምንድነው?",
   "send_money": "ገንዘብ ላክ",
-  "transfer_successful": "ዝውውሩ ተሳክቷል!"
+  "transfer_successful": "ዝውውሩ ተሳክቷል!",
+  "no_upcoming_stops": "ምንም የሚገኙ ፌርማታዎች የሉም"
 }

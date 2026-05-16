@@ -23,7 +23,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString();
       if (auth.token != null && userId != null) {
         context.read<WalletProvider>().fetchTransactions(userId, auth.token!, headers: auth.headers);
-        context.read<TripProvider>().fetchTripHistory(auth.token!, headers: auth.headers);
       }
     });
   }
@@ -55,7 +54,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         body: TabBarView(
           children: [
             _buildList(context, wallet.transactions, isAll: true),
-            _buildList(context, context.watch<TripProvider>().tripHistory, isTrip: true),
+            _buildList(context, wallet.transactions.where((tx) => tx['reason'] == 'fare' || tx['reason'] == 'fare-payment').toList(), isTrip: true),
             _buildList(context, wallet.transactions.where((tx) => tx['reason'] == 'topup' || tx['reason'] == 'wallet topup').toList()),
           ],
         ),

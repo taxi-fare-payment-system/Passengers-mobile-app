@@ -18,6 +18,7 @@ class ConfirmPaymentScreen extends StatefulWidget {
 class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
   final TextEditingController _amountController = TextEditingController();
   int? _selectedStopIndex;
+  bool _isLoadingStops = false;
   bool _isPaying = false;
   String? _error;
 
@@ -26,10 +27,27 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args != null && args['amount'] != null) {
-        _amountController.text = args['amount'].toString();
+      if (args != null) {
+        if (args['amount'] != null) {
+          _amountController.text = args['amount'].toString();
+        }
+        _fetchStops(args['trip_id']?.toString());
       }
     });
+  }
+
+  Future<void> _fetchStops(String? tripId) async {
+    if (tripId == null) return;
+    setState(() => _isLoadingStops = true);
+    try {
+      final auth = context.read<AuthProvider>();
+      final tripProvider = context.read<TripProvider>();
+      await tripProvider.fetchNextStops(tripId, auth.token!, headers: auth.headers);
+    } catch (e) {
+      print('Error fetching stops: $e');
+    } finally {
+      setState(() => _isLoadingStops = false);
+    }
   }
 
   Future<void> _handlePayment() async {
@@ -53,7 +71,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         tripId: tripId,
         amount: amount,
         walletId: wallet.walletId ?? '',
-        driverId: tripProvider.currentTrip?['driver_id']?.toString() ?? '',
+        driverId: (tripProvider.currentTrip?['driver_id'] ?? tripProvider.currentTrip?['driverId'])?.toString() ?? '',
         token: auth.token!,
         headers: auth.headers,
       );
@@ -127,28 +145,51 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             const SizedBox(height: 16),
             
             // Stops List
-            if (stops.isEmpty)
-              Text('no_route_info'.tr(), style: const TextStyle(color: AppTheme.textSecondary))
-            else
-              ...List.generate(stops.length, (index) {
-                final stop = stops[index];
-                final isSelected = _selectedStopIndex == index;
+            if (_isLoadingStops) ...[
+              const Center(child: CircularProgressIndicator()),
+            ] else if (tripProvider.nextStops.isEmpty && (tripProvider.currentTrip?['route']?['stops'] as List?)?.isEmpty == true) ...[
+              Text('no_upcoming_stops'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
+            ] else ...[
+              ...List.generate(
+                tripProvider.nextStops.isNotEmpty 
+                  ? tripProvider.nextStops.length 
+                  : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []).length, 
+                (index) {
+                final stopsSource = tripProvider.nextStops.isNotEmpty 
+                  ? tripProvider.nextStops 
+                  : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []);
+                
+                final stop = stopsSource[index];
+                final stopIndex = stop['stopIndex'] ?? stop['index'];
+                final isSelected = _selectedStopIndex == stopIndex;
+                
+                // Resolve stop name from route
+                final routeStops = tripProvider.currentTrip?['route']?['stops'] as List<dynamic>? ?? [];
+                final stopInfo = routeStops.firstWhere(
+                  (s) => s['index'] == stopIndex || s['stopIndex'] == stopIndex,
+                  orElse: () => null,
+                );
+                final stopName = stopInfo?['name'] ?? 'Stop $stopIndex';
                 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: InkWell(
                     onTap: () async {
-                      setState(() => _selectedStopIndex = index);
-                      try {
-                        final price = await tripProvider.fetchPriceQuote(
-                          tripId: tripId,
-                          destinationStopIndex: index,
-                          token: auth.token!,
-                          headers: auth.headers,
-                        );
-                        setState(() => _amountController.text = price.toStringAsFixed(2));
-                      } catch (e) {
-                        print('Price quote error: $e');
+                      setState(() => _selectedStopIndex = stopIndex as int?);
+                      if (stop['amount'] != null) {
+                        setState(() => _amountController.text = stop['amount'].toString());
+                      } else {
+                        try {
+                          final price = await tripProvider.fetchPriceQuote(
+                            tripId: tripId,
+                            destinationStopIndex: stopIndex as int,
+                            token: auth.token!,
+                            headers: auth.headers,
+                          );
+                          setState(() => _amountController.text = price.toStringAsFixed(2));
+                        } catch (e) {
+                          print('Price quote error: $e');
+                        }
                       }
                     },
                     child: Container(
@@ -169,12 +210,22 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: Text(
-                              stop['name'] ?? 'unknown_stop'.tr(),
-                              style: TextStyle(
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  stopName,
+                                  style: TextStyle(
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+                                  ),
+                                ),
+                                if (stop['distanceKm'] != null || stop['distance'] != null)
+                                  Text(
+                                    '${stop['distanceKm'] ?? stop['distance'] ?? '--'} km • ${stop['amount'] ?? '--'} ETB',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  ),
+                              ],
                             ),
                           ),
                           if (isSelected)
@@ -185,6 +236,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                   ),
                 );
               }),
+            ],
 
             const SizedBox(height: 40),
             

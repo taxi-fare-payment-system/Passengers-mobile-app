@@ -15,6 +15,24 @@ class WalletProvider with ChangeNotifier {
   List<dynamic> _transactions = [];
   List<dynamic> get transactions => _transactions;
 
+  Future<String?> getWalletByUserId(String userId, String type, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.get(
+        '/api/v1/wallet/users/$userId?type=$type',
+        token: token,
+        extraHeaders: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return (data['id'] ?? data['wallet_id'])?.toString();
+      }
+    } catch (e) {
+      debugPrint('Error getting wallet for user $userId: $e');
+    }
+    return null;
+  }
+
   Future<void> fetchBalance(String userId, String token, {Map<String, String>? headers}) async {
     _isLoading = true;
     notifyListeners();
@@ -143,39 +161,98 @@ class WalletProvider with ChangeNotifier {
 
   Future<void> transferFunds({
     required String fromWalletId,
-    String? toWalletId,
-    String? recipientPhone,
+    required String toWalletId,
     required double amount,
-    String? recipientName,
     String? message,
     required String token,
-    String? userId,
   }) async {
     _isTransferring = true;
     notifyListeners();
 
     try {
-      final response = await ApiService.post(
-        '/api/v1/wallet/transfers',
+      final response = await ApiService.put(
+        '/api/v1/wallet/$fromWalletId/transfer',
         {
           'amount': amount,
-          'payer_user_id': userId,
-          'sender_wallet_id': fromWalletId,
-          if (toWalletId != null) 'receiver_wallet_id': toWalletId,
-          if (recipientPhone != null) 'receiver_phone': recipientPhone,
-          if (recipientName != null) 'receiver_full_name': recipientName,
+          'to_wallet_id': toWalletId,
           'message': message ?? 'P2P Transfer',
         },
         token: token,
       );
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
+      if (response.statusCode != 200) {
         final error = jsonDecode(response.body)['message'] ?? 'Transfer failed';
         throw Exception(error);
       }
     } finally {
       _isTransferring = false;
       notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>> payFare({
+    required String walletId,
+    required double amount,
+    required String driverWalletId,
+    required String tripId,
+    required String receiverFullName,
+    int? subCityId,
+    String? assistantId,
+    String? message,
+    required String token,
+  }) async {
+    final response = await ApiService.put(
+      '/api/v1/wallet/$walletId/pay-fare',
+      {
+        'amount': amount,
+        'driver_wallet_id': driverWalletId,
+        'trip_id': tripId,
+        'receiver_full_name': receiverFullName,
+        if (subCityId != null) 'sub_city_id': subCityId,
+        if (assistantId != null) 'assistant_id': assistantId,
+        'message': message ?? 'Trip payment',
+      },
+      token: token,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['message'] ?? 'Fare payment failed';
+      throw Exception(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> withdraw({
+    required String walletId,
+    required double amount,
+    required String accountName,
+    required String accountNumber,
+    required String bankCode,
+    String? withdrawalReference,
+    String? message,
+    required String token,
+    Map<String, String>? headers,
+  }) async {
+    final response = await ApiService.put(
+      '/api/v1/wallet/$walletId/withdraw',
+      {
+        'amount': amount,
+        'account_name': accountName,
+        'account_number': accountNumber,
+        'bank_code': bankCode,
+        if (withdrawalReference != null) 'withdrawal_reference': withdrawalReference,
+        'message': message ?? 'Wallet withdrawal',
+      },
+      token: token,
+      extraHeaders: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['message'] ?? 'Withdrawal failed';
+      throw Exception(error);
     }
   }
 }

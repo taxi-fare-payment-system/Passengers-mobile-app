@@ -2,6 +2,31 @@
 
 This document describes the **HTTP interface** exposed by this wallet service: endpoint, request/response shapes, and a short description.
 
+## Route index
+
+All paths are under the service base URL and use prefix **`/api/v1/wallet`**.
+
+| Method | Path |
+| --- | --- |
+| `GET` | `/healthz` |
+| `GET` | `/readyz` |
+| `GET` | `/banks/chapa` |
+| `GET` | `/assistant/:assistantId/earnings` |
+| `GET` | `/transactions` |
+| `POST` | `/` (base path = create wallet) |
+| `GET` | `/users/:userId` |
+| `GET` | `/:id` |
+| `PUT` | `/:wallet_id/topup` |
+| `POST` | `/finalize-topup` |
+| `PUT` | `/:wallet_id/pay-fare` |
+| `PUT` | `/:wallet_id/transfer` |
+| `PUT` | `/:wallet_id/withdraw` |
+| `PUT` | `/:wallet_id/freeze` |
+| `DELETE` | `/:wallet_id` |
+| `GET` | `/admin/wallets` |
+
+Sections below follow this order: [Health](#health) → [Banks](#banks-payment-pass-through) → [Wallets](#wallets) → [Top-up](#top-up) → [Pay fare](#pay-fare) → [Wallet transfer (P2P)](#wallet-transfer-p2p) → [Assistant earnings](#assistant-earnings) → [Transactions](#transactions-proxy) → [Withdraw](#withdraw) → [Admin: freeze](#admin-freeze) & [Admin: find wallets](#admin-find-wallets) → [Delete wallet](#delete-wallet).
+
 ## Conventions
 
 - **Base URL**: `http://<host>:<port>` (default listen port **8088**; register with the gateway team.)
@@ -20,7 +45,7 @@ This document describes the **HTTP interface** exposed by this wallet service: e
 
 ```json
 {
-  "id": 1,
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "user_id": "123",
   "wallet_type": "passenger",
   "freezed": false,
@@ -32,6 +57,7 @@ This document describes the **HTTP interface** exposed by this wallet service: e
 
 Notes:
 
+- `id` (wallet id) is a **UUID** string
 - `wallet_type ∈ {"passenger","driver","owner"}`
 - `balance` is encoded as a decimal string
 - timestamps are RFC3339Nano
@@ -109,7 +135,7 @@ Notes:
 
 ### `GET /api/v1/wallet/users/:userId?type=<wallet_type>`
 
-- **Description**: fetch a user’s wallet by **numeric** user id and wallet type. Access-controlled:
+- **Description**: fetch a user’s wallet by **string** user id (`:userId` path segment) and wallet type. Access-controlled:
   - **Own wallet** (`X-User-ID` equals `:userId`): full Wallet object.
   - **`admin` / `superadmin`**: full Wallet object.
   - **`passenger`** requesting `type=driver`: **only** `{ "wallet_id": <id> }` (no balance or freeze fields), for QR / pay-fare flows.
@@ -195,7 +221,7 @@ Notes:
   "tx_ref": "pay-<uuid>",
   "chapa_reference": "<reference>",
   "payer_user_id": "<string>",
-  "receiver_wallet_id": "<string>",
+  "receiver_wallet_id": "<wallet-uuid>",
   "amount": "<decimal string>",
   "currency": "ETB"
 }
@@ -258,6 +284,46 @@ Notes:
 
 ---
 
+## Wallet transfer (P2P)
+
+### `PUT /api/v1/wallet/:wallet_id/transfer`
+
+- **Description**: debits `:wallet_id` (source) and credits `to_wallet_id` (destination) atomically in the database, then records the movement via Payment Service `POST /api/v1/payments/transfers` inside the same transfer transaction (hook). Use for peer transfers where trip payment (`pay-fare`) does not apply.
+- **Receiver display name**: resolved server-side via Auth Service **`GET /internal/users/:id/contact`** (`:id` = destination wallet’s `user_id`), using `display_name` from the response; if empty, **`phone`** is used. See **`auth.md`** (Internal Endpoints). No `receiver_full_name` in the request body.
+- **Path**: `:wallet_id` — source wallet UUID.
+- **Request (JSON)**:
+
+```json
+{
+  "amount": 25.5,
+  "to_wallet_id": "<destination-wallet-uuid>",
+  "message": "optional note"
+}
+```
+
+- **Response 200**:
+
+```json
+{
+  "success": true,
+  "transaction_id": "<uuid>"
+}
+```
+
+- **Errors** (non-exhaustive):
+  - 400 `{ "message": "invalid json body" }`
+  - 400 `{ "message": "amount must be > 0" }`
+  - 400 `{ "message": "invalid to_wallet_id" }`
+  - 404 `{ "message": "source wallet not found" }`
+  - 404 `{ "message": "destination wallet not found" }`
+  - 502 `{ "message": "auth client not configured" }`
+  - 502 `{ "message": "<auth service error>" }` (including invalid user id / user not found in Auth)
+  - 502 `{ "message": "receiver display name not available from auth" }`
+  - 400 other wallet-service / insufficient-balance / frozen-wallet errors from the underlying transfer logic
+  - 502 Payment Service errors surfaced as `{ "message": "<payment service error>" }` where applicable
+
+---
+
 ## Assistant earnings
 
 ### `GET /api/v1/wallet/assistant/:assistantId/earnings`
@@ -296,14 +362,14 @@ Notes:
 
 ### `GET /api/v1/wallet/transactions`
 
-- **Description**: proxies Payment Service `GET /api/v1/payments/transactions` with restricted query params. The caller must identify their wallet using **`sender_wallet_id` and/or `receiver_wallet_id`**; each supplied wallet id must belong to **`X-User-ID`** or the request is **403**.
+- **Description**: proxies Payment Service `GET /api/v1/payments/transactions` with restricted query params. **`sender_wallet_id` and `receiver_wallet_id` are optional**; when either is supplied, that wallet id must belong to **`X-User-ID`** or the request is **403**. When neither is supplied, Wallet resolves the caller’s wallet from **`X-User-ID`** and **`X-User-Role`** (`passenger` → passenger wallet, `driver` → driver wallet, `owner` → owner wallet) and forwards it to Payment as **`wallet_id`**. **`admin` / `superadmin`** may omit all wallet filters.
 - **Headers**: **`X-User-ID` required** (gateway-injected).
 - **Allowed query params**:
-  - filters: `reason`, `status`, `sender_wallet_id`, `receiver_wallet_id`
+  - filters: `reason`, `status`, `sender_wallet_id` (optional), `receiver_wallet_id` (optional)
   - sorting: `sort`, `order`
   - pagination: `limit` (0–200), `offset` (≥ 0)
-- **Forbidden query params**:
-  - `payer_user_id`, `trip_id`
+- **Forbidden query params** (set server-side when auto-resolving):
+  - `payer_user_id`, `trip_id`, `wallet_id`
 - **Response 200**: payment service response shape, e.g.
 
 ```json
@@ -318,8 +384,8 @@ Notes:
 
 - **Errors**:
   - 401 `{ "message": "missing X-User-ID" }`
-  - 400 `{ "message": "sender_wallet_id or receiver_wallet_id required" }`
-  - 403 `{ "message": "forbidden" }`
+  - 403 `{ "message": "forbidden" }` (supplied wallet id does not belong to caller, or role has no wallet mapping)
+  - 404 `{ "message": "wallet not found" }` (caller has no wallet for their role)
   - 400 `{ "message": "query param not supported: payer_user_id" }`
   - 400 `{ "message": "unknown query param: <name>" }`
   - 400 `{ "message": "invalid limit" }`
@@ -383,7 +449,7 @@ Notes:
 - **Response 200**:
 
 ```json
-{ "success": true, "wallet_id": 1 }
+{ "success": true, "wallet_id": "<wallet-uuid>" }
 ```
 
 - **Errors** (non-exhaustive):

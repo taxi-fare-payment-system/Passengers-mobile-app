@@ -280,5 +280,6 @@
   "message_optional": "Message (Optional)",
   "whats_this_for": "What's this for?",
   "send_money": "Send Money",
-  "transfer_successful": "Transfer Successful!"
+  "transfer_successful": "Transfer Successful!",
+  "no_upcoming_stops": "No upcoming stops available"
 }

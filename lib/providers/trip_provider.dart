@@ -10,6 +10,7 @@ class TripProvider with ChangeNotifier {
   List<dynamic> _tripHistory = [];
   Map<String, dynamic>? _vehicleDetails;
   Map<String, dynamic>? _currentTrip;
+  List<dynamic> _nextStops = [];
   Timer? _pollingTimer;
 
   List<dynamic> get routes => _routes;
@@ -18,6 +19,7 @@ class TripProvider with ChangeNotifier {
   List<dynamic> get vehicles => _vehicles;
   Map<String, dynamic>? get vehicleDetails => _vehicleDetails;
   Map<String, dynamic>? get currentTrip => _currentTrip;
+  List<dynamic> get nextStops => _nextStops;
 
   void startTripPolling(String tripId, String token, {Map<String, String>? headers}) {
     _pollingTimer?.cancel();
@@ -103,7 +105,7 @@ class TripProvider with ChangeNotifier {
     notifyListeners();
     try {
       // Find active trip for this driver
-      final response = await ApiService.get('/api/v1/trips/active?driver_id=$driverId', token: token, extraHeaders: headers);
+      final response = await ApiService.get('/api/v1/trips/drivers/$driverId/active', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
         final tripData = jsonDecode(response.body);
         _currentTrip = tripData;
@@ -112,6 +114,14 @@ class TripProvider with ChangeNotifier {
         final vId = tripData['vehicle_id'] ?? tripData['vehicleId'];
         if (vId != null) {
           fetchVehicleDetails(vId.toString(), token, headers: headers);
+        }
+        
+        // Fetch route details if missing
+        if (_currentTrip != null && _currentTrip!['route'] == null && _currentTrip!['routeId'] != null) {
+          final routeResp = await ApiService.get('/api/v1/routes/${_currentTrip!['routeId']}', token: token, extraHeaders: headers);
+          if (routeResp.statusCode == 200) {
+            _currentTrip!['route'] = jsonDecode(routeResp.body);
+          }
         }
         
         notifyListeners();
@@ -124,6 +134,19 @@ class TripProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> fetchNextStops(String tripId, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.get('/api/v1/trips/$tripId/stops/next', token: token, extraHeaders: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _nextStops = data['stops'] ?? [];
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching next stops: $e');
     }
   }
 
@@ -194,7 +217,6 @@ class TripProvider with ChangeNotifier {
     required String token,
     Map<String, String>? headers,
   }) async {
-    print('Trip Debug: Initiating payment for Trip: $tripId, Amount: $amount');
     final response = await ApiService.post(
       '/api/v1/trips/$tripId/payments/initiate',
       {
@@ -207,12 +229,10 @@ class TripProvider with ChangeNotifier {
       extraHeaders: headers,
     );
 
-    if (response.statusCode == 200) {
-      print('Trip Debug: Payment successful: ${response.body}');
+    if (response.statusCode == 200 || response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      return data['transactionId'] ?? data['transaction_id'];
+      return (data['transactionId'] ?? data['transaction_id'])?.toString() ?? '';
     } else {
-      print('Trip Debug: Payment failed status ${response.statusCode}: ${response.body}');
       final error = jsonDecode(response.body)['message'] ?? 'Payment failed';
       throw Exception(error);
     }
@@ -246,10 +266,4 @@ class TripProvider with ChangeNotifier {
     }
   }
 
-  // Trip history for passengers is derived from wallet transactions where reason = 'fare'
-  // We'll let the UI handle filtering from the WalletProvider instead of calling a non-existent endpoint.
-  Future<void> fetchTripHistory(String token, {Map<String, String>? headers}) async {
-    // No-op: Trip history is managed via WalletProvider
-    print('Trip Debug: fetchTripHistory is now managed via WalletProvider transactions');
-  }
 }
