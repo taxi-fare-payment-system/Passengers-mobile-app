@@ -9,99 +9,91 @@ class LanguageSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
-              const Icon(
-                Icons.local_taxi_rounded,
-                size: 48,
-                color: AppTheme.primaryColor,
+              const SizedBox(height: 60),
+              // Brand Mark
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white : AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.local_taxi_rounded,
+                  size: 32,
+                  color: isDark ? Colors.black : Colors.white,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Text(
                 'WuloPay',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: theme.textTheme.displayLarge?.copyWith(fontSize: 48),
               ),
               Text(
                 'cashless_taxi_fare'.tr(),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: theme.textTheme.bodyLarge?.copyWith(letterSpacing: 2, fontWeight: FontWeight.w900, color: AppTheme.accentColor),
               ),
               const Spacer(),
+              
               Text(
                 'choose_language'.tr(),
-                style: Theme.of(context).textTheme.titleLarge,
+                style: theme.textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
                 'select_preferred_language'.tr(),
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),
-              _LanguageButton(
+              
+              _LanguageOption(
                 title: 'አማርኛ (Amharic)',
-                onTap: () {
-                  context.setLocale(const Locale('am'));
-                },
+                onTap: () => context.setLocale(const Locale('am')),
                 isActive: context.locale.languageCode == 'am',
               ),
-              const SizedBox(height: 16),
-              _LanguageButton(
+              const SizedBox(height: 12),
+              _LanguageOption(
                 title: 'English',
-                onTap: () {
-                  context.setLocale(const Locale('en'));
-                },
+                onTap: () => context.setLocale(const Locale('en')),
                 isActive: context.locale.languageCode == 'en',
               ),
+              
               const Spacer(),
               
-              // Theme Toggle Section
+              // Appearance Toggle
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Icon(Icons.palette_rounded, color: Theme.of(context).primaryColor, size: 20),
-                        const SizedBox(width: 12),
-                        Text('Appearance', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      ],
+                    _ThemeToggle(
+                      label: 'light'.tr(),
+                      isActive: context.watch<ThemeProvider>().themeMode == ThemeMode.light,
+                      onTap: () => context.read<ThemeProvider>().setThemeMode(ThemeMode.light),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _ThemeOption(
-                          icon: Icons.light_mode_rounded,
-                          label: 'Light',
-                          isActive: context.watch<ThemeProvider>().themeMode == ThemeMode.light,
-                          onTap: () => context.read<ThemeProvider>().setThemeMode(ThemeMode.light),
-                        ),
-                        _ThemeOption(
-                          icon: Icons.dark_mode_rounded,
-                          label: 'Dark',
-                          isActive: context.watch<ThemeProvider>().themeMode == ThemeMode.dark,
-                          onTap: () => context.read<ThemeProvider>().setThemeMode(ThemeMode.dark),
-                        ),
-                        _ThemeOption(
-                          icon: Icons.brightness_auto_rounded,
-                          label: 'System',
-                          isActive: context.watch<ThemeProvider>().themeMode == ThemeMode.system,
-                          onTap: () => context.read<ThemeProvider>().setThemeMode(ThemeMode.system),
-                        ),
-                      ],
+                    _ThemeToggle(
+                      label: 'dark'.tr(),
+                      isActive: context.watch<ThemeProvider>().themeMode == ThemeMode.dark,
+                      onTap: () => context.read<ThemeProvider>().setThemeMode(ThemeMode.dark),
+                    ),
+                    _ThemeToggle(
+                      label: 'system'.tr(),
+                      isActive: context.watch<ThemeProvider>().themeMode == ThemeMode.system,
+                      onTap: () => context.read<ThemeProvider>().setThemeMode(ThemeMode.system),
                     ),
                   ],
                 ),
@@ -109,23 +101,11 @@ class LanguageSelectionScreen extends StatelessWidget {
               
               const SizedBox(height: 32),
               if (!Navigator.canPop(context))
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                    child: Text('continue'.tr()),
-                  ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                  child: Text('continue'.tr().toUpperCase()),
                 ),
-              const Spacer(),
-              Text(
-                'secure_seamless_payments'.tr(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.4),
-                    ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -134,57 +114,41 @@ class LanguageSelectionScreen extends StatelessWidget {
   }
 }
 
-class _LanguageButton extends StatelessWidget {
+class _LanguageOption extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
   final bool isActive;
 
-  const _LanguageButton({
-    required this.title,
-    required this.onTap,
-    this.isActive = false,
-  });
+  const _LanguageOption({required this.title, required this.onTap, this.isActive = false});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.primaryColor : Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
+          color: isActive ? AppTheme.accentColor : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? AppTheme.primaryColor : Theme.of(context).dividerColor,
-            width: 1.5,
+            color: isActive ? AppTheme.accentColor : Theme.of(context).dividerColor.withOpacity(0.1),
+            width: 2,
           ),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: isActive ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  ),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+                color: isActive ? Colors.black : Theme.of(context).textTheme.bodyLarge?.color,
+              ),
             ),
-            Icon(
-              isActive ? Icons.check_circle : Icons.language,
-              color: isActive ? Colors.white : Theme.of(context).hintColor,
-              size: 20,
-            ),
+            if (isActive) const Icon(Icons.check_circle_rounded, color: Colors.black),
           ],
         ),
       ),
@@ -192,52 +156,38 @@ class _LanguageButton extends StatelessWidget {
   }
 }
 
-class _ThemeOption extends StatelessWidget {
-  final IconData icon;
+class _ThemeToggle extends StatelessWidget {
   final String label;
   final bool isActive;
   final VoidCallback onTap;
 
-  const _ThemeOption({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+  const _ThemeToggle({required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.25,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? theme.primaryColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isActive ? theme.primaryColor : theme.dividerColor.withOpacity(0.1),
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: isActive ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.primaryColor) : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isActive ? Colors.white : theme.textTheme.bodyMedium?.color,
-              size: 20,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
+          child: Center(
+            child: Text(
+              label.toUpperCase(),
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? Colors.white : theme.textTheme.bodyMedium?.color,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+                color: isActive 
+                  ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
+                  : Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

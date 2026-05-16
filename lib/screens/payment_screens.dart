@@ -83,7 +83,6 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         headers: auth.headers,
       );
 
-      // Auto-refresh wallet after payment
       final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
       if (userId.isNotEmpty) {
         wallet.refreshWallet(userId, auth.token!);
@@ -113,83 +112,91 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final tripId = args?['trip_id']?.toString() ?? 'unknown';
     final tripProvider = context.watch<TripProvider>();
     final auth = context.read<AuthProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('confirm_payment'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
+        title: Text('confirm_payment'.tr(), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: Theme.of(context).iconTheme.color),
+        centerTitle: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Trip Info Card
+            // Driver Card
             if (tripProvider.currentTrip != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 24),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
+              GestureDetector(
+                onTap: () {
+                  final driverId = (tripProvider.currentTrip!['driver_id'] ?? tripProvider.currentTrip!['driverId'])?.toString();
+                  if (driverId != null) {
+                    Navigator.pushNamed(context, '/driver-profile', arguments: {'driverId': driverId});
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFF101828),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.local_taxi_rounded, color: AppTheme.accentColor),
                       ),
-                      child: const Icon(Icons.local_taxi_rounded, color: AppTheme.primaryColor),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${'driver'.tr()}: ${tripProvider.currentTrip!['driverName'] ?? 'assigned_soon'.tr()}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${tripProvider.currentTrip!['route']?['start']?['metadata']?['name'] ?? '...'} → ${tripProvider.currentTrip!['route']?['end']?['metadata']?['name'] ?? '...'}',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                          ),
-                        ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tripProvider.currentTrip!['driverName'] ?? 'assigned_soon'.tr(),
+                              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.white),
+                            ),
+                            Text(
+                              '${tripProvider.currentTrip!['route']?['start']?['metadata']?['name'] ?? '...'} → ${tripProvider.currentTrip!['route']?['end']?['metadata']?['name'] ?? '...'}',
+                              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
-            // Amount Input Card
+            // Amount Input
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
               ),
               child: Column(
                 children: [
-                  Text('enter_amount_etb'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                  const SizedBox(height: 12),
+                  Text('enter_amount_etb'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
                   TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                    style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Theme.of(context).textTheme.bodyLarge?.color, letterSpacing: -2),
                     decoration: const InputDecoration(
+                      filled: false,
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
                       hintText: '0.00',
                     ),
                   ),
@@ -197,124 +204,40 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
               ),
             ),
             
-            const SizedBox(height: 32),
-            Text('where_getting_off'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 40),
+            Text('where_getting_off'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
             const SizedBox(height: 16),
             
-            // Stops List
+            // Stops Grid
             if (_isLoadingStops) ...[
               const Center(child: CircularProgressIndicator()),
-            ] else if (tripProvider.nextStops.isEmpty && (tripProvider.currentTrip?['route']?['stops'] as List?)?.isEmpty == true) ...[
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withOpacity(0.2)),
-                ),
-                child: Column(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.amber),
-                    const SizedBox(height: 12),
-                    Text(
-                      'no_upcoming_stops'.tr(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'enter_qr_manually'.tr(),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
-                    ),
-                  ],
-                ),
-              ),
             ] else ...[
               for (var stop in (tripProvider.nextStops.isNotEmpty 
                 ? tripProvider.nextStops 
                 : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []))) 
-                Builder(
-                  builder: (context) {
-                    // Normalize stop data (Handles both Route stops and NextStops)
+                _StopItem(
+                  stop: stop,
+                  isSelected: _selectedStopIndex == (stop['stopIndex'] ?? stop['index'] ?? stop['sequence']),
+                  onTap: () async {
                     final stopIndex = stop['stopIndex'] ?? stop['index'] ?? stop['sequence'];
-                    final isSelected = _selectedStopIndex == stopIndex;
-                    
-                    // Find name (NextStops has 'name', Route stops have 'metadata.name')
-                    String stopName = stop['name'] ?? 'Stop $stopIndex';
-                    if (stop['metadata']?['name'] != null) {
-                      stopName = stop['metadata']['name'];
+                    setState(() => _selectedStopIndex = stopIndex as int?);
+                    if (stop['amount'] != null) {
+                      setState(() => _amountController.text = stop['amount'].toString());
+                    } else {
+                      try {
+                        final price = await tripProvider.fetchPriceQuote(
+                          tripId: (ModalRoute.of(context)?.settings.arguments as Map?)?['trip_id']?.toString() ?? '',
+                          destinationStopIndex: stopIndex as int,
+                          token: auth.token!,
+                          headers: auth.headers,
+                        );
+                        setState(() => _amountController.text = price.toStringAsFixed(2));
+                      } catch (e) {
+                        final baseFare = tripProvider.currentTrip?['route']?['baseFare'];
+                        if (baseFare != null) setState(() => _amountController.text = baseFare.toString());
+                      }
                     }
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        onTap: () async {
-                          setState(() => _selectedStopIndex = stopIndex as int?);
-                          if (stop['amount'] != null) {
-                            setState(() => _amountController.text = stop['amount'].toString());
-                          } else {
-                            try {
-                              final price = await tripProvider.fetchPriceQuote(
-                                tripId: tripId,
-                                destinationStopIndex: stopIndex as int,
-                                token: auth.token!,
-                                headers: auth.headers,
-                              );
-                              setState(() => _amountController.text = price.toStringAsFixed(2));
-                            } catch (e) {
-                              print('Price quote error: $e');
-                              // Fallback to Base Fare if quote fails
-                              final baseFare = tripProvider.currentTrip?['route']?['baseFare'];
-                              if (baseFare != null) {
-                                setState(() => _amountController.text = baseFare.toString());
-                              }
-                            }
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected ? AppTheme.primaryColor : Theme.of(context).dividerColor,
-                              width: 2,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_rounded,
-                                color: isSelected ? AppTheme.primaryColor : Colors.grey[400],
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      stopName,
-                                      style: TextStyle(
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                        color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
-                                      ),
-                                    ),
-                                    if (stop['distanceKm'] != null || stop['distance'] != null)
-                                      Text(
-                                        '${stop['distanceKm'] ?? stop['distance'] ?? '--'} km • ${stop['amount'] ?? '--'} ETB',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              if (isSelected)
-                                const Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }
+                  },
                 ),
             ],
 
@@ -322,32 +245,95 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             
             if (_error != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold))),
+                    ],
+                  ),
+                ),
               ),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isPaying ? null : _handlePayment,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: AppTheme.primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: _isPaying 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text('pay_fare'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
+            ElevatedButton(
+              onPressed: _isPaying ? null : _handlePayment,
+              child: _isPaying 
+                ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                : Text('pay_fare'.tr().toUpperCase()),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Center(
               child: TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+                child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
               ),
             ),
+            const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StopItem extends StatelessWidget {
+  final dynamic stop;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _StopItem({required this.stop, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    String stopName = stop['name'] ?? 'Stop';
+    if (stop['metadata']?['name'] != null) stopName = stop['metadata']['name'];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.accentColor : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? AppTheme.accentColor : Theme.of(context).dividerColor.withOpacity(0.05),
+              width: 2,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.location_on_rounded, color: isSelected ? Colors.black : Colors.grey[400]),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stopName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: isSelected ? Colors.black : Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    if (stop['distanceKm'] != null)
+                      Text(
+                        '${stop['distanceKm']} km',
+                        style: TextStyle(fontSize: 12, color: isSelected ? Colors.black.withOpacity(0.6) : Colors.grey[600]),
+                      ),
+                  ],
+                ),
+              ),
+              if (isSelected) const Icon(Icons.check_circle_rounded, color: Colors.black),
+            ],
+          ),
         ),
       ),
     );
@@ -372,71 +358,58 @@ class PaymentSuccessScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.check_circle_rounded, size: 100, color: Colors.green),
-              const SizedBox(height: 32),
-              Text('payment_successful'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              Text(
-                'paid_for_trip'.tr(args: [amount.toStringAsFixed(2)]),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+      body: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+              child: const Icon(Icons.check_rounded, size: 64, color: Colors.white),
+            ),
+            const SizedBox(height: 40),
+            Text('payment_successful'.tr(), style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32)),
+            const SizedBox(height: 16),
+            Text(
+              'paid_for_trip'.tr(args: [amount.toStringAsFixed(2)]),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 60),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(24),
               ),
-              const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text('transaction_id'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                    const SizedBox(height: 4),
-                    Text(transactionId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
+              child: Column(
+                children: [
+                  Text('transaction_id'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                  const SizedBox(height: 8),
+                  Text(transactionId, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+                ],
               ),
-              const SizedBox(height: 60),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pushReplacement(
-                    context, 
-                    MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text('rate_your_trip'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                ),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () => Navigator.pushReplacement(
+                context, 
+                MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                  child: Text('back_to_home'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor, foregroundColor: Colors.black),
+              child: Text('rate_your_trip'.tr().toUpperCase()),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+              child: Text('back_to_home'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
     );
   }
-}
-
-class PaymentPinScreen extends StatelessWidget {
-  final String tripId;
-  final double amount;
-  const PaymentPinScreen({super.key, required this.tripId, required this.amount});
-  @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('PIN Screen Placeholder')));
 }

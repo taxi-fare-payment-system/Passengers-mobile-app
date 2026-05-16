@@ -19,16 +19,11 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
-    // Wait for splash animation or just a bit of time
     await Future.delayed(const Duration(seconds: 2));
-    
     if (!mounted) return;
-
     final authProvider = context.read<AuthProvider>();
     await authProvider.tryAutoLogin();
-
     if (!mounted) return;
-
     if (authProvider.isAuthenticated) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
@@ -38,45 +33,66 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 140,
-              height: 140,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.local_taxi_rounded,
-                size: 80,
-                color: AppTheme.primaryColor,
+      backgroundColor: isDark ? Colors.black : AppTheme.primaryColor,
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentColor,
+                    borderRadius: BorderRadius.circular(32),
+                  ),
+                  child: const Icon(
+                    Icons.local_taxi_rounded,
+                    size: 64,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  'WULO PAY',
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    color: Colors.white,
+                    letterSpacing: 4,
+                    fontSize: 32,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'qr_based_taxi_payments'.tr().toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 60,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: AppTheme.accentColor.withOpacity(0.3),
+                  strokeWidth: 2,
+                ),
               ),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'WuloPay',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -1.0,
-              ),
-            ),
-            Text(
-              'qr_based_taxi_payments'.tr(),
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

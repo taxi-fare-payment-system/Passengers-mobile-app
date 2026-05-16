@@ -18,6 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
@@ -28,32 +29,39 @@ class _MainNavigationState extends State<MainNavigation> {
           ProfileScreen(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Theme.of(context).cardColor,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: Theme.of(context).hintColor,
-        elevation: 8,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.qr_code_scanner_rounded),
-            label: 'home'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.account_balance_wallet_rounded),
-            label: 'wallet'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.history_rounded),
-            label: 'history'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_rounded),
-            label: 'profile'.tr(),
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.05))),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) => setState(() => _selectedIndex = index),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: theme.scaffoldBackgroundColor,
+          selectedItemColor: AppTheme.accentColor,
+          unselectedItemColor: theme.hintColor.withOpacity(0.4),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
+          elevation: 0,
+          items: [
+            BottomNavigationBarItem(
+              icon: const Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.qr_code_scanner_rounded)),
+              label: 'home'.tr().toUpperCase(),
+            ),
+            BottomNavigationBarItem(
+              icon: const Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.account_balance_wallet_rounded)),
+              label: 'wallet'.tr().toUpperCase(),
+            ),
+            BottomNavigationBarItem(
+              icon: const Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.history_rounded)),
+              label: 'history'.tr().toUpperCase(),
+            ),
+            BottomNavigationBarItem(
+              icon: const Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.person_rounded)),
+              label: 'profile'.tr().toUpperCase(),
+            ),
+          ],
+        ),
       ),
     );
   }

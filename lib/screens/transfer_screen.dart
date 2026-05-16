@@ -31,15 +31,14 @@ class _TransferScreenState extends State<TransferScreen> {
   Widget build(BuildContext context) {
     final walletProvider = context.watch<WalletProvider>();
     final auth = context.watch<AuthProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('transfer_funds'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('transfer_funds'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
-        leading: const BackButton(color: Colors.black),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -48,7 +47,7 @@ class _TransferScreenState extends State<TransferScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('recipient_details'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('recipient_details'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -58,43 +57,41 @@ class _TransferScreenState extends State<TransferScreen> {
                       decoration: InputDecoration(
                         labelText: 'phone_number'.tr(),
                         hintText: '09xxxxxxxx',
-                        filled: true,
-                        fillColor: AppTheme.surfaceColor,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        fillColor: theme.cardColor,
                       ),
                       keyboardType: TextInputType.phone,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                       validator: (value) => value == null || value.isEmpty ? 'required'.tr() : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    height: 56,
-                    width: 56,
+                    height: 64,
+                    width: 64,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primaryColor),
+                      icon: const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.accentColor, size: 28),
                       onPressed: () => _scanRecipientQR(),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 32),
-              Text('amount'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('amount'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
                 decoration: InputDecoration(
                   labelText: 'amount_etb'.tr(),
                   prefixText: 'ETB ',
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  fillColor: theme.cardColor,
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'required'.tr();
                   final amt = double.tryParse(value);
@@ -102,66 +99,65 @@ class _TransferScreenState extends State<TransferScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              Text('message_optional'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 32),
+              Text('message_optional'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _messageController,
                 decoration: InputDecoration(
                   labelText: 'whats_this_for'.tr(),
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  fillColor: theme.cardColor,
                 ),
-                maxLines: 2,
+                maxLines: 3,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 48),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: walletProvider.isTransferring
-                      ? null
-                      : () async {
-                          if (_formKey.currentState!.validate()) {
-                            try {
-                              final token = auth.token!;
-                              await walletProvider.transferFunds(
-                                fromWalletId: walletProvider.walletId!,
-                                toPhoneNumber: _recipientController.text.trim(),
-                                amount: double.parse(_amountController.text),
-                                message: _messageController.text.isNotEmpty ? _messageController.text : null,
-                                token: token,
+              const SizedBox(height: 60),
+              ElevatedButton(
+                onPressed: walletProvider.isTransferring
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          try {
+                            final token = auth.token!;
+                            await walletProvider.transferFunds(
+                              fromWalletId: walletProvider.walletId!,
+                              toPhoneNumber: _recipientController.text.trim(),
+                              amount: double.parse(_amountController.text),
+                              message: _messageController.text.isNotEmpty ? _messageController.text : null,
+                              token: token,
+                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('transfer_successful'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)), 
+                                  backgroundColor: Colors.green,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                ),
                               );
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('transfer_successful'.tr()), backgroundColor: Colors.green),
-                                );
-                                Navigator.pop(context);
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-                                );
-                              }
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+                              );
                             }
                           }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: walletProvider.isTransferring
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('send_money'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
+                        }
+                      },
+                child: walletProvider.isTransferring
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                    : Text('send_money'.tr().toUpperCase()),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
       ),
     );
   }
+
   void _scanRecipientQR() {
     showModalBottomSheet(
       context: context,
@@ -169,37 +165,43 @@ class _TransferScreenState extends State<TransferScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            const Text('Scan Recipient QR', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('scan_recipient_qr'.tr(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
             const SizedBox(height: 24),
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: MobileScanner(
-                  onDetect: (capture) {
-                    final List<Barcode> barcodes = capture.barcodes;
-                    if (barcodes.isNotEmpty) {
-                      final String? code = barcodes.first.rawValue;
-                      if (code != null) {
-                        setState(() => _recipientController.text = code);
-                        Navigator.pop(context);
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: MobileScanner(
+                    onDetect: (capture) {
+                      final List<Barcode> barcodes = capture.barcodes;
+                      if (barcodes.isNotEmpty) {
+                        final String? code = barcodes.first.rawValue;
+                        if (code != null) {
+                          setState(() => _recipientController.text = code);
+                          Navigator.pop(context);
+                        }
                       }
-                    }
-                  },
+                    },
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('cancel'.tr())),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            TextButton(
+              onPressed: () => Navigator.pop(context), 
+              child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary))
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),

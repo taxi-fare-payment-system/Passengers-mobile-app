@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
@@ -20,44 +19,73 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('top_up_wallet'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('top_up_wallet'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('enter_amount'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                hintText: '0.00',
-                suffixText: 'ETB',
-                suffixStyle: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
-                filled: true,
-                fillColor: AppTheme.surfaceColor,
+            // Immersive Amount Input
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+              ),
+              child: Column(
+                children: [
+                  Text('enter_amount'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
+                  TextField(
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: theme.textTheme.bodyLarge?.color, letterSpacing: -2),
+                    decoration: const InputDecoration(
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      hintText: '0.00',
+                      suffixText: 'ETB',
+                      suffixStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              children: ['100', '200', '500', '1000'].map((amt) => ActionChip(
-                label: Text('$amt ETB'),
-                onPressed: () => setState(() => _amountController.text = amt),
-                backgroundColor: AppTheme.surfaceColor,
-              )).toList(),
+            const SizedBox(height: 24),
+            
+            // Quick Presets
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: ['100', '200', '500', '1000'].map((amt) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ActionChip(
+                    label: Text('$amt ETB', style: const TextStyle(fontWeight: FontWeight.w800)),
+                    onPressed: () => setState(() => _amountController.text = amt),
+                    backgroundColor: theme.cardColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                  ),
+                )).toList(),
+              ),
             ),
-            const SizedBox(height: 32),
-            Text('payment_method'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            
+            const SizedBox(height: 48),
+            Text('payment_method'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
             const SizedBox(height: 16),
+            
             _PaymentMethodTile(
               title: 'Telebirr',
               subtitle: 'Pay with your Telebirr account',
@@ -81,57 +109,58 @@ class _TopUpScreenState extends State<TopUpScreen> {
               isSelected: _selectedMethod == 'Card',
               onTap: () => setState(() => _selectedMethod = 'Card'),
             ),
-            const SizedBox(height: 48),
+            
+            const SizedBox(height: 60),
+            
             ElevatedButton(
-              onPressed: () async {
-                final amountText = _amountController.text.trim();
-                if (amountText.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_amount'.tr())));
-                  return;
-                }
-
-                final amount = double.tryParse(amountText);
-                if (amount == null || amount <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_valid_amount'.tr())));
-                  return;
-                }
-
-                try {
-                  final auth = context.read<AuthProvider>();
-                  final walletProvider = context.read<WalletProvider>();
-                  
-                  // For demo, we need the wallet ID. Usually we'd fetch it with balance.
-                  // Let's assume we fetch it in WalletProvider and store it.
-                  // For now, I'll update WalletProvider to store the wallet ID.
-                  
-                  final checkoutUrl = await walletProvider.initiateTopup(
-                    walletId: walletProvider.walletId ?? '',
-                    amount: amount,
-                    phone: auth.user?['phone'],
-                    email: auth.user?['email'],
-                    token: auth.token!,
-                  );
-
-                  if (mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TopUpRedirectScreen(checkoutUrl: checkoutUrl, amount: amount),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                  }
-                }
-              },
-              child: Text('proceed_to_payment'.tr()),
+              onPressed: _handleTopUp,
+              child: Text('proceed_to_payment'.tr().toUpperCase()),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleTopUp() async {
+    final amountText = _amountController.text.trim();
+    if (amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_amount'.tr())));
+      return;
+    }
+
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_valid_amount'.tr())));
+      return;
+    }
+
+    try {
+      final auth = context.read<AuthProvider>();
+      final walletProvider = context.read<WalletProvider>();
+      
+      final checkoutUrl = await walletProvider.initiateTopup(
+        walletId: walletProvider.walletId ?? '',
+        amount: amount,
+        phone: auth.user?['phone'],
+        email: auth.user?['email'],
+        token: auth.token!,
+      );
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TopUpRedirectScreen(checkoutUrl: checkoutUrl, amount: amount),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
   }
 }
 
@@ -152,30 +181,55 @@ class _PaymentMethodTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          border: Border.all(color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9), width: isSelected ? 2 : 1),
-          borderRadius: BorderRadius.circular(16),
-          color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
+          color: isSelected ? AppTheme.accentColor : theme.cardColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppTheme.accentColor : theme.dividerColor.withOpacity(0.05),
+            width: 2,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.black.withOpacity(0.1) : theme.dividerColor.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: isSelected ? Colors.black : AppTheme.accentColor, size: 24),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                  Text(
+                    title, 
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900, 
+                      fontSize: 16, 
+                      color: isSelected ? Colors.black : theme.textTheme.bodyLarge?.color
+                    )
+                  ),
+                  Text(
+                    subtitle, 
+                    style: TextStyle(
+                      color: isSelected ? Colors.black.withOpacity(0.6) : theme.hintColor, 
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600
+                    )
+                  ),
                 ],
               ),
             ),
-            if (isSelected) const Icon(Icons.check_circle, color: AppTheme.primaryColor, size: 20),
+            if (isSelected) const Icon(Icons.check_circle_rounded, color: Colors.black),
           ],
         ),
       ),
@@ -202,10 +256,6 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
   Future<void> _launchAndPoll() async {
     final url = Uri.parse(widget.checkoutUrl);
     try {
-      // On mobile, we can't easily intercept URL changes with url_launcher's inAppWebView.
-      // However, we can use a small delay and then start polling.
-      // If we had the webview_flutter plugin, we could do more.
-      
       await launchUrl(
         url,
         mode: LaunchMode.inAppWebView,
@@ -215,25 +265,18 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
         ),
       );
       
-      // Start polling for balance change immediately
       final auth = context.read<AuthProvider>();
       final wallet = context.read<WalletProvider>();
       
-      print('Wallet Debug: Redirecting to Chapa. Starting background poll...');
-      
-      // We poll in the background. Even if the user sees a "Forbidden" error in the browser,
-      // the app will detect the balance change and navigate to the success screen.
       await wallet.pollBalanceChange(auth.user?['id']?.toString() ?? auth.user?['user_id']?.toString() ?? '', auth.token!);
 
       if (mounted) {
-        // If we reach here, it means pollBalanceChange finished (either balance increased or timed out)
         if (double.parse(wallet.balance ?? '0') > 0) {
            Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => TopUpSuccessScreen(amount: widget.amount)),
           );
         } else {
-          // If it timed out but they closed the webview, just go back
           Navigator.pop(context);
         }
       }
@@ -248,23 +291,24 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(40.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.security_rounded, size: 80, color: AppTheme.primaryColor),
+              const Icon(Icons.security_rounded, size: 80, color: AppTheme.accentColor),
               const SizedBox(height: 32),
-              Text('securing_transaction'.tr(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text('securing_transaction'.tr(), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24)),
               const SizedBox(height: 16),
               Text(
                 'redirecting_to_payment'.tr(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 48),
-              const CircularProgressIndicator(color: AppTheme.primaryColor),
+              const CircularProgressIndicator(color: AppTheme.accentColor, strokeWidth: 4),
             ],
           ),
         ),
@@ -280,57 +324,61 @@ class TopUpSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wallet = context.watch<WalletProvider>();
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Spacer(),
               Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.check_circle_rounded, size: 80, color: Colors.green),
+                padding: const EdgeInsets.all(32),
+                decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                child: const Icon(Icons.check_rounded, size: 64, color: Colors.white),
               ),
-              const SizedBox(height: 32),
-              Text('top_up_successful'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 40),
+              Text('top_up_successful'.tr(), style: theme.textTheme.displayLarge?.copyWith(fontSize: 32)),
               const SizedBox(height: 12),
-              Text('wallet_credited_successfully'.tr(), textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textSecondary)),
+              Text('wallet_credited_successfully'.tr(), textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
               const SizedBox(height: 48),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(24),
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(32),
                 ),
                 child: Column(
                   children: [
-                    Text('total_top_up_amount'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    Text('total_top_up_amount'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
                     const SizedBox(height: 8),
-                    Text('${amount.toStringAsFixed(2)} ETB', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                    Text('${amount.toStringAsFixed(2)} ETB', style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, color: AppTheme.accentColor, letterSpacing: -1)),
                     const Divider(height: 48),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('new_wallet_balance'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                        Text('${wallet.balance ?? '0.00'} ETB', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        Text('new_wallet_balance'.tr(), style: theme.textTheme.bodyMedium),
+                        Text('${wallet.balance ?? '0.00'} ETB', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 64),
+              const Spacer(),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('back_to_wallet'.tr()),
+                child: Text('back_to_wallet'.tr().toUpperCase()),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextButton(
                 onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                child: Text('go_to_home'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('go_to_home'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

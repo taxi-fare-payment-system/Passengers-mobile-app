@@ -37,93 +37,69 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(source: source, imageQuality: 70);
-    if (image != null) {
-      setState(() {
-        _selectedFile = File(image.path);
-      });
-    }
+    if (image != null) setState(() => _selectedFile = File(image.path));
   }
 
   Future<void> _upload() async {
     if (_selectedFile == null) return;
-
     final auth = context.read<AuthProvider>();
     final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString();
     if (userId == null) return;
 
     try {
       await context.read<DocumentProvider>().uploadDocument(
-        userId: userId,
-        documentType: _documentType,
-        file: _selectedFile!,
-        token: auth.token!,
-        headers: auth.headers,
+        userId: userId, documentType: _documentType, file: _selectedFile!, token: auth.token!, headers: auth.headers,
       );
-      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('doc_uploaded_success_msg'.tr()), backgroundColor: Colors.green),
-        );
-        setState(() {
-          _selectedFile = null;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('doc_uploaded_success_msg'.tr()), backgroundColor: Colors.green));
+        setState(() => _selectedFile = null);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${'upload_failed'.tr()}: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${'upload_failed'.tr()}: $e'), backgroundColor: Colors.red));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final docProvider = context.watch<DocumentProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('account_verification'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('account_verification'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
-        leading: const BackButton(color: Colors.black),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'upload_identity'.tr(),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text('upload_identity'.tr(), style: theme.textTheme.headlineMedium?.copyWith(fontSize: 24)),
             const SizedBox(height: 8),
-            Text(
-              'verify_account_desc'.tr(),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-            ),
+            Text('verify_account_desc'.tr(), style: theme.textTheme.bodyMedium),
             const SizedBox(height: 32),
             
-            // Document Type Selector
-            Text('document_type'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('document_type'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(16),
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _documentType,
                   isExpanded: true,
+                  dropdownColor: theme.cardColor,
                   onChanged: (val) => setState(() => _documentType = val!),
                   items: [
-                    DropdownMenuItem(value: 'national_id', child: Text('national_id'.tr())),
-                    DropdownMenuItem(value: 'license', child: Text('driver_license'.tr())),
-                    DropdownMenuItem(value: 'profile_photo', child: Text('profile_photo'.tr())),
+                    DropdownMenuItem(value: 'national_id', child: Text('national_id'.tr(), style: const TextStyle(fontWeight: FontWeight.w800))),
+                    DropdownMenuItem(value: 'license', child: Text('driver_license'.tr(), style: const TextStyle(fontWeight: FontWeight.w800))),
+                    DropdownMenuItem(value: 'profile_photo', child: Text('profile_photo'.tr(), style: const TextStyle(fontWeight: FontWeight.w800))),
                   ],
                 ),
               ),
@@ -131,56 +107,53 @@ class _VerificationScreenState extends State<VerificationScreen> {
             
             const SizedBox(height: 32),
             
-            // Image Picker Area
             InkWell(
               onTap: () => _showPickerOptions(),
+              borderRadius: BorderRadius.circular(32),
               child: Container(
                 width: double.infinity,
-                height: 200,
+                height: 240,
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1), width: 2),
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: AppTheme.accentColor.withOpacity(0.2), width: 2),
                 ),
                 child: _selectedFile == null
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_rounded, size: 48, color: AppTheme.primaryColor.withOpacity(0.5)),
-                        const SizedBox(height: 12),
-                        Text('tap_take_photo'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
+                        const Icon(Icons.add_a_photo_rounded, size: 64, color: AppTheme.accentColor),
+                        const SizedBox(height: 16),
+                        Text('tap_take_photo'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
                       ],
                     )
                   : ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(30),
                       child: Image.file(_selectedFile!, fit: BoxFit.cover),
                     ),
               ),
             ),
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             
             if (_selectedFile != null)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: docProvider.isLoading ? null : _upload,
-                  child: docProvider.isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text('upload_document'.tr()),
-                ),
+              ElevatedButton(
+                onPressed: docProvider.isLoading ? null : _upload,
+                child: docProvider.isLoading 
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                  : Text('upload_document'.tr().toUpperCase()),
               ),
             
-            const SizedBox(height: 48),
-            Text('my_documents'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 16),
+            const SizedBox(height: 60),
+            Text('my_documents'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
+            const SizedBox(height: 24),
             
             if (docProvider.isLoading && docProvider.userDocuments.isEmpty)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: CircularProgressIndicator(color: AppTheme.accentColor))
             else if (docProvider.userDocuments.isEmpty)
-              Center(child: Text('no_docs_uploaded_yet'.tr()))
+              Center(child: Text('no_docs_uploaded_yet'.tr(), style: theme.textTheme.bodyMedium))
             else
-              ...docProvider.userDocuments.map((doc) => _buildDocItem(doc)),
+              ...docProvider.userDocuments.map((doc) => _buildDocItem(doc, theme)),
           ],
         ),
       ),
@@ -190,49 +163,52 @@ class _VerificationScreenState extends State<VerificationScreen> {
   void _showPickerOptions() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_rounded),
-              title: Text('take_photo'.tr()),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_rounded),
-              title: Text('choose_from_gallery'.tr()),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded, color: AppTheme.accentColor),
+                title: Text('take_photo'.tr(), style: const TextStyle(fontWeight: FontWeight.w900)),
+                onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: AppTheme.accentColor),
+                title: Text('choose_from_gallery'.tr(), style: const TextStyle(fontWeight: FontWeight.w900)),
+                onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDocItem(dynamic doc) {
+  Widget _buildDocItem(dynamic doc, ThemeData theme) {
     final status = doc['status']?.toString().toLowerCase() ?? 'pending';
     final isApproved = status == 'approved';
     final isRejected = status == 'rejected';
+    final color = isApproved ? Colors.green : (isRejected ? Colors.red : Colors.orange);
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
       ),
       child: Row(
         children: [
-          Icon(
-            isApproved ? Icons.check_circle_rounded : (isRejected ? Icons.cancel_rounded : Icons.pending_rounded),
-            color: isApproved ? Colors.green : (isRejected ? Colors.red : Colors.orange),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(isApproved ? Icons.check_rounded : (isRejected ? Icons.close_rounded : Icons.access_time_rounded), color: color, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -241,29 +217,19 @@ class _VerificationScreenState extends State<VerificationScreen> {
               children: [
                 Text(
                   doc['document_type']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'DOCUMENT',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
                 ),
                 Text(
                   '${'uploaded_on'.tr()} ${doc['created_at']?.toString().split('T').first ?? 'N/A'}',
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: (isApproved ? Colors.green : (isRejected ? Colors.red : Colors.orange)).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              status.toUpperCase(),
-              style: TextStyle(
-                color: isApproved ? Colors.green : (isRejected ? Colors.red : Colors.orange),
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: Text(status.toUpperCase(), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
           ),
         ],
       ),

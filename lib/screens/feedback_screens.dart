@@ -20,21 +20,22 @@ class _RateTripScreenState extends State<RateTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black),
-        title: Text('rate_your_trip'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: Text('rate_your_trip'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        centerTitle: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            InkWell(
+            const Spacer(),
+            // Immersive Driver Info
+            GestureDetector(
               onTap: () {
                 if (widget.driverId != null) {
                   Navigator.pushNamed(context, '/driver-profile', arguments: {'driverId': widget.driverId});
@@ -42,57 +43,71 @@ class _RateTripScreenState extends State<RateTripScreen> {
               },
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 60,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=driver1'),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: theme.dividerColor, width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=${widget.driverId ?? 'driver'}'),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Dawit K.',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    'Dawit K.', // Fallback name, ideally from trip details
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 48),
             Text(
               'how_was_ride'.tr(),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               'feedback_help_improve'.tr(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary),
+              style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 48),
+            
+            // Modern Stars
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) => IconButton(
                 onPressed: () => setState(() => _rating = index + 1),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 icon: Icon(
                   index < _rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                  size: 48,
-                  color: Colors.orange,
+                  size: 56,
+                  color: index < _rating ? Colors.orange : theme.dividerColor,
                 ),
               )),
             ),
-            const SizedBox(height: 12),
-            Text(
-              _getRatingText(),
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _rating > 0 ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, driverId: widget.driverId, rating: _rating))) : null,
-              child: Text('submit_rating'.tr()),
-            ),
             const SizedBox(height: 16),
+            if (_rating > 0)
+              Text(
+                _getRatingText().toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.orange, letterSpacing: 1.5),
+              ),
+            const Spacer(),
+            
+            ElevatedButton(
+              onPressed: _rating > 0 
+                ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, driverId: widget.driverId, rating: _rating))) 
+                : null,
+              child: Text('continue'.tr().toUpperCase()),
+            ),
+            const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-              child: Text('skip'.tr(), style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+              child: Text('skip'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -124,13 +139,6 @@ class FeedbackFormScreen extends StatefulWidget {
 class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   final List<String> _selectedTags = [];
   final TextEditingController _commentController = TextEditingController();
-  late int _rating;
-
-  @override
-  void initState() {
-    super.initState();
-    _rating = widget.rating;
-  }
 
   @override
   void dispose() {
@@ -143,36 +151,25 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
     final feedbackProvider = context.watch<FeedbackProvider>();
     final driverProvider = context.watch<DriverProvider>();
     final auth = context.watch<AuthProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('add_feedback'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: const BackButton(color: Colors.black),
+        title: Text('add_feedback'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'thanks_for_rating'.tr(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'tell_us_more'.tr(),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-            ),
+            Text('tell_us_more'.tr(), style: theme.textTheme.headlineMedium?.copyWith(fontSize: 24)),
             const SizedBox(height: 32),
-            Text('optional_comments'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('optional_comments'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
             const SizedBox(height: 16),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 'safe_driving'.tr(), 'clean_taxi'.tr(), 'polite_driver'.tr(), 'great_music'.tr(),
                 'helpful'.tr(), 'punctual'.tr(), 'good_route'.tr(), 'fair_price'.tr()
@@ -187,18 +184,14 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                 },
               )).toList(),
             ),
-            const SizedBox(height: 32),
-            Text('write_comment'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 40),
+            Text('write_comment'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
             const SizedBox(height: 16),
             TextField(
               controller: _commentController,
-              maxLines: 5,
+              maxLines: 4,
               decoration: InputDecoration(
                 hintText: 'share_experience_hint'.tr(),
-                filled: true,
-                fillColor: AppTheme.surfaceColor,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.all(20),
               ),
             ),
             const SizedBox(height: 48),
@@ -210,16 +203,15 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                         if (widget.driverId != null) {
                           await driverProvider.submitDriverReview(
                             driverId: widget.driverId!,
-                            rating: _rating.toDouble(),
+                            rating: widget.rating.toDouble(),
                             message: _commentController.text.isNotEmpty ? _commentController.text : 'No comment provided',
                             token: auth.token!,
                             headers: auth.headers,
                           );
                         } else {
-                          // Fallback to mock feedback if no driverId
                           await feedbackProvider.submitFeedback(
                             tripId: widget.tripId,
-                            rating: _rating,
+                            rating: widget.rating,
                             tags: _selectedTags,
                             comment: _commentController.text,
                             token: auth.token!,
@@ -229,10 +221,10 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('feedback_submitted_thanks'.tr()),
-                              backgroundColor: AppTheme.primaryColor,
+                              content: Text('feedback_submitted_thanks'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              backgroundColor: Colors.green,
                               behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             ),
                           );
                           Navigator.popUntil(context, (route) => route.isFirst);
@@ -240,20 +232,16 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                       } catch (e) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error: $e'),
-                              backgroundColor: Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
+                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
                           );
                         }
                       }
                     },
               child: feedbackProvider.isSubmitting
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text('submit_feedback'.tr()),
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                  : Text('submit_feedback'.tr().toUpperCase()),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -270,23 +258,23 @@ class _TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilterChip(
+    return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
-      backgroundColor: AppTheme.surfaceColor,
-      selectedColor: AppTheme.primaryColor.withOpacity(0.1),
-      checkmarkColor: AppTheme.primaryColor,
+      backgroundColor: Theme.of(context).cardColor,
+      selectedColor: AppTheme.accentColor,
       labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        color: isSelected ? Colors.black : Theme.of(context).textTheme.bodyLarge?.color,
+        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
         fontSize: 13,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isSelected ? AppTheme.primaryColor : Colors.transparent),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: isSelected ? AppTheme.accentColor : Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      showCheckmark: false,
     );
   }
 }

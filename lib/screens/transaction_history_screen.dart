@@ -30,24 +30,24 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final wallet = context.watch<WalletProvider>();
+    final theme = Theme.of(context);
     
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text('transactions'.tr(), style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: BackButton(color: Theme.of(context).iconTheme.color),
+          title: Text('transactions'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 2, color: AppTheme.accentColor)),
           bottom: TabBar(
-            labelColor: AppTheme.primaryColor,
-            unselectedLabelColor: Theme.of(context).hintColor,
-            indicatorColor: AppTheme.primaryColor,
+            labelColor: AppTheme.accentColor,
+            unselectedLabelColor: theme.brightness == Brightness.dark ? Colors.white.withOpacity(0.3) : theme.hintColor.withOpacity(0.5),
+            indicatorColor: AppTheme.accentColor,
+            indicatorWeight: 4,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1),
             tabs: [
-              Tab(text: 'all'.tr()),
-              Tab(text: 'payments'.tr()),
-              Tab(text: 'top_ups'.tr()),
+              Tab(text: 'all'.tr().toUpperCase()),
+              Tab(text: 'payments'.tr().toUpperCase()),
+              Tab(text: 'top_ups'.tr().toUpperCase()),
             ],
           ),
         ),
@@ -65,9 +65,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   Widget _buildList(BuildContext context, List<dynamic> transactions, {bool isTrip = false, bool isAll = false}) {
     final wallet = context.watch<WalletProvider>();
     final trip = context.watch<TripProvider>();
+    final theme = Theme.of(context);
     
     if (wallet.isLoading || trip.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.accentColor));
     }
 
     if (transactions.isEmpty) {
@@ -75,18 +76,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 48, color: Theme.of(context).dividerColor),
+            Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 64, color: theme.dividerColor.withOpacity(0.1)),
             const SizedBox(height: 16),
-            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: TextStyle(color: Theme.of(context).hintColor)),
+            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
           ],
         ),
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
       itemCount: transactions.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final tx = transactions[index];
         final reason = (tx['reason'] ?? '').toString().toLowerCase();
@@ -96,21 +97,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         final date = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
 
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(16),
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: (isExpense ? Colors.red : Colors.green).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isTrip ? Icons.directions_car_rounded : (isExpense ? Icons.call_made_rounded : Icons.call_received_rounded),
+                  isTrip ? Icons.local_taxi_rounded : (isExpense ? Icons.call_made_rounded : Icons.call_received_rounded),
                   color: isExpense ? Colors.red : Colors.green,
                   size: 20,
                 ),
@@ -123,35 +125,30 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     Text(
                       () {
                         if (isTrip) return '${tx['startLocation']} → ${tx['endLocation']}';
-                        final reason = (tx['reason'] ?? '').toString().toLowerCase();
-                        final message = (tx['message'] ?? '').toString().toLowerCase();
-                        
-                        if (reason == 'fare' || message.contains('fare')) return 'taxi_fare'.tr();
-                        if (reason == 'transfer' || message.contains('transfer')) {
-                          if (message.contains('p2p')) return 'p2p_transfer'.tr();
-                          return 'transfer'.tr();
-                        }
-                        if (reason.contains('topup') || reason.contains('top up')) return 'wallet_top_up'.tr();
-                        
+                        final r = (tx['reason'] ?? '').toString().toLowerCase();
+                        final m = (tx['message'] ?? '').toString().toLowerCase();
+                        if (r == 'fare' || m.contains('fare')) return 'taxi_fare'.tr();
+                        if (r == 'transfer' || m.contains('transfer')) return m.contains('p2p') ? 'p2p_transfer'.tr() : 'transfer'.tr();
+                        if (r.contains('topup') || r.contains('top up')) return 'wallet_top_up'.tr();
                         return tx['reason']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'transaction'.tr();
                       }(),
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       DateFormat('MMM dd, HH:mm').format(date),
-                      style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11),
+                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
               Text(
-                '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)} ETB',
+                '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)}',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: isExpense ? Theme.of(context).textTheme.bodyLarge?.color : Colors.green,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: isExpense ? theme.textTheme.bodyLarge?.color : Colors.green,
                 ),
               ),
             ],

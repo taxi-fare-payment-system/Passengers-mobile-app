@@ -18,47 +18,36 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final defaultPinTheme = PinTheme(
-      width: 50,
-      height: 50,
-      textStyle: const TextStyle(
-        fontSize: 20,
-        color: AppTheme.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
+      width: 56,
+      height: 64,
+      textStyle: theme.textTheme.displayLarge?.copyWith(fontSize: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
       ),
     );
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: Text('WULO PAY', style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 4, color: AppTheme.accentColor)),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'verify_phone'.tr(),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '${'enter_otp_msg'.tr()} +251 91 234 5678',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 40),
+            Text('verify_phone'.tr(), style: theme.textTheme.displayLarge?.copyWith(fontSize: 40)),
+            const SizedBox(height: 8),
+            Text('enter_otp_msg_short'.tr(), style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 60),
+            
             Center(
               child: Pinput(
                 length: 6,
@@ -66,23 +55,24 @@ class _OTPScreenState extends State<OTPScreen> {
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: defaultPinTheme.copyWith(
                   decoration: defaultPinTheme.decoration!.copyWith(
-                    border: Border.all(color: AppTheme.primaryColor, width: 2),
+                    border: Border.all(color: AppTheme.accentColor, width: 2),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            
+            const SizedBox(height: 40),
             Center(
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.timer_outlined, size: 16, color: AppTheme.textSecondary),
+                      const Icon(Icons.timer_outlined, size: 16, color: AppTheme.accentColor),
                       const SizedBox(width: 8),
                       Text(
                         '${'resend_code_in'.tr()} 00:55',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: theme.textTheme.labelSmall?.copyWith(fontSize: 11, letterSpacing: 1),
                       ),
                     ],
                   ),
@@ -91,86 +81,61 @@ class _OTPScreenState extends State<OTPScreen> {
                     onPressed: () {},
                     child: Text(
                       'change_phone_number'.tr(),
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
-                      ),
+                      style: const TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.w900),
                     ),
                   ),
                 ],
               ),
             ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () async {
-                        final args = ModalRoute.of(context)!.settings.arguments;
-                        String phone;
-                        String? password;
-                        
-                        if (args is String) {
-                          phone = args;
-                        } else {
-                          final map = args as Map<String, dynamic>;
-                          phone = map['phone'];
-                          password = map['password'];
-                        }
-
-                        final code = _pinController.text;
-
-                        if (code.length != 6) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('enter_otp_msg_short'.tr())),
-                          );
-                          return;
-                        }
-
-                        setState(() => _isLoading = true);
-                        try {
-                          await context.read<AuthProvider>().verifyOTP(phone, code);
-                          
-                          // If we have a password (from registration), log in now to get the token
-                          if (password != null) {
-                            await context.read<AuthProvider>().login(phone, password);
-                          }
-                          
-                          if (mounted) {
-                            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
-                          }
-                        } finally {
-                          if (mounted) setState(() => _isLoading = false);
-                        }
-                      },
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Text('verify_continue'.tr()),
+            
+            const SizedBox(height: 80),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _handleVerify,
+              child: _isLoading 
+                ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                : Text('verify_continue'.tr().toUpperCase()),
+            ),
+            
+            const SizedBox(height: 24),
+            Center(
+              child: Text(
+                'by_continuing_agree_generic'.tr(),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, color: theme.hintColor.withOpacity(0.5)),
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'by_continuing_agree_generic'.tr(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary.withOpacity(0.6),
-                  ),
-            ),
+            const SizedBox(height: 60),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleVerify() async {
+    final args = ModalRoute.of(context)!.settings.arguments;
+    String phone;
+    String? password;
+    
+    if (args is String) {
+      phone = args;
+    } else {
+      final map = args as Map<String, dynamic>;
+      phone = map['phone'];
+      password = map['password'];
+    }
+
+    final code = _pinController.text;
+    if (code.length != 6) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await context.read<AuthProvider>().verifyOTP(phone, code);
+      if (password != null) await context.read<AuthProvider>().login(phone, password);
+      if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
