@@ -44,15 +44,6 @@ class ProfileScreen extends StatelessWidget {
                           backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=passenger'),
                         ),
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 14),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -125,9 +116,8 @@ class ProfileScreen extends StatelessWidget {
               context,
               'account'.tr(),
               [
-                _ProfileTile(icon: Icons.person_outline_rounded, title: 'edit_profile'.tr(), onTap: () => Navigator.pushNamed(context, '/edit-profile')),
                 _ProfileTile(icon: Icons.history_rounded, title: 'trip_history'.tr(), onTap: () => Navigator.pushNamed(context, '/transaction-history')),
-                _ProfileTile(icon: Icons.payment_rounded, title: 'payment_methods'.tr(), onTap: () => Navigator.pushNamed(context, '/payment-methods')),
+                _ProfileTile(icon: Icons.lock_outline_rounded, title: 'change_password'.tr(), onTap: () => Navigator.pushNamed(context, '/change-password')),
               ],
             ),
             _buildSection(
@@ -135,8 +125,6 @@ class ProfileScreen extends StatelessWidget {
               'preferences'.tr(),
               [
                 _ProfileTile(icon: Icons.language_rounded, title: 'language'.tr(), subtitle: 'English', onTap: () => Navigator.pushNamed(context, '/language')),
-                _ProfileTile(icon: Icons.notifications_none_rounded, title: 'notification_settings'.tr(), onTap: () {}),
-                _ProfileTile(icon: Icons.security_rounded, title: 'security_pin_biometric'.tr(), onTap: () {}),
               ],
             ),
             _buildSection(

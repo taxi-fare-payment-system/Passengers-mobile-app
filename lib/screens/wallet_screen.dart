@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -107,8 +108,11 @@ class _WalletScreenState extends State<WalletScreen> {
               Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('no_transactions_yet'.tr())))
             else
               ...wallet.transactions.take(5).map((tx) {
-                final isExpense = tx['sender_wallet_id'] == wallet.walletId || tx['reason'] == 'fare';
+                final reason = (tx['reason'] ?? '').toString().toLowerCase();
+                final isTopUp = reason.contains('topup') || reason.contains('top up');
+                final isExpense = !isTopUp && (tx['sender_wallet_id'] == wallet.walletId || tx['reason'] == 'fare');
                 final amount = double.tryParse(tx['amount']?.toString() ?? '0') ?? 0;
+                
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
@@ -118,20 +122,53 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        isExpense ? Icons.arrow_upward : Icons.arrow_downward,
-                        color: isExpense ? Colors.red : Colors.green,
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isExpense ? Colors.red : Colors.green).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isExpense ? Icons.call_made_rounded : Icons.call_received_rounded,
+                          color: isExpense ? Colors.red : Colors.green,
+                          size: 16,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: Text(
-                          tx['reason'] == 'fare' ? 'taxi_fare'.tr() : 'top_up'.tr(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              () {
+                                final reason = (tx['reason'] ?? '').toString().toLowerCase();
+                                final message = (tx['message'] ?? '').toString().toLowerCase();
+                                
+                                if (reason == 'fare' || message.contains('fare')) return 'taxi_fare'.tr();
+                                if (reason == 'transfer' || message.contains('transfer')) {
+                                  if (message.contains('p2p')) return 'p2p_transfer'.tr();
+                                  return 'transfer'.tr();
+                                }
+                                if (reason.contains('topup') || reason.contains('top up')) return 'wallet_top_up'.tr();
+                                
+                                return tx['reason']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'transaction'.tr();
+                              }(),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            if (tx['created_at'] != null)
+                              Text(
+                                DateFormat('MMM dd, HH:mm').format(DateTime.parse(tx['created_at'])),
+                                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                              ),
+                          ],
                         ),
                       ),
                       Text(
                         '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isExpense ? AppTheme.textPrimary : Colors.green,
+                        ),
                       ),
                     ],
                   ),

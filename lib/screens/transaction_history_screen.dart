@@ -89,7 +89,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final tx = transactions[index];
-        final isExpense = isTrip || tx['reason'] == 'fare';
+        final reason = (tx['reason'] ?? '').toString().toLowerCase();
+        final isTopUp = reason.contains('topup') || reason.contains('top up');
+        final isExpense = !isTopUp && (isTrip || tx['reason'] == 'fare' || (tx['sender_wallet_id'] == wallet.walletId));
         final amount = double.tryParse((isTrip ? tx['totalFare'] : tx['amount'])?.toString() ?? '0') ?? 0;
         final date = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
 
@@ -108,7 +110,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isTrip ? Icons.directions_car_rounded : (isExpense ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
+                  isTrip ? Icons.directions_car_rounded : (isExpense ? Icons.call_made_rounded : Icons.call_received_rounded),
                   color: isExpense ? Colors.red : Colors.green,
                   size: 20,
                 ),
@@ -119,7 +121,20 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isTrip ? '${tx['startLocation']} → ${tx['endLocation']}' : (tx['reason'] == 'fare' ? 'taxi_fare'.tr() : 'wallet_top_up'.tr()),
+                      () {
+                        if (isTrip) return '${tx['startLocation']} → ${tx['endLocation']}';
+                        final reason = (tx['reason'] ?? '').toString().toLowerCase();
+                        final message = (tx['message'] ?? '').toString().toLowerCase();
+                        
+                        if (reason == 'fare' || message.contains('fare')) return 'taxi_fare'.tr();
+                        if (reason == 'transfer' || message.contains('transfer')) {
+                          if (message.contains('p2p')) return 'p2p_transfer'.tr();
+                          return 'transfer'.tr();
+                        }
+                        if (reason.contains('topup') || reason.contains('top up')) return 'wallet_top_up'.tr();
+                        
+                        return tx['reason']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'transaction'.tr();
+                      }(),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

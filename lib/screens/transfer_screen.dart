@@ -56,12 +56,13 @@ class _TransferScreenState extends State<TransferScreen> {
                     child: TextFormField(
                       controller: _recipientController,
                       decoration: InputDecoration(
-                        labelText: 'recipient_wallet_id'.tr(),
-                        hintText: 'UUID',
+                        labelText: 'phone_number'.tr(),
+                        hintText: '09xxxxxxxx',
                         filled: true,
                         fillColor: AppTheme.surfaceColor,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
+                      keyboardType: TextInputType.phone,
                       validator: (value) => value == null || value.isEmpty ? 'required'.tr() : null,
                     ),
                   ),
@@ -127,7 +128,7 @@ class _TransferScreenState extends State<TransferScreen> {
                               final token = auth.token!;
                               await walletProvider.transferFunds(
                                 fromWalletId: walletProvider.walletId!,
-                                toWalletId: _recipientController.text.trim(),
+                                toPhoneNumber: _recipientController.text.trim(),
                                 amount: double.parse(_amountController.text),
                                 message: _messageController.text.isNotEmpty ? _messageController.text : null,
                                 token: token,

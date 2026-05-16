@@ -53,7 +53,26 @@ class QRProvider with ChangeNotifier {
 
   Future<Map<String, dynamic>?> getDriverFromQR(String qrCode, String token, {Map<String, String>? headers}) async {
     try {
-      // 1. Try to decode as Base64 JSON
+      final encodedQR = Uri.encodeComponent(qrCode);
+      final response = await ApiService.get(
+        '/api/v1/qr/$encodedQR/driver',
+        token: token,
+        extraHeaders: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'driver_id': data['driver_id'],
+          'scanned_at': DateTime.now().toIso8601String(),
+        };
+      }
+    } catch (e) {
+      print('QR Debug: Official driver lookup failed: $e');
+    }
+
+    // Fallback: Try to decode as Base64 JSON (for test QR codes)
+    try {
       final decoded = utf8.decode(base64.decode(qrCode));
       final Map<String, dynamic> data = jsonDecode(decoded);
       if (data.containsKey('driver_id')) {
@@ -63,10 +82,7 @@ class QRProvider with ChangeNotifier {
           'raw_data': data,
         };
       }
-    } catch (e) {
-      // 2. Fallback: Assume it's a URL or raw ID
-      print('QR Debug: Not a Base64 JSON, falling back to raw: $e');
-    }
+    } catch (_) {}
 
     return {
       'driver_id': qrCode.split('/').last,

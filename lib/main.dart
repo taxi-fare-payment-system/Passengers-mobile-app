@@ -85,7 +85,7 @@ class WuloPayApp extends StatelessWidget {
         '/transfer': (context) => const TransferScreen(),
         '/notifications': (context) => const NotificationScreen(),
         '/verification': (context) => const VerificationScreen(),
-        '/edit-profile': (context) => EditProfileScreen(),
+        '/change-password': (context) => const ChangePasswordScreen(),
       },
     );
   }

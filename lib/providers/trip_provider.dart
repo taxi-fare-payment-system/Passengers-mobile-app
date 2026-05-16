@@ -117,10 +117,15 @@ class TripProvider with ChangeNotifier {
         }
         
         // Fetch route details if missing
-        if (_currentTrip != null && _currentTrip!['route'] == null && _currentTrip!['routeId'] != null) {
-          final routeResp = await ApiService.get('/api/v1/routes/${_currentTrip!['routeId']}', token: token, extraHeaders: headers);
+        final rId = _currentTrip!['routeId'] ?? _currentTrip!['route_id'];
+        if (_currentTrip != null && _currentTrip!['route'] == null && rId != null) {
+          print('Trip Debug: Fetching route details for $rId');
+          final routeResp = await ApiService.get('/api/v1/routes/$rId', token: token, extraHeaders: headers);
           if (routeResp.statusCode == 200) {
             _currentTrip!['route'] = jsonDecode(routeResp.body);
+            print('Trip Debug: Route details fetched successfully');
+          } else {
+            print('Trip Debug: Failed to fetch route details status ${routeResp.statusCode}');
           }
         }
         
@@ -139,14 +144,22 @@ class TripProvider with ChangeNotifier {
 
   Future<void> fetchNextStops(String tripId, String token, {Map<String, String>? headers}) async {
     try {
+      print('Trip Debug: Fetching next stops for $tripId');
       final response = await ApiService.get('/api/v1/trips/$tripId/stops/next', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _nextStops = data['stops'] ?? [];
+        print('Trip Debug: Fetched ${_nextStops.length} next stops');
+        notifyListeners();
+      } else {
+        print('Trip Debug: Next stops fetch failed status ${response.statusCode}: ${response.body}');
+        _nextStops = [];
         notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching next stops: $e');
+      _nextStops = [];
+      notifyListeners();
     }
   }
 

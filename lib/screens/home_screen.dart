@@ -143,37 +143,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleQRValue(String code, QRProvider qrProvider, AuthProvider auth, TripProvider tripProvider) async {
-    // 1. Verify QR Code
-    final isValid = await qrProvider.verifyQRCode(code, auth.token!, headers: auth.headers);
-    
-    if (!isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('invalid_qr_code'.tr()))
-        );
-      }
-      return;
-    }
-
-    // 2. Handle QR based on content
+    // 1. Resolve Driver/Trip
     try {
-      if (code.contains('/')) {
-        // Trip URL format
+      if (code.contains('/') && !code.contains('eyJ')) {
+        // Legacy Trip URL format
         final tripId = code.split('/').last;
         await tripProvider.fetchTripStatus(tripId, auth.token!);
         if (mounted) {
-          Navigator.pushNamed(
-            context, 
-            '/confirm-payment', 
-            arguments: {'trip_id': tripId}
-          );
+          Navigator.pushNamed(context, '/confirm-payment', arguments: {'trip_id': tripId});
         }
       } else {
-        // Driver QR format (JSON or ID)
-        final driverInfo = await qrProvider.getDriverFromQR(code, auth.token!);
+        // Driver QR format (Official /driver endpoint or Base64 Fallback)
+        final driverInfo = await qrProvider.getDriverFromQR(code, auth.token!, headers: auth.headers);
         if (driverInfo != null && driverInfo['driver_id'] != null) {
           final driverId = driverInfo['driver_id'];
-          await tripProvider.fetchActiveTripByDriver(driverId, auth.token!);
+          await tripProvider.fetchActiveTripByDriver(driverId, auth.token!, headers: auth.headers);
           
           if (mounted && tripProvider.currentTrip != null) {
             Navigator.pushNamed(
@@ -181,6 +165,12 @@ class _HomeScreenState extends State<HomeScreen> {
               '/confirm-payment', 
               arguments: {'trip_id': tripProvider.currentTrip!['id']}
             );
+          }
+        } else {
+          // General verification if not a driver QR
+          final isValid = await qrProvider.verifyQRCode(code, auth.token!, headers: auth.headers);
+          if (!isValid && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('invalid_qr_code'.tr())));
           }
         }
       }
@@ -373,10 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            if (trip.currentTrip != null) ...[
-              _buildActiveTripCard(context, trip),
-              const SizedBox(height: 24),
-            ],
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -391,28 +378,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: InkWell(
-                    onTap: () => _fetchData(),
+                    onTap: () => _showManualQRDialog(),
                     child: _ActionCard(
-                      icon: Icons.map_outlined,
-                      title: 'find_taxi'.tr(),
-                      subtitle: 'routes'.tr(),
-                      color: Colors.orange.withOpacity(0.05),
-                      iconColor: Colors.orange,
+                      icon: Icons.qr_code_scanner_rounded,
+                      title: 'pay_fare'.tr(),
+                      subtitle: 'scan_or_enter_qr'.tr(),
+                      color: Colors.green.withOpacity(0.05),
+                      iconColor: Colors.green,
                     ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: () => _showManualQRDialog(),
-              child: _ActionCard(
-                icon: Icons.qr_code_scanner_rounded,
-                title: 'pay_fare'.tr(),
-                subtitle: 'scan_or_enter_qr'.tr(),
-                color: Colors.green.withOpacity(0.05),
-                iconColor: Colors.green,
-              ),
             ),
             const SizedBox(height: 32),
             Row(

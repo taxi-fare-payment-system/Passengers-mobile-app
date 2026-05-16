@@ -161,7 +161,7 @@ class WalletProvider with ChangeNotifier {
 
   Future<void> transferFunds({
     required String fromWalletId,
-    required String toWalletId,
+    required String toPhoneNumber,
     required double amount,
     String? message,
     required String token,
@@ -170,19 +170,25 @@ class WalletProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.put(
+      final response = await ApiService.post(
         '/api/v1/wallet/$fromWalletId/transfer',
         {
           'amount': amount,
-          'to_wallet_id': toWalletId,
+          'to_phone_number': toPhoneNumber,
           'message': message ?? 'P2P Transfer',
         },
         token: token,
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body)['message'] ?? 'Transfer failed';
         throw Exception(error);
+      }
+      
+      // Auto-refresh wallet after success
+      final userId = jsonDecode(response.body)['payer_user_id']?.toString() ?? '';
+      if (userId.isNotEmpty) {
+        await refreshWallet(userId, token);
       }
     } finally {
       _isTransferring = false;
@@ -254,5 +260,10 @@ class WalletProvider with ChangeNotifier {
       final error = jsonDecode(response.body)['message'] ?? 'Withdrawal failed';
       throw Exception(error);
     }
+  }
+
+  Future<void> refreshWallet(String userId, String token) async {
+    await fetchBalance(userId, token);
+    await fetchTransactions(userId, token);
   }
 }

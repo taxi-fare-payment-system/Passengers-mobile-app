@@ -76,6 +76,12 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         headers: auth.headers,
       );
 
+      // Auto-refresh wallet after payment
+      final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
+      if (userId.isNotEmpty) {
+        wallet.refreshWallet(userId, auth.token!);
+      }
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -99,9 +105,6 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     final tripProvider = context.watch<TripProvider>();
     final auth = context.read<AuthProvider>();
     
-    final currentTrip = tripProvider.currentTrip;
-    final stops = currentTrip?['route']?['stops'] as List<dynamic>? ?? [];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -148,94 +151,111 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             if (_isLoadingStops) ...[
               const Center(child: CircularProgressIndicator()),
             ] else if (tripProvider.nextStops.isEmpty && (tripProvider.currentTrip?['route']?['stops'] as List?)?.isEmpty == true) ...[
-              Text('no_upcoming_stops'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amber.withOpacity(0.2)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                    const SizedBox(height: 12),
+                    Text(
+                      'no_upcoming_stops'.tr(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'enter_qr_manually'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                    ),
+                  ],
+                ),
+              ),
             ] else ...[
-              ...List.generate(
-                tripProvider.nextStops.isNotEmpty 
-                  ? tripProvider.nextStops.length 
-                  : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []).length, 
-                (index) {
-                final stopsSource = tripProvider.nextStops.isNotEmpty 
-                  ? tripProvider.nextStops 
-                  : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []);
-                
-                final stop = stopsSource[index];
-                final stopIndex = stop['stopIndex'] ?? stop['index'];
-                final isSelected = _selectedStopIndex == stopIndex;
-                
-                // Resolve stop name from route
-                final routeStops = tripProvider.currentTrip?['route']?['stops'] as List<dynamic>? ?? [];
-                final stopInfo = routeStops.firstWhere(
-                  (s) => s['index'] == stopIndex || s['stopIndex'] == stopIndex,
-                  orElse: () => null,
-                );
-                final stopName = stopInfo?['name'] ?? 'Stop $stopIndex';
-                
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: InkWell(
-                    onTap: () async {
-                      setState(() => _selectedStopIndex = stopIndex as int?);
-                      if (stop['amount'] != null) {
-                        setState(() => _amountController.text = stop['amount'].toString());
-                      } else {
-                        try {
-                          final price = await tripProvider.fetchPriceQuote(
-                            tripId: tripId,
-                            destinationStopIndex: stopIndex as int,
-                            token: auth.token!,
-                            headers: auth.headers,
-                          );
-                          setState(() => _amountController.text = price.toStringAsFixed(2));
-                        } catch (e) {
-                          print('Price quote error: $e');
-                        }
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9),
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_rounded,
-                            color: isSelected ? AppTheme.primaryColor : Colors.grey[400],
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  stopName,
-                                  style: TextStyle(
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
-                                  ),
-                                ),
-                                if (stop['distanceKm'] != null || stop['distance'] != null)
-                                  Text(
-                                    '${stop['distanceKm'] ?? stop['distance'] ?? '--'} km • ${stop['amount'] ?? '--'} ETB',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                                  ),
-                              ],
+              for (var stop in (tripProvider.nextStops.isNotEmpty 
+                ? tripProvider.nextStops 
+                : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []))) 
+                Builder(
+                  builder: (context) {
+                    final stopIndex = stop['stopIndex'] ?? stop['index'];
+                    final isSelected = _selectedStopIndex == stopIndex;
+                    final routeStops = tripProvider.currentTrip?['route']?['stops'] as List<dynamic>? ?? [];
+                    final stopInfo = routeStops.firstWhere(
+                      (s) => s['index'] == stopIndex || s['stopIndex'] == stopIndex,
+                      orElse: () => null,
+                    );
+                    final stopName = stopInfo?['name'] ?? 'Stop $stopIndex';
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: InkWell(
+                        onTap: () async {
+                          setState(() => _selectedStopIndex = stopIndex as int?);
+                          if (stop['amount'] != null) {
+                            setState(() => _amountController.text = stop['amount'].toString());
+                          } else {
+                            try {
+                              final price = await tripProvider.fetchPriceQuote(
+                                tripId: tripId,
+                                destinationStopIndex: stopIndex as int,
+                                token: auth.token!,
+                                headers: auth.headers,
+                              );
+                              setState(() => _amountController.text = price.toStringAsFixed(2));
+                            } catch (e) {
+                              print('Price quote error: $e');
+                            }
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9),
+                              width: 2,
                             ),
                           ),
-                          if (isSelected)
-                            const Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor),
-                        ],
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_rounded,
+                                color: isSelected ? AppTheme.primaryColor : Colors.grey[400],
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      stopName,
+                                      style: TextStyle(
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    if (stop['distanceKm'] != null || stop['distance'] != null)
+                                      Text(
+                                        '${stop['distanceKm'] ?? stop['distance'] ?? '--'} km • ${stop['amount'] ?? '--'} ETB',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }),
+                    );
+                  }
+                ),
             ],
 
             const SizedBox(height: 40),
