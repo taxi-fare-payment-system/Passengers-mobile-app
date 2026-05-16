@@ -7,6 +7,7 @@ import '../providers/qr_provider.dart';
 import '../providers/trip_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/wallet_provider.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -65,7 +66,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Text('welcome_back'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, color: theme.hintColor.withOpacity(0.5))),
             Text(
-              auth.user?['display_name'] ?? auth.user?['name'] ?? 'User',
+              auth.user?['display_name'] ?? auth.user?['name'] ?? 'user'.tr(),
               style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
             ),
           ],
@@ -123,10 +124,14 @@ class HomeScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${wallet.balance ?? '0.00'} ETB',
-                style: theme.textTheme.displayLarge?.copyWith(fontSize: 40, color: AppTheme.accentColor, letterSpacing: -1),
+              Expanded(
+                child: Text(
+                  '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
+                  style: theme.textTheme.displayLarge?.copyWith(fontSize: 40, color: AppTheme.accentColor, letterSpacing: -1),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 12),
               Container(
                 decoration: BoxDecoration(color: AppTheme.accentColor, borderRadius: BorderRadius.circular(16)),
                 child: IconButton(
@@ -155,7 +160,7 @@ class HomeScreen extends StatelessWidget {
         _QuickActionItem(
           icon: Icons.qr_code_rounded,
           label: 'scan_pay'.tr(),
-          onTap: () => Navigator.pushNamed(context, '/home'), 
+          onTap: () => _showQRScanner(context), 
         ),
         _QuickActionItem(
           icon: Icons.account_balance_wallet_rounded,
@@ -260,6 +265,70 @@ class HomeScreen extends StatelessWidget {
       children: tripProvider.tripHistory.take(3).map((trip) => _TripItem(trip: trip)).toList(),
     );
   }
+
+  void _showQRScanner(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            Text('scan_pay'.tr().toUpperCase(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1)),
+            const SizedBox(height: 24),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: MobileScanner(
+                    onDetect: (capture) async {
+                      final List<Barcode> barcodes = capture.barcodes;
+                      if (barcodes.isNotEmpty) {
+                        final String? code = barcodes.first.rawValue;
+                        if (code != null) {
+                          Navigator.pop(context);
+                          final auth = context.read<AuthProvider>();
+                          final qrProvider = context.read<QRProvider>();
+                          
+                          try {
+                            final isValid = await qrProvider.verifyQRCode(code, auth.token!, headers: auth.headers);
+                            if (context.mounted) {
+                              if (isValid) {
+                                Navigator.pushNamed(context, '/confirm-payment', arguments: {'trip_id': code});
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('invalid_qr_code'.tr())));
+                              }
+                            }
+                          } catch (e) {
+                            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                          }
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            TextButton(
+              onPressed: () => Navigator.pop(context), 
+              child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary))
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _QuickActionItem extends StatelessWidget {
@@ -272,11 +341,13 @@ class _QuickActionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(28),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.26,
+        width: (width - 64 - 32) / 3, // Dynamic width for responsiveness
         padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
           color: theme.cardColor,
@@ -287,7 +358,13 @@ class _QuickActionItem extends StatelessWidget {
           children: [
             Icon(icon, color: AppTheme.accentColor, size: 32),
             const SizedBox(height: 12),
-            Text(label.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5)),
+            Text(
+              label.toUpperCase(), 
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 9, letterSpacing: 0.5),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -302,6 +379,8 @@ class _TripItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final date = DateTime.tryParse(trip['created_at'] ?? '') ?? DateTime.now();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(24),
@@ -332,14 +411,14 @@ class _TripItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  trip['created_at'] != null ? trip['created_at'].toString().split('T')[0] : 'Today',
+                  DateFormat.yMMMd(context.locale.toString()).format(date),
                   style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
           ),
           Text(
-            '${trip['estimated_fare']} ETB',
+            '${trip['estimated_fare']} ${'currency'.tr()}',
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppTheme.accentColor),
           ),
         ],

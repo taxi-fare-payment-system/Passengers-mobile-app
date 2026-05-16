@@ -189,7 +189,7 @@ class VehicleDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${'base_rate'.tr()}: ${typeInfo['pricePerKm'] ?? 15.0} ETB / km',
+                  '${'base_rate'.tr()}: ${typeInfo['pricePerKm'] ?? '0.00'} ${'currency'.tr()} / km',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(

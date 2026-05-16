@@ -82,98 +82,119 @@ class _NotificationScreenState extends State<NotificationScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
       itemCount: provider.notifications.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final notification = provider.notifications[index];
         final isUnread = notification['status'] != 'read';
         final date = DateTime.tryParse(notification['created_at'] ?? '') ?? DateTime.now();
         
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: InkWell(
-            onTap: () {
-              if (isUnread) {
-                provider.markAsRead(notification['id'], auth.token!, headers: auth.headers);
-              }
-            },
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isUnread ? theme.cardColor : theme.cardColor.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isUnread ? AppTheme.accentColor.withOpacity(0.2) : theme.dividerColor.withOpacity(0.05),
-                  width: 1.5,
+        return InkWell(
+          onTap: () {
+            if (isUnread) {
+              provider.markAsRead(notification['id'], auth.token!, headers: auth.headers);
+            }
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isUnread ? theme.cardColor : theme.cardColor.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isUnread ? AppTheme.accentColor.withOpacity(0.15) : theme.dividerColor.withOpacity(0.03),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _getCategoryColor(notification['category']).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_getCategoryIcon(notification['category']), color: _getCategoryColor(notification['category']), size: 20),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _getCategoryColor(notification['category']).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(_getCategoryIcon(notification['category']), color: _getCategoryColor(notification['category']), size: 20),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                notification['title'] ?? 'notification'.tr(),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14,
-                                  color: isUnread ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodyMedium?.color,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _translate(notification['title'] ?? 'notification'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                                color: isUnread ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
-                              DateFormat('HH:mm').format(date),
-                              style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          notification['content'] ?? '',
-                          style: TextStyle(
-                            color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
-                            fontSize: 12,
-                            height: 1.4,
-                            fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          Text(
+                            DateFormat.Hm(context.locale.toString()).format(date),
+                            style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, color: theme.hintColor.withOpacity(0.4)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _translate(notification['content'] ?? ''),
+                        style: TextStyle(
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+                          fontSize: 12,
+                          height: 1.4,
+                          fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
                         ),
-                      ],
-                    ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  if (isUnread)
-                    Container(
-                      margin: const EdgeInsets.only(left: 12),
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(color: AppTheme.accentColor, shape: BoxShape.circle),
-                    ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
       },
     );
+  }
+
+  String _translate(String text) {
+    String cleanText = text.replaceAll(RegExp(r'Transaction ID:.*', caseSensitive: false), '').trim();
+    String lower = cleanText.toLowerCase();
+    
+    // Pattern mapping for common API strings
+    if (lower.contains('payment successful') || lower.contains('fare paid')) return 'payment_successful'.tr();
+    if (lower.contains('trip assigned')) return 'trip_assigned'.tr();
+    if (lower.contains('top-up successful') || lower.contains('wallet topped up')) return 'top_up_successful'.tr();
+    if (lower.contains('wallet balance') && lower.contains('low')) return 'low_balance_alert'.tr();
+    if (lower.contains('phone verified')) return 'phone_verified'.tr();
+    if (lower.contains('welcome')) return 'welcome'.tr();
+    
+    // Content pattern matching for complex strings with amounts
+    if (lower.contains('you paid')) {
+      final amount = RegExp(r'(\d+\.?\d*)').firstMatch(cleanText)?.group(0) ?? '';
+      if (lower.contains('for your trip')) {
+        return 'paid_for_trip'.tr(args: [amount, 'currency'.tr()]);
+      } else {
+        return 'paid_amount'.tr(args: [amount, 'currency'.tr()]);
+      }
+    }
+    if (lower.contains('wallet has been credited')) {
+      final amount = RegExp(r'(\d+\.?\d*)').firstMatch(cleanText)?.group(0) ?? '';
+      return 'top_up_successful_msg'.tr(args: [amount, 'currency'.tr()]);
+    }
+
+    return cleanText.tr();
   }
 
   IconData _getCategoryIcon(String? category) {
@@ -190,7 +211,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       case 'billing': case 'payment': return Colors.green;
       case 'trip': return AppTheme.accentColor;
       case 'security': return Colors.red;
-      default: return Colors.blue;
+      default: return AppTheme.accentColor;
     }
   }
 }

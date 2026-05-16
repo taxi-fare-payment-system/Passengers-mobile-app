@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -52,7 +53,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Transaction Detail', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('transaction'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -74,12 +75,12 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              isExpense ? 'Trip Payment' : 'Top-up Successful', 
+              isExpense ? 'taxi_fare'.tr() : 'top_up_successful'.tr(), 
               style: TextStyle(color: isExpense ? Colors.red : Colors.green, fontWeight: FontWeight.bold, fontSize: 16)
             ),
             const SizedBox(height: 8),
             Text(
-              '${isExpense ? '-' : '+'}${tx['amount']} ETB', 
+              '${isExpense ? '-' : '+'}${tx['amount']} ${'currency'.tr()}', 
               style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)
             ),
             const SizedBox(height: 48),
@@ -101,13 +102,12 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                   const SizedBox(height: 16),
                   _DetailRow(label: 'Time', value: DateFormat('hh:mm a').format(date)),
                   const SizedBox(height: 16),
-                  _DetailRow(label: 'Transaction ID', value: '#${tx['id'].toString().substring(0, 12)}'),
                   const Divider(height: 48),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Total Amount', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
-                      Text('${tx['amount']} ETB', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryColor)),
+                      Text('${tx['amount']} ${'currency'.tr()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryColor)),
                     ],
                   ),
                 ],

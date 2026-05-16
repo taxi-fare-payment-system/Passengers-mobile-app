@@ -130,21 +130,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         if (r == 'fare' || m.contains('fare')) return 'taxi_fare'.tr();
                         if (r == 'transfer' || m.contains('transfer')) return m.contains('p2p') ? 'p2p_transfer'.tr() : 'transfer'.tr();
                         if (r.contains('topup') || r.contains('top up')) return 'wallet_top_up'.tr();
-                        return tx['reason']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'transaction'.tr();
+                        return (tx['reason']?.toString().toLowerCase() ?? 'transaction').tr().toUpperCase();
                       }(),
                       style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      DateFormat('MMM dd, HH:mm').format(date),
+                      DateFormat.yMMMd(context.locale.toString()).add_Hm().format(date),
                       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
               Text(
-                '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)}',
+                '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)} ${'currency'.tr()}',
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 16,

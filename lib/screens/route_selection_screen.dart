@@ -140,7 +140,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                                   return _RouteCard(
                                     title: route['name'] ?? '${'route'.tr()} ${index + 1}',
                                     subtitle: '${route['startLocation']} → ${route['endLocation']}',
-                                    fare: '${route['baseFare']} ETB',
+                                    fare: '${route['baseFare']} ${'currency'.tr()}',
                                     time: '${route['estimatedDuration']} ${'mins'.tr()}',
                                     isSelected: _selectedRouteIndex == index,
                                     onTap: () => setState(() => _selectedRouteIndex = index),

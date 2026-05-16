@@ -24,7 +24,7 @@ class PaymentMethodsScreen extends StatelessWidget {
           _PaymentMethodItem(
             icon: Icons.account_balance_wallet_rounded,
             title: 'wulopay_wallet'.tr(),
-            subtitle: '${'balance'.tr()}: 450.00 ETB',
+            subtitle: '${'balance'.tr()}: 500 ${'currency'.tr()}',
             isSelected: true,
           ),
           const SizedBox(height: 32),

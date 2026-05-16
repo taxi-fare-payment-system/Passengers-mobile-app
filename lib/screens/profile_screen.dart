@@ -71,7 +71,21 @@ class ProfileScreen extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (auth.isVerified) const Icon(Icons.verified_rounded, color: AppTheme.accentColor, size: 20),
+                                  if (auth.isVerified) 
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.verified_rounded, color: AppTheme.accentColor, size: 16),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'verified'.tr(), 
+                                            style: const TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5)
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                               ],
                             ),
                             const SizedBox(height: 4),
@@ -104,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${wallet.balance ?? '0.00'} ETB',
+                              '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
                               style: theme.textTheme.displayLarge?.copyWith(fontSize: 32, color: AppTheme.accentColor),
                             ),
                             Container(

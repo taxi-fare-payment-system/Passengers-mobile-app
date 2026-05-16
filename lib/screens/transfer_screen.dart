@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
+import '../providers/notification_provider.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -86,8 +87,8 @@ class _TransferScreenState extends State<TransferScreen> {
               TextFormField(
                 controller: _amountController,
                 decoration: InputDecoration(
-                  labelText: 'amount_etb'.tr(),
-                  prefixText: 'ETB ',
+                  labelText: 'amount'.tr(),
+                  prefixText: '${'currency'.tr()} ',
                   fillColor: theme.cardColor,
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -127,6 +128,14 @@ class _TransferScreenState extends State<TransferScreen> {
                               token: token,
                             );
                             if (mounted) {
+                              // Trigger notification and transaction refresh
+                              final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
+                              if (userId.isNotEmpty) {
+                                walletProvider.refreshWallet(userId, auth.token!);
+                                context.read<NotificationProvider>().fetchNotifications(auth.token!, headers: auth.headers);
+                                walletProvider.fetchTransactions(userId, auth.token!);
+                              }
+                              
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('transfer_successful'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)), 

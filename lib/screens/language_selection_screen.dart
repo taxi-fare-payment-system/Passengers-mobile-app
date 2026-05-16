@@ -14,13 +14,23 @@ class LanguageSelectionScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: Navigator.canPop(context) 
+        ? AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ) 
+        : null,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60),
+              if (!Navigator.canPop(context)) const SizedBox(height: 60),
               // Brand Mark
               Container(
                 padding: const EdgeInsets.all(16),
@@ -58,13 +68,23 @@ class LanguageSelectionScreen extends StatelessWidget {
               
               _LanguageOption(
                 title: 'አማርኛ (Amharic)',
-                onTap: () => context.setLocale(const Locale('am')),
+                onTap: () async {
+                  await context.setLocale(const Locale('am'));
+                  if (context.mounted && Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
                 isActive: context.locale.languageCode == 'am',
               ),
               const SizedBox(height: 12),
               _LanguageOption(
                 title: 'English',
-                onTap: () => context.setLocale(const Locale('en')),
+                onTap: () async {
+                  await context.setLocale(const Locale('en'));
+                  if (context.mounted && Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
                 isActive: context.locale.languageCode == 'en',
               ),
               

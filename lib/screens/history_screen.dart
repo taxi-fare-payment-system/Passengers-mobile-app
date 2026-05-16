@@ -109,7 +109,7 @@ class _PaymentsList extends StatelessWidget {
           title: tx['reason'] ?? (isCredit ? 'wallet_top_up'.tr() : 'payment'.tr()),
           date: DateFormat('dd MMM yyyy').format(dt),
           time: DateFormat('hh:mm a').format(dt),
-          amount: '${tx['amount']} ETB',
+          amount: '${tx['amount']} ${'currency'.tr()}',
           status: tx['status'] == 'completed' || tx['status'] == 'success' ? 'successful'.tr() : 'pending'.tr(),
           isCredit: isCredit,
         );

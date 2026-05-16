@@ -5,7 +5,7 @@ class AppTheme {
   static const Color primaryColor = Color(0xFF101828); 
   static const Color accentColor = Color(0xFFFF9900); 
   static const Color backgroundColor = Colors.white;
-  static const Color surfaceColor = Color(0xFFF9FAFB);
+  static const Color surfaceColor = Color(0xFFF3F4F6); // Slightly darker for better contrast in light mode
   static const Color textPrimary = Color(0xFF111827);
   static const Color textSecondary = Color(0xFF6B7280);
   static const Color dividerColor = Color(0xFFE5E7EB);
@@ -111,7 +111,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? const Color(0xFF111827) : Colors.white,
+        fillColor: isDark ? const Color(0xFF111827) : const Color(0xFFF9FAFB),
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),

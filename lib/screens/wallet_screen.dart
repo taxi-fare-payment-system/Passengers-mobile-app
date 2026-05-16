@@ -70,7 +70,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${wallet.balance ?? '0.00'} ETB',
+                    '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
                     style: theme.textTheme.displayLarge?.copyWith(fontSize: 40, color: AppTheme.accentColor, letterSpacing: -1),
                   ),
                   const SizedBox(height: 40),
@@ -142,7 +142,7 @@ class _QuickActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: isAccent ? AppTheme.accentColor : Theme.of(context).scaffoldBackgroundColor,
+          color: isAccent ? AppTheme.accentColor : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: isAccent ? AppTheme.accentColor : Theme.of(context).dividerColor.withOpacity(0.1)),
         ),
@@ -212,14 +212,14 @@ class _TransactionTile extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                 ),
                 Text(
-                  DateFormat('MMM dd, HH:mm').format(DateTime.parse(tx['created_at'])),
+                  DateFormat.yMMMd(context.locale.toString()).add_Hm().format(DateTime.parse(tx['created_at'])),
                   style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
           ),
           Text(
-            '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)}',
+            '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)} ${'currency'.tr()}',
             style: TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 16,

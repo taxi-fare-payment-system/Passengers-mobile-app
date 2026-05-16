@@ -6,6 +6,8 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
 import '../providers/wallet_provider.dart';
+import '../providers/qr_provider.dart';
+import '../providers/notification_provider.dart';
 import 'feedback_screens.dart';
 
 class ConfirmPaymentScreen extends StatefulWidget {
@@ -36,13 +38,28 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     });
   }
 
-  Future<void> _fetchStops(String? tripId) async {
-    if (tripId == null) return;
+  Future<void> _fetchStops(String? qrCode) async {
+    if (qrCode == null) return;
     setState(() => _isLoadingStops = true);
     try {
       final auth = context.read<AuthProvider>();
       final tripProvider = context.read<TripProvider>();
-      await tripProvider.fetchNextStops(tripId, auth.token!, headers: auth.headers);
+      
+      // 1. Resolve Driver/Trip from QR
+      final qrProvider = context.read<QRProvider>();
+      final qrData = await qrProvider.getDriverFromQR(qrCode, auth.token!, headers: auth.headers);
+      final driverId = qrData?['driver_id'];
+      
+      if (driverId != null) {
+        // 2. Get active trip for this driver to get the REAL UUID
+        await tripProvider.fetchActiveTripByDriver(driverId, auth.token!, headers: auth.headers);
+        
+        // 3. Use the real Trip UUID to fetch stops
+        final realTripId = tripProvider.currentTrip?['id']?.toString();
+        if (realTripId != null) {
+          await tripProvider.fetchNextStops(realTripId, auth.token!, headers: auth.headers);
+        }
+      }
     } catch (e) {
       print('Error fetching stops: $e');
     } finally {
@@ -86,6 +103,9 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
       if (userId.isNotEmpty) {
         wallet.refreshWallet(userId, auth.token!);
+        // Trigger notification and transaction refresh
+        context.read<NotificationProvider>().fetchNotifications(auth.token!, headers: auth.headers);
+        wallet.fetchTransactions(userId, auth.token!);
       }
 
       if (mounted) {
@@ -124,11 +144,22 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         elevation: 0,
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: _isLoadingStops
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: AppTheme.accentColor),
+                  const SizedBox(height: 24),
+                  Text('fetching_trip_details'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             // Driver Card
             if (tripProvider.currentTrip != null)
               GestureDetector(
@@ -186,7 +217,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
               ),
               child: Column(
                 children: [
-                  Text('enter_amount_etb'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                  Text('enter_amount_currency'.tr(args: ['currency'.tr()]).toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
                   TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
@@ -209,12 +240,9 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             const SizedBox(height: 16),
             
             // Stops Grid
-            if (_isLoadingStops) ...[
-              const Center(child: CircularProgressIndicator()),
-            ] else ...[
-              for (var stop in (tripProvider.nextStops.isNotEmpty 
-                ? tripProvider.nextStops 
-                : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []))) 
+            for (var stop in (tripProvider.nextStops.isNotEmpty 
+              ? tripProvider.nextStops 
+              : (tripProvider.currentTrip?['route']?['stops'] as List? ?? []))) 
                 _StopItem(
                   stop: stop,
                   isSelected: _selectedStopIndex == (stop['stopIndex'] ?? stop['index'] ?? stop['sequence']),
@@ -239,7 +267,6 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                     }
                   },
                 ),
-            ],
 
             const SizedBox(height: 40),
             
@@ -331,7 +358,20 @@ class _StopItem extends StatelessWidget {
                   ],
                 ),
               ),
-              if (isSelected) const Icon(Icons.check_circle_rounded, color: Colors.black),
+              if (stop['amount'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Text(
+                    '${stop['amount']} ${'currency'.tr()}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      color: isSelected ? Colors.black : AppTheme.accentColor,
+                    ),
+                  ),
+                ),
+              if (isSelected && stop['amount'] == null) 
+                const Icon(Icons.check_circle_rounded, color: Colors.black),
             ],
           ),
         ),
@@ -373,25 +413,11 @@ class PaymentSuccessScreen extends StatelessWidget {
             Text('payment_successful'.tr(), style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32)),
             const SizedBox(height: 16),
             Text(
-              'paid_for_trip'.tr(args: [amount.toStringAsFixed(2)]),
+              'paid_for_trip'.tr(args: [amount.toStringAsFixed(2), 'currency'.tr()]),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 60),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  Text('transaction_id'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
-                  const SizedBox(height: 8),
-                  Text(transactionId, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
-                ],
-              ),
-            ),
             const Spacer(),
             ElevatedButton(
               onPressed: () => Navigator.pushReplacement(
