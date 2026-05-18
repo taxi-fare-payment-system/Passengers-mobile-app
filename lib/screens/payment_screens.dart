@@ -8,6 +8,7 @@ import '../providers/trip_provider.dart';
 import '../providers/wallet_provider.dart';
 import '../providers/qr_provider.dart';
 import '../providers/notification_provider.dart';
+import '../providers/driver_provider.dart';
 import 'feedback_screens.dart';
 
 class ConfirmPaymentScreen extends StatefulWidget {
@@ -44,19 +45,30 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     try {
       final auth = context.read<AuthProvider>();
       final tripProvider = context.read<TripProvider>();
+      final trimmedCode = qrCode.trim();
       
       // Check if the qrCode is already a valid UUID
       final uuidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
-      final isUuid = uuidRegex.hasMatch(qrCode);
+      final isUuid = uuidRegex.hasMatch(trimmedCode);
       
       if (isUuid) {
         // Fetch trip status to load currentTrip and fetch next stops directly
-        await tripProvider.fetchTripStatus(qrCode, auth.token!, headers: auth.headers);
-        await tripProvider.fetchNextStops(qrCode, auth.token!, headers: auth.headers);
+        await tripProvider.fetchTripStatus(trimmedCode, auth.token!, headers: auth.headers);
+        if (tripProvider.currentTrip != null) {
+          await tripProvider.fetchNextStops(trimmedCode, auth.token!, headers: auth.headers);
+        } else {
+          // If no trip was loaded, maybe the UUID represents a driver ID!
+          // Fallback: Fetch active trip by driver ID
+          await tripProvider.fetchActiveTripByDriver(trimmedCode, auth.token!, headers: auth.headers);
+          final realTripId = tripProvider.currentTrip?['id']?.toString();
+          if (realTripId != null) {
+            await tripProvider.fetchNextStops(realTripId, auth.token!, headers: auth.headers);
+          }
+        }
       } else {
         // 1. Resolve Driver/Trip from QR
         final qrProvider = context.read<QRProvider>();
-        final qrData = await qrProvider.getDriverFromQR(qrCode, auth.token!, headers: auth.headers);
+        final qrData = await qrProvider.getDriverFromQR(trimmedCode, auth.token!, headers: auth.headers);
         final driverId = qrData?['driver_id'];
         
         if (driverId != null) {
@@ -410,6 +422,8 @@ class PaymentSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
@@ -433,14 +447,47 @@ class PaymentSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 60),
             const Spacer(),
-            ElevatedButton(
-              onPressed: () => Navigator.pushReplacement(
-                context, 
-                MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
+            if (driverId != null) ...[
+              FutureBuilder<Map<String, dynamic>?>(
+                future: context.read<DriverProvider>().getDriverProfileData(driverId!, auth.token!, headers: auth.headers),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  
+                  final profile = snapshot.data;
+                  final reviews = profile?['reviews'] ?? {};
+                  final reviewList = reviews['reviews'] as List? ?? [];
+                  final currentUserId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
+                  final hasReviewed = reviewList.any((r) => r['reviewer_id']?.toString() == currentUserId);
+                  
+                  if (hasReviewed) {
+                    return const SizedBox.shrink(); // Hide the feedback button entirely
+                  }
+                  
+                  return ElevatedButton(
+                    onPressed: () => Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
+                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor, foregroundColor: Colors.black),
+                    child: Text('rate_your_trip'.tr().toUpperCase()),
+                  );
+                },
               ),
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor, foregroundColor: Colors.black),
-              child: Text('rate_your_trip'.tr().toUpperCase()),
-            ),
+            ] else ...[
+              ElevatedButton(
+                onPressed: () => Navigator.pushReplacement(
+                  context, 
+                  MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
+                ),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor, foregroundColor: Colors.black),
+                child: Text('rate_your_trip'.tr().toUpperCase()),
+              ),
+            ],
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),

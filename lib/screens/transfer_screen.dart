@@ -168,20 +168,21 @@ class _TransferScreenState extends State<TransferScreen> {
   }
 
   void _scanRecipientQR() {
+    bool hasScanned = false;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
+      builder: (modalContext) => Container(
+        height: MediaQuery.of(modalContext).size.height * 0.7,
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: Theme.of(modalContext).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(modalContext).dividerColor, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
             Text('scan_recipient_qr'.tr(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
             const SizedBox(height: 24),
@@ -192,12 +193,14 @@ class _TransferScreenState extends State<TransferScreen> {
                   borderRadius: BorderRadius.circular(32),
                   child: MobileScanner(
                     onDetect: (capture) {
+                      if (hasScanned) return;
                       final List<Barcode> barcodes = capture.barcodes;
                       if (barcodes.isNotEmpty) {
-                        final String? code = barcodes.first.rawValue;
+                        final String? code = barcodes.first.rawValue?.trim();
                         if (code != null) {
+                          hasScanned = true;
                           setState(() => _recipientController.text = code);
-                          Navigator.pop(context);
+                          Navigator.pop(modalContext);
                         }
                       }
                     },
@@ -207,7 +210,7 @@ class _TransferScreenState extends State<TransferScreen> {
             ),
             const SizedBox(height: 32),
             TextButton(
-              onPressed: () => Navigator.pop(context), 
+              onPressed: () => Navigator.pop(modalContext), 
               child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary))
             ),
             const SizedBox(height: 32),

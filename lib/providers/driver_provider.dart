@@ -78,4 +78,16 @@ class DriverProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>?> getDriverProfileData(String driverId, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.get('/api/v1/auth/drivers/$driverId/profile', token: token, extraHeaders: headers);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      print('Driver Debug: Error fetching driver profile data: $e');
+    }
+    return null;
+  }
 }

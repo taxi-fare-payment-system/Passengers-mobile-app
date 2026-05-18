@@ -267,6 +267,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showQRScanner(BuildContext context) {
+    bool hasScanned = false;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -291,10 +292,12 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(32),
                   child: MobileScanner(
                     onDetect: (capture) async {
+                      if (hasScanned) return;
                       final List<Barcode> barcodes = capture.barcodes;
                       if (barcodes.isNotEmpty) {
-                        final String? code = barcodes.first.rawValue;
+                        final String? code = barcodes.first.rawValue?.trim();
                         if (code != null) {
+                          hasScanned = true;
                           Navigator.pop(modalContext);
                           final auth = context.read<AuthProvider>();
                           final qrProvider = context.read<QRProvider>();
