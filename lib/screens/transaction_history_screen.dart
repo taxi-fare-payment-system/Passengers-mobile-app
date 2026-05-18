@@ -54,8 +54,38 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         body: TabBarView(
           children: [
             _buildList(context, wallet.transactions, isAll: true),
-            _buildList(context, wallet.transactions.where((tx) => tx['reason'] == 'fare' || tx['reason'] == 'fare-payment').toList(), isTrip: true),
-            _buildList(context, wallet.transactions.where((tx) => tx['reason'] == 'topup' || tx['reason'] == 'wallet topup').toList()),
+            _buildList(context, wallet.transactions.where((tx) {
+              final reason = (tx['reason'] ?? '').toString().toLowerCase();
+              final message = (tx['message'] ?? '').toString().toLowerCase();
+              final type = (tx['type'] ?? '').toString().toLowerCase();
+              return reason == 'fare' ||
+                     reason == 'fare-payment' ||
+                     reason == 'fare_payment' ||
+                     reason == 'pay-fare' ||
+                     reason == 'pay_fare' ||
+                     reason == 'pay fare' ||
+                     reason == 'payment' ||
+                     reason == 'transfer' ||
+                     reason == 'transfer_out' ||
+                     reason.contains('fare') ||
+                     reason.contains('pay') ||
+                     message.contains('fare') ||
+                     message.contains('pay') ||
+                     type == 'fare_payment' ||
+                     type == 'fare-payment' ||
+                     type == 'pay_fare' ||
+                     type == 'pay-fare' ||
+                     type == 'payment';
+            }).toList(), isTrip: true),
+            _buildList(context, wallet.transactions.where((tx) {
+              final reason = (tx['reason'] ?? '').toString().toLowerCase();
+              final type = (tx['type'] ?? '').toString().toLowerCase();
+              return reason.contains('topup') ||
+                     reason.contains('top up') ||
+                     reason.contains('credit') ||
+                     type == 'topup' ||
+                     type == 'transfer_in';
+            }).toList()),
           ],
         ),
       ),
@@ -91,10 +121,25 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       itemBuilder: (context, index) {
         final tx = transactions[index];
         final reason = (tx['reason'] ?? '').toString().toLowerCase();
-        final isTopUp = reason.contains('topup') || reason.contains('top up');
-        final isExpense = !isTopUp && (isTrip || tx['reason'] == 'fare' || (tx['sender_wallet_id'] == wallet.walletId));
-        final amount = double.tryParse((isTrip ? tx['totalFare'] : tx['amount'])?.toString() ?? '0') ?? 0;
+        final message = (tx['message'] ?? '').toString().toLowerCase();
+        final type = (tx['type'] ?? '').toString().toLowerCase();
+
+        final isTopUp = reason.contains('topup') || reason.contains('top up') || type == 'topup' || type == 'transfer_in';
+        final isExpense = !isTopUp && (isTrip || reason == 'fare' || reason.contains('fare') || reason.contains('pay') || (tx['sender_wallet_id'] == wallet.walletId));
+        final amount = double.tryParse((tx['amount'] ?? tx['totalFare'])?.toString() ?? '0') ?? 0;
         final date = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+
+        final isFare = isTrip || 
+                       reason == 'fare' || 
+                       reason == 'fare-payment' || 
+                       reason == 'fare_payment' || 
+                       reason.contains('pay-fare') || 
+                       reason.contains('pay_fare') || 
+                       reason.contains('pay fare') || 
+                       reason.contains('fare') || 
+                       message.contains('fare') || 
+                       type == 'fare_payment' || 
+                       type == 'fare-payment';
 
         return Container(
           padding: const EdgeInsets.all(24),
@@ -112,7 +157,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isTrip ? Icons.local_taxi_rounded : (isExpense ? Icons.call_made_rounded : Icons.call_received_rounded),
+                  isFare ? Icons.local_taxi_rounded : (isExpense ? Icons.call_made_rounded : Icons.call_received_rounded),
                   color: isExpense ? Colors.red : Colors.green,
                   size: 20,
                 ),
@@ -124,7 +169,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   children: [
                     Text(
                       () {
-                        if (isTrip) return '${tx['startLocation']} → ${tx['endLocation']}';
+                        if (isFare) {
+                          if (tx['startLocation'] != null && tx['endLocation'] != null) {
+                            return '${tx['startLocation']} → ${tx['endLocation']}';
+                          }
+                          return tx['metadata']?['route_name'] ?? 'taxi_fare'.tr();
+                        }
                         final r = (tx['reason'] ?? '').toString().toLowerCase();
                         final m = (tx['message'] ?? '').toString().toLowerCase();
                         if (r == 'fare' || m.contains('fare')) return 'taxi_fare'.tr();

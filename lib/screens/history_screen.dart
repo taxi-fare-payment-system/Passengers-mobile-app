@@ -45,7 +45,23 @@ class _TripsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wallet = context.watch<WalletProvider>();
-    final tripFares = wallet.transactions.where((tx) => tx['reason'] == 'fare' || tx['type'] == 'fare_payment').toList();
+    final tripFares = wallet.transactions.where((tx) {
+      final reason = (tx['reason'] ?? '').toString().toLowerCase();
+      final message = (tx['message'] ?? '').toString().toLowerCase();
+      final type = (tx['type'] ?? '').toString().toLowerCase();
+      return reason == 'fare' ||
+             reason == 'fare-payment' ||
+             reason == 'fare_payment' ||
+             reason == 'pay-fare' ||
+             reason == 'pay_fare' ||
+             reason == 'pay fare' ||
+             reason.contains('fare') ||
+             message.contains('fare') ||
+             type == 'fare_payment' ||
+             type == 'fare-payment' ||
+             type == 'pay_fare' ||
+             type == 'pay-fare';
+    }).toList();
 
     if (wallet.isLoading && tripFares.isEmpty) {
       return const Center(child: CircularProgressIndicator());
