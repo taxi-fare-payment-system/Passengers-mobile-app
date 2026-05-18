@@ -292,10 +292,13 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
         if (double.parse(wallet.balance ?? '0') > 0) {
            Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => TopUpSuccessScreen(amount: widget.amount)),
+            MaterialPageRoute(builder: (context) => TopUpStatusScreen(isSuccess: true, amount: widget.amount)),
           );
         } else {
-          Navigator.pop(context);
+           Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const TopUpStatusScreen(isSuccess: false)),
+          );
         }
       }
     } catch (e) {
@@ -336,9 +339,50 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
   }
 }
 
-class TopUpSuccessScreen extends StatelessWidget {
-  final double amount;
-  const TopUpSuccessScreen({super.key, required this.amount});
+class TopUpStatusScreen extends StatefulWidget {
+  final bool isSuccess;
+  final double? amount;
+
+  const TopUpStatusScreen({
+    super.key,
+    required this.isSuccess,
+    this.amount,
+  });
+
+  @override
+  State<TopUpStatusScreen> createState() => _TopUpStatusScreenState();
+}
+
+class _TopUpStatusScreenState extends State<TopUpStatusScreen> {
+  int _secondsRemaining = 5;
+  late final Stream<int> _countdownStream;
+  bool _timerCompleted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    _countdownStream = Stream.periodic(const Duration(seconds: 1), (x) => 4 - x).take(5);
+    _countdownStream.listen((seconds) {
+      if (mounted) {
+        setState(() {
+          _secondsRemaining = seconds;
+        });
+      }
+    }, onDone: () {
+      if (mounted && !_timerCompleted) {
+        _timerCompleted = true;
+        _goBack();
+      }
+    });
+  }
+
+  void _goBack() {
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +391,14 @@ class TopUpSuccessScreen extends StatelessWidget {
     
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.iconTheme.color),
+          onPressed: _goBack,
+        ),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -356,49 +408,80 @@ class TopUpSuccessScreen extends StatelessWidget {
               const Spacer(),
               Container(
                 padding: const EdgeInsets.all(32),
-                decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                child: const Icon(Icons.check_rounded, size: 64, color: Colors.white),
+                decoration: BoxDecoration(
+                  color: widget.isSuccess ? Colors.green : Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  widget.isSuccess ? Icons.check_rounded : Icons.close_rounded,
+                  size: 64,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 40),
-              Text('top_up_successful'.tr().toUpperCase(), textAlign: TextAlign.center, style: theme.textTheme.displayLarge?.copyWith(fontSize: 32)),
+              Text(
+                widget.isSuccess
+                    ? 'top_up_successful'.tr().toUpperCase()
+                    : 'top_up_failed'.tr().toUpperCase(),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.displayLarge?.copyWith(fontSize: 32),
+              ),
               const SizedBox(height: 12),
-              Text('wallet_credited_successfully'.tr(), textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+              Text(
+                widget.isSuccess
+                    ? 'wallet_credited_successfully'.tr()
+                    : 'top_up_failed_msg'.tr(),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge,
+              ),
               const SizedBox(height: 60),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(40),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+              if (widget.isSuccess && widget.amount != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('total_top_up_amount'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
+                      const SizedBox(height: 12),
+                      Text(
+                        '${widget.amount!.toStringAsFixed(2)} ${'currency'.tr()}',
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          fontSize: 40,
+                          color: AppTheme.accentColor,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Divider(color: theme.dividerColor.withOpacity(0.1)),
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('new_wallet_balance'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
+                          Text('${wallet.balance ?? '0.00'} ${'currency'.tr()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Text('total_top_up_amount'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
-                    const SizedBox(height: 12),
-                    Text('${amount.toStringAsFixed(2)} ${'currency'.tr()}', style: theme.textTheme.displayLarge?.copyWith(fontSize: 40, color: AppTheme.accentColor, letterSpacing: -1)),
-                    const SizedBox(height: 32),
-                    Divider(color: theme.dividerColor.withOpacity(0.1)),
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('new_wallet_balance'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
-                        Text('${wallet.balance ?? '0.00'} ${'currency'.tr()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
               const Spacer(),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('back_to_wallet'.tr().toUpperCase()),
+              Text(
+                'returning_to_wallet_in'.tr(args: [_secondsRemaining.toString()]),
+                style: TextStyle(
+                  color: theme.hintColor.withOpacity(0.6),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                child: Text('go_to_home'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.accentColor, fontSize: 12, letterSpacing: 1)),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _goBack,
+                child: Text('back_to_wallet'.tr().toUpperCase()),
               ),
               const SizedBox(height: 40),
             ],

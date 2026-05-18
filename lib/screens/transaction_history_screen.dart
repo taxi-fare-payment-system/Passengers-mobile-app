@@ -141,6 +141,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                        type == 'fare_payment' || 
                        type == 'fare-payment';
 
+        final status = tx['status']?.toString().toLowerCase();
+        final bool isFailedTopUp = isTopUp && (status == 'failed' || status == 'cancelled');
+        final bool isPendingTopUp = isTopUp && (status == 'pending');
+        final Color topUpColor = isFailedTopUp 
+            ? Colors.red 
+            : (isPendingTopUp ? Colors.orange : Colors.green);
+
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -153,12 +160,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (isExpense ? Colors.red : Colors.green).withOpacity(0.1),
+                  color: (isExpense ? Colors.red : topUpColor).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   isFare ? Icons.local_taxi_rounded : (isExpense ? Icons.call_made_rounded : Icons.call_received_rounded),
-                  color: isExpense ? Colors.red : Colors.green,
+                  color: isExpense ? Colors.red : topUpColor,
                   size: 20,
                 ),
               ),
@@ -193,13 +200,37 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ],
                 ),
               ),
-              Text(
-                '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)} ${'currency'.tr()}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  color: isExpense ? theme.textTheme.bodyLarge?.color : Colors.green,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${isExpense ? '-' : '+'}${amount.toStringAsFixed(2)} ${'currency'.tr()}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      color: isExpense ? theme.textTheme.bodyLarge?.color : topUpColor,
+                    ),
+                  ),
+                  if (isTopUp && tx['status'] != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: topUpColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        tx['status'].toString().tr().toUpperCase(),
+                        style: TextStyle(
+                          color: topUpColor,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

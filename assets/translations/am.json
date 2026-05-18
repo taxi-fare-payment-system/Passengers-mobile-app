@@ -304,5 +304,15 @@
   "Your wallet has been credited {} ETB.": "ዋሌትዎ በ {} {} ተሞልቷል።",
   "Phone verified": "ስልክ ተረጋግጧል",
   "Your phone number was verified successfully.": "ስልክዎ በትክክል ተረጋግጧል።",
-  "security_instructions": "ይህንን ለውጥ ለመፍቀድ የአሁኑን የይለፍ ቃልዎን ያስገቡ።"
+  "security_instructions": "ይህንን ለውጥ ለመፍቀድ የአሁኑን የይለፍ ቃልዎን ያስገቡ።",
+  "failed": "አልተሳካም",
+  "cancelled": "ተሰርዟል",
+  "pending": "በመጠባበቅ ላይ",
+  "succeeded": "ተሳክቷል",
+  "succeded": "ተሳክቷል",
+  "success": "ተሳክቷል",
+  "completed": "ተጠናቋል",
+  "top_up_failed": "ገንዘብ ማስገባት አልተሳካም",
+  "top_up_failed_msg": "የገንዘብ ማስገባት ጥያቄዎን ማስተናገድ አልቻልንም። እባክዎ እንደገና ይሞክሩ።",
+  "returning_to_wallet_in": "በ {} ሰከንድ ውስጥ ወደ ዋሌት ይመለሳል..."
 }

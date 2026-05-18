@@ -171,16 +171,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
   String _translate(String text) {
     String cleanText = text.replaceAll(RegExp(r'Transaction ID:.*', caseSensitive: false), '').trim();
     String lower = cleanText.toLowerCase();
-    
-    // Pattern mapping for common API strings
+  
     if (lower.contains('payment successful') || lower.contains('fare paid')) return 'payment_successful'.tr();
     if (lower.contains('trip assigned')) return 'trip_assigned'.tr();
     if (lower.contains('top-up successful') || lower.contains('wallet topped up')) return 'top_up_successful'.tr();
     if (lower.contains('wallet balance') && lower.contains('low')) return 'low_balance_alert'.tr();
     if (lower.contains('phone verified')) return 'phone_verified'.tr();
     if (lower.contains('welcome')) return 'welcome'.tr();
-    
-    // Content pattern matching for complex strings with amounts
     if (lower.contains('you paid')) {
       final amount = RegExp(r'(\d+\.?\d*)').firstMatch(cleanText)?.group(0) ?? '';
       if (lower.contains('for your trip')) {

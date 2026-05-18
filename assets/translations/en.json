@@ -304,5 +304,15 @@
   "Your wallet has been credited {} ETB.": "Your wallet has been credited {} {}.",
   "Phone verified": "Phone verified",
   "Your phone number was verified successfully.": "Your phone number was verified successfully.",
-  "security_instructions": "Enter your current password to authorize this change."
+  "security_instructions": "Enter your current password to authorize this change.",
+  "failed": "Failed",
+  "cancelled": "Cancelled",
+  "pending": "Pending",
+  "succeeded": "Succeeded",
+  "succeded": "Succeeded",
+  "success": "Success",
+  "completed": "Completed",
+  "top_up_failed": "Top-up Failed",
+  "top_up_failed_msg": "We couldn't process your top-up request. Please try again.",
+  "returning_to_wallet_in": "Returning to wallet in {} seconds..."
 }

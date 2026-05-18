@@ -90,6 +90,10 @@ class WuloPayApp extends StatelessWidget {
             },
             '/payment-methods': (context) => const PaymentMethodsScreen(),
             '/top-up': (context) => const TopUpScreen(),
+            '/topup/success': (context) => const TopUpStatusScreen(isSuccess: true),
+            '/topup/failed': (context) => const TopUpStatusScreen(isSuccess: false),
+            '/top-up/success': (context) => const TopUpStatusScreen(isSuccess: true),
+            '/top-up/failed': (context) => const TopUpStatusScreen(isSuccess: false),
             '/driver-profile': (context) {
               final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
               return DriverProfileScreen(driverId: args?['driverId']);
