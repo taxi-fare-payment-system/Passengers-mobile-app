@@ -81,7 +81,7 @@ class NotificationProvider with ChangeNotifier {
   Future<void> registerDeviceToken(String fcmToken, String platform, String token, {Map<String, String>? headers}) async {
     try {
       final response = await ApiService.post(
-        '/api/v1/notifications/devices',
+        '/api/v1/notifications/register',
         {
           'token': fcmToken,
           'platform': platform,
@@ -103,7 +103,7 @@ class NotificationProvider with ChangeNotifier {
   Future<void> unregisterDeviceToken(String fcmToken, String token, {Map<String, String>? headers}) async {
     try {
       final response = await ApiService.delete(
-        '/api/v1/notifications/devices',
+        '/api/v1/notifications/register',
         {
           'token': fcmToken,
         },
