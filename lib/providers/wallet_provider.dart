@@ -97,7 +97,7 @@ class WalletProvider with ChangeNotifier {
     }
   }
 
-  Future<void> pollBalanceChange(String userId, String token) async {
+  Future<bool> pollBalanceChange(String userId, String token) async {
     final oldBalance = double.tryParse(_balance ?? '0') ?? 0.0;
     print('Wallet Debug: Starting poll. Old balance: $oldBalance, UserID: $userId');
     int attempts = 0;
@@ -109,7 +109,7 @@ class WalletProvider with ChangeNotifier {
       
       if (newBalance > oldBalance) {
         print('Wallet Debug: Balance INCREASE detected!');
-        break;
+        return true;
       }
       await Future.delayed(const Duration(seconds: 5));
       attempts++;
@@ -117,6 +117,7 @@ class WalletProvider with ChangeNotifier {
     if (attempts >= 24) {
       print('Wallet Debug: Polling timed out without detecting a change.');
     }
+    return false;
   }
 
   Future<void> fetchTransactions(String userId, String token, {Map<String, String>? headers}) async {

@@ -279,7 +279,7 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
       final auth = context.read<AuthProvider>();
       final wallet = context.read<WalletProvider>();
       
-      await wallet.pollBalanceChange(auth.user?['id']?.toString() ?? auth.user?['user_id']?.toString() ?? '', auth.token!);
+      final isSuccess = await wallet.pollBalanceChange(auth.user?['id']?.toString() ?? auth.user?['user_id']?.toString() ?? '', auth.token!);
 
       if (mounted) {
         // Trigger notification and transaction refresh
@@ -289,7 +289,10 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
           wallet.fetchTransactions(userId, auth.token!);
         }
 
-        if (double.parse(wallet.balance ?? '0') > 0) {
+        // Close the in-app webview
+        await closeInAppWebView();
+
+        if (isSuccess) {
            Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => TopUpStatusScreen(isSuccess: true, amount: widget.amount)),
@@ -302,6 +305,7 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
         }
       }
     } catch (e) {
+      await closeInAppWebView();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
         Navigator.pop(context);
