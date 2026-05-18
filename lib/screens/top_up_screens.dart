@@ -357,15 +357,33 @@ class TopUpStatusScreen extends StatefulWidget {
   State<TopUpStatusScreen> createState() => _TopUpStatusScreenState();
 }
 
-class _TopUpStatusScreenState extends State<TopUpStatusScreen> {
+class _TopUpStatusScreenState extends State<TopUpStatusScreen> with SingleTickerProviderStateMixin {
   int _secondsRemaining = 5;
   late final Stream<int> _countdownStream;
   bool _timerCompleted = false;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
+    
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   void _startCountdown() {
@@ -395,100 +413,171 @@ class _TopUpStatusScreenState extends State<TopUpStatusScreen> {
     
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.iconTheme.color),
-          onPressed: _goBack,
-        ),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: widget.isSuccess ? Colors.green : Colors.red,
-                  shape: BoxShape.circle,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                
+                // Pulsing ring backdrop and elastic icon scale
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: (widget.isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.1),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: widget.isSuccess
+                              ? [const Color(0xFF10B981), const Color(0xFF059669)]
+                              : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: (widget.isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.3),
+                            blurRadius: 30,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 10),
+                          )
+                        ],
+                      ),
+                      child: Icon(
+                        widget.isSuccess ? Icons.check_rounded : Icons.close_rounded,
+                        size: 64,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  widget.isSuccess ? Icons.check_rounded : Icons.close_rounded,
-                  size: 64,
-                  color: Colors.white,
+                const SizedBox(height: 48),
+                
+                Text(
+                  widget.isSuccess
+                      ? 'top_up_successful'.tr().toUpperCase()
+                      : 'top_up_failed'.tr().toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.displayLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                widget.isSuccess
-                    ? 'top_up_successful'.tr().toUpperCase()
-                    : 'top_up_failed'.tr().toUpperCase(),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.displayLarge?.copyWith(fontSize: 32),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                widget.isSuccess
-                    ? 'wallet_credited_successfully'.tr()
-                    : 'top_up_failed_msg'.tr(),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 60),
-              if (widget.isSuccess && widget.amount != null)
+                const SizedBox(height: 12),
+                Text(
+                  widget.isSuccess
+                      ? 'wallet_credited_successfully'.tr()
+                      : 'top_up_failed_msg'.tr(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor.withOpacity(0.7)),
+                ),
+                
+                const SizedBox(height: 48),
+                
+                if (widget.isSuccess && widget.amount != null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: theme.dividerColor.withOpacity(0.08)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'total_top_up_amount'.tr().toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, letterSpacing: 1),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${widget.amount!.toStringAsFixed(2)} ${'currency'.tr()}',
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            fontSize: 36,
+                            color: AppTheme.accentColor,
+                            letterSpacing: -1,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Divider(color: theme.dividerColor.withOpacity(0.1)),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'new_wallet_balance'.tr().toUpperCase(),
+                              style: theme.textTheme.labelSmall?.copyWith(fontSize: 9, letterSpacing: 0.5),
+                            ),
+                            Text(
+                              '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
+                              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.accentColor),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                const Spacer(),
+                
+                // Super clean redirect countdown badge
                 Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(40),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
                     color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: theme.dividerColor.withOpacity(0.08)),
                   ),
-                  child: Column(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('total_top_up_amount'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
-                      const SizedBox(height: 12),
-                      Text(
-                        '${widget.amount!.toStringAsFixed(2)} ${'currency'.tr()}',
-                        style: theme.textTheme.displayLarge?.copyWith(
-                          fontSize: 40,
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
                           color: AppTheme.accentColor,
-                          letterSpacing: -1,
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      Divider(color: theme.dividerColor.withOpacity(0.1)),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('new_wallet_balance'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
-                          Text('${wallet.balance ?? '0.00'} ${'currency'.tr()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-                        ],
+                      const SizedBox(width: 12),
+                      Text(
+                        'returning_to_wallet_in'.tr(args: [_secondsRemaining.toString()]),
+                        style: TextStyle(
+                          color: theme.hintColor.withOpacity(0.8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              const Spacer(),
-              Text(
-                'returning_to_wallet_in'.tr(args: [_secondsRemaining.toString()]),
-                style: TextStyle(
-                  color: theme.hintColor.withOpacity(0.6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 24),
+                
+                ElevatedButton(
+                  onPressed: _goBack,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: Text('back_to_wallet'.tr().toUpperCase()),
                 ),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _goBack,
-                child: Text('back_to_wallet'.tr().toUpperCase()),
-              ),
-              const SizedBox(height: 40),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

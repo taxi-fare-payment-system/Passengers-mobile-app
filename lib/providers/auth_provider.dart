@@ -8,12 +8,14 @@ class AuthProvider with ChangeNotifier {
   String? _token;
   Map<String, dynamic>? _user;
   bool _isLoading = false;
+  String? _storedPhone;
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
   bool get isAuthenticated => _token != null;
   bool get isVerified => _user?['is_verified'] ?? false;
   bool get isLoading => _isLoading;
+  String? get storedPhone => _storedPhone;
   
   Map<String, String> get headers {
     final Map<String, String> h = {};
@@ -72,6 +74,9 @@ class AuthProvider with ChangeNotifier {
       
       if (_token != null) {
         await _storage.write(key: 'token', value: _token);
+        final userPhone = _user?['phone'] ?? phone;
+        await _storage.write(key: 'phone', value: userPhone);
+        _storedPhone = userPhone;
         notifyListeners();
       }
     } else {
@@ -128,6 +133,9 @@ class AuthProvider with ChangeNotifier {
       
       if (_token != null) {
         await _storage.write(key: 'token', value: _token);
+        final userPhone = _user?['phone'] ?? phone;
+        await _storage.write(key: 'phone', value: userPhone);
+        _storedPhone = userPhone;
         notifyListeners();
       }
     } else {
@@ -145,6 +153,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> tryAutoLogin() async {
     _token = await _storage.read(key: 'token');
+    _storedPhone = await _storage.read(key: 'phone');
     if (_token == null) return;
 
     try {
@@ -198,8 +207,6 @@ class AuthProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final data = (body is Map && body.containsKey('data')) ? body['data'] : body;
-        
-        // Update local user data
         final updatedUser = data['user'] ?? (data.containsKey('display_name') ? data : null);
         if (updatedUser != null) {
           _user = {...?_user, ...updatedUser};

@@ -77,4 +77,47 @@ class NotificationProvider with ChangeNotifier {
       print('Notification Debug: Mark all as read failed: $e');
     }
   }
+
+  Future<void> registerDeviceToken(String fcmToken, String platform, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.post(
+        '/api/v1/notifications/devices',
+        {
+          'token': fcmToken,
+          'platform': platform,
+        },
+        token: token,
+        extraHeaders: headers,
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification Debug: Device token registered successfully');
+      } else {
+        print('Notification Debug: Failed to register device token: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Notification Debug: Register device token failed: $e');
+    }
+  }
+
+  Future<void> unregisterDeviceToken(String fcmToken, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.delete(
+        '/api/v1/notifications/devices',
+        {
+          'token': fcmToken,
+        },
+        token: token,
+        extraHeaders: headers,
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification Debug: Device token unregistered successfully');
+      } else {
+        print('Notification Debug: Failed to unregister device token: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Notification Debug: Unregister device token failed: $e');
+    }
+  }
 }

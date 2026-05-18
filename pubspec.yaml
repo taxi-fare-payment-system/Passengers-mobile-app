@@ -21,6 +21,8 @@ dependencies:
   url_launcher: ^6.2.5
   image_picker: ^1.0.7
   easy_localization: ^3.0.3
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.19
 
 dev_dependencies:
   flutter_test:

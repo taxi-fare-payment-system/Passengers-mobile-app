@@ -19,6 +19,7 @@ import 'screens/transaction_history_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/verification_screen.dart';
 import 'screens/profile_management_screens.dart';
+import 'screens/route_selection_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/trip_provider.dart';
@@ -27,11 +28,18 @@ import 'providers/document_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/feedback_provider.dart';
 import 'providers/theme_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'providers/driver_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
 
   runApp(
     EasyLocalization(
@@ -103,6 +111,7 @@ class WuloPayApp extends StatelessWidget {
             '/notifications': (context) => const NotificationScreen(),
             '/verification': (context) => const VerificationScreen(),
             '/change-password': (context) => const ChangePasswordScreen(),
+            '/route-selection': (context) => const RouteSelectionScreen(),
           },
         );
       },

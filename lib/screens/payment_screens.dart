@@ -406,7 +406,7 @@ class _StopItem extends StatelessWidget {
   }
 }
 
-class PaymentSuccessScreen extends StatelessWidget {
+class PaymentSuccessScreen extends StatefulWidget {
   final String transactionId;
   final double amount;
   final String tripId;
@@ -421,80 +421,180 @@ class PaymentSuccessScreen extends StatelessWidget {
   });
 
   @override
+  State<PaymentSuccessScreen> createState() => _PaymentSuccessScreenState();
+}
+
+class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded, size: 64, color: Colors.white),
-            ),
-            const SizedBox(height: 40),
-            Text('payment_successful'.tr(), style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32)),
-            const SizedBox(height: 16),
-            Text(
-              'paid_for_trip'.tr(args: [amount.toStringAsFixed(2), 'currency'.tr()]),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 60),
-            const Spacer(),
-            if (driverId != null) ...[
-              FutureBuilder<Map<String, dynamic>?>(
-                future: context.read<DriverProvider>().getDriverProfileData(driverId!, auth.token!, headers: auth.headers),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  
-                  final profile = snapshot.data;
-                  final reviews = profile?['reviews'] ?? {};
-                  final reviewList = reviews['reviews'] as List? ?? [];
-                  final currentUserId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
-                  final hasReviewed = reviewList.any((r) => r['reviewer_id']?.toString() == currentUserId);
-                  
-                  if (hasReviewed) {
-                    return const SizedBox.shrink(); // Hide the feedback button entirely
-                  }
-                  
-                  return ElevatedButton(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                
+                // Immersive pulsing emerald gradient status ring
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withOpacity(0.3),
+                            blurRadius: 30,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 10),
+                          )
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        size: 64,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
+                
+                Text(
+                  'payment_successful'.tr().toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    fontSize: 28, 
+                    fontWeight: FontWeight.w900, 
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'paid_for_trip'.tr(args: [widget.amount.toStringAsFixed(2), 'currency'.tr()]),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.hintColor.withOpacity(0.7),
+                  ),
+                ),
+                
+                const SizedBox(height: 48),
+                
+                // Show transaction ID badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: theme.dividerColor.withOpacity(0.08)),
+                  ),
+                  child: Text(
+                    'TXID: ${widget.transactionId.toUpperCase()}',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                if (widget.driverId != null) ...[
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: context.read<DriverProvider>().getDriverProfileData(widget.driverId!, auth.token!, headers: auth.headers),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: CircularProgressIndicator(color: AppTheme.accentColor),
+                        );
+                      }
+                      
+                      final profile = snapshot.data;
+                      final reviews = profile?['reviews'] ?? {};
+                      final reviewList = reviews['reviews'] as List? ?? [];
+                      final currentUserId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
+                      final hasReviewed = reviewList.any((r) => r['reviewer_id']?.toString() == currentUserId);
+                      
+                      if (hasReviewed) {
+                        return const SizedBox.shrink(); // Hide review action if already reviewed
+                      }
+                      
+                      return ElevatedButton(
+                        onPressed: () => Navigator.pushReplacement(
+                          context, 
+                          MaterialPageRoute(builder: (context) => RateTripScreen(tripId: widget.tripId, driverId: widget.driverId))
+                        ),
+                        child: Text('rate_your_trip'.tr().toUpperCase()),
+                      );
+                    },
+                  ),
+                ] else ...[
+                  ElevatedButton(
                     onPressed: () => Navigator.pushReplacement(
                       context, 
-                      MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
+                      MaterialPageRoute(builder: (context) => RateTripScreen(tripId: widget.tripId, driverId: widget.driverId))
                     ),
-                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor, foregroundColor: Colors.black),
                     child: Text('rate_your_trip'.tr().toUpperCase()),
-                  );
-                },
-              ),
-            ] else ...[
-              ElevatedButton(
-                onPressed: () => Navigator.pushReplacement(
-                  context, 
-                  MaterialPageRoute(builder: (context) => RateTripScreen(tripId: tripId, driverId: driverId))
+                  ),
+                ],
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: Text('back_to_home'.tr().toUpperCase()),
                 ),
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor, foregroundColor: Colors.black),
-                child: Text('rate_your_trip'.tr().toUpperCase()),
-              ),
-            ],
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-              child: Text('back_to_home'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+                const SizedBox(height: 20),
+              ],
             ),
-            const SizedBox(height: 20),
-          ],
+          ),
         ),
       ),
     );

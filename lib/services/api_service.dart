@@ -61,4 +61,19 @@ class ApiService {
     print('API PUT Response [$endpoint]: ${response.statusCode} - ${response.body}');
     return response;
   }
+
+  static Future<http.Response> delete(String endpoint, Map<String, dynamic> body, {String? token, Map<String, String>? extraHeaders}) async {
+    print('API DELETE: $endpoint Body: $body');
+    final response = await http.delete(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+        if (extraHeaders != null) ...extraHeaders,
+      },
+      body: jsonEncode(body),
+    );
+    print('API DELETE Response [$endpoint]: ${response.statusCode} - ${response.body}');
+    return response;
+  }
 }
