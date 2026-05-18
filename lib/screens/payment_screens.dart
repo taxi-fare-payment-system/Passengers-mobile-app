@@ -45,19 +45,29 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       final auth = context.read<AuthProvider>();
       final tripProvider = context.read<TripProvider>();
       
-      // 1. Resolve Driver/Trip from QR
-      final qrProvider = context.read<QRProvider>();
-      final qrData = await qrProvider.getDriverFromQR(qrCode, auth.token!, headers: auth.headers);
-      final driverId = qrData?['driver_id'];
+      // Check if the qrCode is already a valid UUID
+      final uuidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+      final isUuid = uuidRegex.hasMatch(qrCode);
       
-      if (driverId != null) {
-        // 2. Get active trip for this driver to get the REAL UUID
-        await tripProvider.fetchActiveTripByDriver(driverId, auth.token!, headers: auth.headers);
+      if (isUuid) {
+        // Fetch trip status to load currentTrip and fetch next stops directly
+        await tripProvider.fetchTripStatus(qrCode, auth.token!, headers: auth.headers);
+        await tripProvider.fetchNextStops(qrCode, auth.token!, headers: auth.headers);
+      } else {
+        // 1. Resolve Driver/Trip from QR
+        final qrProvider = context.read<QRProvider>();
+        final qrData = await qrProvider.getDriverFromQR(qrCode, auth.token!, headers: auth.headers);
+        final driverId = qrData?['driver_id'];
         
-        // 3. Use the real Trip UUID to fetch stops
-        final realTripId = tripProvider.currentTrip?['id']?.toString();
-        if (realTripId != null) {
-          await tripProvider.fetchNextStops(realTripId, auth.token!, headers: auth.headers);
+        if (driverId != null) {
+          // 2. Get active trip for this driver to get the REAL UUID
+          await tripProvider.fetchActiveTripByDriver(driverId, auth.token!, headers: auth.headers);
+          
+          // 3. Use the real Trip UUID to fetch stops
+          final realTripId = tripProvider.currentTrip?['id']?.toString();
+          if (realTripId != null) {
+            await tripProvider.fetchNextStops(realTripId, auth.token!, headers: auth.headers);
+          }
         }
       }
     } catch (e) {
@@ -69,7 +79,8 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
 
   Future<void> _handlePayment() async {
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final tripId = args?['trip_id']?.toString();
+    final tripProvider = context.read<TripProvider>();
+    final tripId = tripProvider.currentTrip?['id']?.toString() ?? args?['trip_id']?.toString();
     if (tripId == null) return;
 
     setState(() {
@@ -79,7 +90,6 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
 
     try {
       final auth = context.read<AuthProvider>();
-      final tripProvider = context.read<TripProvider>();
       final wallet = context.read<WalletProvider>();
       
       final amount = double.tryParse(_amountController.text) ?? 0;
@@ -250,11 +260,12 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                     final stopIndex = stop['stopIndex'] ?? stop['index'] ?? stop['sequence'];
                     setState(() => _selectedStopIndex = stopIndex as int?);
                     if (stop['amount'] != null) {
-                      setState(() => _amountController.text = stop['amount'].toString());
+                      final parsedAmount = double.tryParse(stop['amount'].toString())?.toStringAsFixed(2) ?? stop['amount'].toString();
+                      setState(() => _amountController.text = parsedAmount);
                     } else {
                       try {
                         final price = await tripProvider.fetchPriceQuote(
-                          tripId: (ModalRoute.of(context)?.settings.arguments as Map?)?['trip_id']?.toString() ?? '',
+                          tripId: tripProvider.currentTrip?['id']?.toString() ?? (ModalRoute.of(context)?.settings.arguments as Map?)?['trip_id']?.toString() ?? '',
                           destinationStopIndex: stopIndex as int,
                           token: auth.token!,
                           headers: auth.headers,
@@ -262,7 +273,10 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                         setState(() => _amountController.text = price.toStringAsFixed(2));
                       } catch (e) {
                         final baseFare = tripProvider.currentTrip?['route']?['baseFare'];
-                        if (baseFare != null) setState(() => _amountController.text = baseFare.toString());
+                        if (baseFare != null) {
+                          final parsedBase = double.tryParse(baseFare.toString())?.toStringAsFixed(2) ?? baseFare.toString();
+                          setState(() => _amountController.text = parsedBase);
+                        }
                       }
                     }
                   },
@@ -362,7 +376,7 @@ class _StopItem extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 12),
                   child: Text(
-                    '${stop['amount']} ${'currency'.tr()}',
+                    '${double.tryParse(stop['amount'].toString())?.toStringAsFixed(2) ?? stop['amount']} ${'currency'.tr()}',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16,

@@ -16,14 +16,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  String? _selectedSubCityId;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthProvider>().fetchSubCities();
-    });
   }
 
   @override
@@ -90,9 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: InputDecoration(hintText: '••••••••', fillColor: theme.cardColor),
             ),
             
-            const SizedBox(height: 24),
-            _buildLabel(context, 'select_subcity'.tr()),
-            _buildSubCityField(context),
+
             
             const SizedBox(height: 48),
             ElevatedButton(
@@ -134,31 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildSubCityField(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedSubCityId,
-          isExpanded: true,
-          dropdownColor: theme.cardColor,
-          hint: Text('choose_area'.tr(), style: TextStyle(color: theme.hintColor.withOpacity(0.5), fontWeight: FontWeight.w600)),
-          onChanged: (val) => setState(() => _selectedSubCityId = val),
-          items: auth.subCities.map((sc) => DropdownMenuItem<String>(
-            value: sc['id']?.toString(),
-            child: Text(sc['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w800)),
-          )).toList(),
-        ),
-      ),
-    );
-  }
+
 
   Future<void> _register() async {
     final name = _nameController.text.trim();
@@ -168,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     try {
       final fullPhone = '0$phone';
-      await context.read<AuthProvider>().register(phone: fullPhone, password: password, displayName: name, subCityId: _selectedSubCityId);
+      await context.read<AuthProvider>().register(phone: fullPhone, password: password, displayName: name);
       if (mounted) Navigator.pushReplacementNamed(context, '/otp', arguments: {'phone': fullPhone, 'password': password});
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));

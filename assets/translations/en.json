@@ -30,6 +30,7 @@
   "enter_trip_code": "Enter trip code",
   "invalid_qr_code": "Invalid QR Code. Please scan a valid taxi QR.",
   "error_loading_trip": "Error loading trip",
+  "fetching_trip_details": "Fetching trip details...",
   "hi": "Hi",
   "passenger": "Passenger",
   "in_transit": "In transit",

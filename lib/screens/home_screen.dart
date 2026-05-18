@@ -136,7 +136,7 @@ class HomeScreen extends StatelessWidget {
                 decoration: BoxDecoration(color: AppTheme.accentColor, borderRadius: BorderRadius.circular(16)),
                 child: IconButton(
                   icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.black, size: 24),
-                  onPressed: () => Navigator.pushNamed(context, '/home'), // Mock trigger scanner
+                  onPressed: () => _showQRScanner(context),
                 ),
               ),
             ],
@@ -271,16 +271,16 @@ class HomeScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
+      builder: (modalContext) => Container(
+        height: MediaQuery.of(modalContext).size.height * 0.7,
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: Theme.of(modalContext).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(modalContext).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
             Text('scan_pay'.tr().toUpperCase(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1)),
             const SizedBox(height: 24),
@@ -295,7 +295,7 @@ class HomeScreen extends StatelessWidget {
                       if (barcodes.isNotEmpty) {
                         final String? code = barcodes.first.rawValue;
                         if (code != null) {
-                          Navigator.pop(context);
+                          Navigator.pop(modalContext);
                           final auth = context.read<AuthProvider>();
                           final qrProvider = context.read<QRProvider>();
                           
@@ -320,7 +320,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             TextButton(
-              onPressed: () => Navigator.pop(context), 
+              onPressed: () => Navigator.pop(modalContext), 
               child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary))
             ),
             const SizedBox(height: 32),

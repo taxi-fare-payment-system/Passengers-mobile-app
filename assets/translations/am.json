@@ -30,6 +30,7 @@
   "enter_trip_code": "የጉዞ ኮድ ያስገቡ",
   "invalid_qr_code": "የተሳሳተ ኪውአር ኮድ (QR Code)። እባክዎ ትክክለኛ የታክሲ ኪውአር ስካን ያድርጉ።",
   "error_loading_trip": "ጉዞን መጫን አልተቻለም",
+  "fetching_trip_details": "የጉዞ መረጃን በመጫን ላይ...",
   "hi": "ሰላም",
   "passenger": "መንገደኛ",
   "in_transit": "በጉዞ ላይ",
