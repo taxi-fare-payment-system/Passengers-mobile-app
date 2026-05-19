@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -23,9 +24,16 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     final authProvider = context.read<AuthProvider>();
     await authProvider.tryAutoLogin();
+    
+    const storage = FlutterSecureStorage();
+    final hasSeenOnboarding = await storage.read(key: 'has_seen_onboarding');
+    
     if (!mounted) return;
+    
     if (authProvider.isAuthenticated) {
       Navigator.pushReplacementNamed(context, '/home');
+    } else if (hasSeenOnboarding == 'true') {
+      Navigator.pushReplacementNamed(context, '/login');
     } else {
       Navigator.pushReplacementNamed(context, '/language');
     }

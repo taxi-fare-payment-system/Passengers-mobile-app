@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -148,14 +149,32 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             ? Colors.red 
             : (isPendingTopUp ? Colors.orange : Colors.green);
 
-        return Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
-          ),
-          child: Row(
+        return InkWell(
+          onTap: () async {
+            if (tx['receipt_url'] != null) {
+              final url = Uri.parse(tx['receipt_url']);
+              try {
+                await launchUrl(url, mode: LaunchMode.inAppBrowserView);
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open receipt')));
+                }
+              }
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No receipt available')));
+              }
+            }
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+            ),
+            child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
@@ -234,7 +253,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }

@@ -6,10 +6,17 @@ class NotificationProvider with ChangeNotifier {
   List<dynamic> _notifications = [];
   int _unreadCount = 0;
   bool _isLoading = false;
+  bool _isPushEnabled = true;
 
   List<dynamic> get notifications => _notifications;
   int get unreadCount => _unreadCount;
   bool get isLoading => _isLoading;
+  bool get isPushEnabled => _isPushEnabled;
+
+  void togglePushNotifications(bool value) {
+    _isPushEnabled = value;
+    notifyListeners();
+  }
 
   Future<void> fetchNotifications(String token, {Map<String, String>? headers}) async {
     _isLoading = true;

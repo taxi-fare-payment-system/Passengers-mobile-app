@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/notification_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -14,6 +15,7 @@ class ProfileScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final wallet = context.watch<WalletProvider>();
     final themeProvider = context.watch<ThemeProvider>();
+    final notificationProvider = context.watch<NotificationProvider>();
     final user = auth.user;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -168,6 +170,12 @@ class ProfileScreen extends StatelessWidget {
                   _buildSectionHeader(theme, 'preferences'.tr()),
                   const SizedBox(height: 16),
                   _ProfileTile(icon: Icons.language_rounded, title: 'language'.tr(), subtitle: context.locale.languageCode == 'en' ? 'English' : 'አማርኛ', onTap: () => Navigator.pushNamed(context, '/language')),
+                  _SwitchTile(
+                    icon: Icons.notifications_active_rounded,
+                    title: 'push_notifications'.tr(),
+                    value: auth.user?['push_enabled'] ?? true,
+                    onChanged: (value) => auth.updatePreferences(pushEnabled: value),
+                  ),
 
                   const SizedBox(height: 60),
                   SizedBox(
@@ -274,6 +282,41 @@ class _ThemeOption extends StatelessWidget {
               letterSpacing: 1,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwitchTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SwitchTile({required this.icon, required this.title, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
+          ),
+          child: Icon(icon, color: AppTheme.accentColor, size: 20),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        trailing: Switch(
+          value: value,
+          onChanged: onChanged,
+          activeColor: AppTheme.accentColor,
         ),
       ),
     );

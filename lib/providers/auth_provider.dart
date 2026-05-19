@@ -220,4 +220,37 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updatePreferences({
+    String? language,
+    bool? pushEnabled,
+    bool? biometricEnabled,
+  }) async {
+    final Map<String, dynamic> data = {};
+    if (language != null) data['language'] = language;
+    if (pushEnabled != null) data['push_enabled'] = pushEnabled;
+    if (biometricEnabled != null) data['biometric_enabled'] = biometricEnabled;
+
+    if (data.isEmpty) return;
+
+    try {
+      final response = await ApiService.patch(
+        '/api/v1/auth/preferences',
+        data,
+        token: _token,
+      );
+
+      if (response.statusCode == 200) {
+        if (_user != null) {
+          _user = {..._user!, ...data};
+          notifyListeners();
+        }
+      } else {
+        throw Exception(jsonDecode(response.body)['message'] ?? 'Failed to update preferences');
+      }
+    } catch (e) {
+      print('Auth Debug: Update preferences failed: $e');
+      rethrow;
+    }
+  }
 }

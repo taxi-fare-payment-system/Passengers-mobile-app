@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../theme/app_theme.dart';
 import '../providers/theme_provider.dart';
 
@@ -122,7 +123,13 @@ class LanguageSelectionScreen extends StatelessWidget {
               const SizedBox(height: 32),
               if (!Navigator.canPop(context))
                 ElevatedButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                  onPressed: () async {
+                    const storage = FlutterSecureStorage();
+                    await storage.write(key: 'has_seen_onboarding', value: 'true');
+                    if (context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    }
+                  },
                   child: Text('continue'.tr().toUpperCase()),
                 ),
               const SizedBox(height: 40),
