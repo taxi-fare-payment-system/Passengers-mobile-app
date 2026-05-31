@@ -176,6 +176,12 @@ class ProfileScreen extends StatelessWidget {
                     value: auth.user?['push_enabled'] ?? true,
                     onChanged: (value) => auth.updatePreferences(pushEnabled: value),
                   ),
+                  _SwitchTile(
+                    icon: Icons.fingerprint_rounded,
+                    title: 'biometric_login'.tr(),
+                    value: auth.isBiometricEnabledLocal,
+                    onChanged: (value) => auth.setBiometricEnabledLocal(value),
+                  ),
 
                   const SizedBox(height: 60),
                   SizedBox(

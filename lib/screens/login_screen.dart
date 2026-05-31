@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'SCAN QR CODE'.tr().toUpperCase(),
+                  'scan_qr_code'.tr().toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
@@ -169,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'USE PHONE NUMBER INSTEAD'.tr().toUpperCase(),
+                  'use_phone_instead'.tr().toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     color: AppTheme.accentColor,
@@ -217,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'QR CODE SCANNED'.tr().toUpperCase(),
+                      'qr_code_scanned'.tr().toUpperCase(),
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         color: AppTheme.accentColor,
@@ -285,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
               });
             },
             child: Text(
-              'CANCEL SCAN'.tr().toUpperCase(),
+              'cancel_scan'.tr().toUpperCase(),
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textSecondary,
@@ -374,7 +374,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _handleBiometricLogin,
             icon: const Icon(Icons.fingerprint_rounded, size: 28),
-            label: const Text('Login with Biometrics', style: TextStyle(fontWeight: FontWeight.w900)),
+            label: Text('login_with_biometrics'.tr(), style: const TextStyle(fontWeight: FontWeight.w900)),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.cardColor,
               foregroundColor: AppTheme.accentColor,
@@ -395,7 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.qr_code_scanner_rounded, size: 16, color: AppTheme.accentColor),
                 const SizedBox(width: 8),
                 Text(
-                  'BACK TO QR SCAN'.tr().toUpperCase(),
+                  'back_to_qr_scan'.tr().toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     color: AppTheme.accentColor,
@@ -475,7 +475,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 12),
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(modalContext).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            Text('SCAN QR TO QUICK LOGIN', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1)),
+            Text('scan_qr_to_quick_login'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1)),
             const SizedBox(height: 24),
             Expanded(
               child: Padding(

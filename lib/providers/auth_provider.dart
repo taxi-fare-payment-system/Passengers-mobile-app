@@ -10,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   Map<String, dynamic>? _user;
   bool _isLoading = false;
   String? _storedPhone;
+  bool _isBiometricEnabledLocal = false;
   final LocalAuthentication _localAuth = LocalAuthentication();
 
   String? get token => _token;
@@ -18,6 +19,7 @@ class AuthProvider with ChangeNotifier {
   bool get isVerified => _user?['is_verified'] ?? false;
   bool get isLoading => _isLoading;
   String? get storedPhone => _storedPhone;
+  bool get isBiometricEnabledLocal => _isBiometricEnabledLocal;
   
   Map<String, String> get headers {
     final Map<String, String> h = {};
@@ -225,7 +227,16 @@ class AuthProvider with ChangeNotifier {
   Future<bool> hasStoredCredentials() async {
     final phone = await _storage.read(key: 'phone');
     final password = await _storage.read(key: 'password');
-    return phone != null && password != null;
+    final biometricStr = await _storage.read(key: 'biometric_enabled');
+    // Default to true if they have password stored but no preference set yet
+    final isEnabled = biometricStr != 'false'; 
+    return phone != null && password != null && isEnabled;
+  }
+
+  Future<void> setBiometricEnabledLocal(bool value) async {
+    _isBiometricEnabledLocal = value;
+    await _storage.write(key: 'biometric_enabled', value: value ? 'true' : 'false');
+    notifyListeners();
   }
 
   Future<void> biometricLogin() async {
@@ -259,6 +270,8 @@ class AuthProvider with ChangeNotifier {
   Future<void> tryAutoLogin() async {
     _token = await _storage.read(key: 'token');
     _storedPhone = await _storage.read(key: 'phone');
+    final biometricStr = await _storage.read(key: 'biometric_enabled');
+    _isBiometricEnabledLocal = biometricStr != 'false';
     if (_token == null) return;
 
     try {
