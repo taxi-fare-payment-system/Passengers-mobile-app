@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../providers/auth_provider.dart';
+import '../providers/qr_provider.dart';
 import '../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -140,22 +141,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'TAP TO SCAN QR CODE'.tr().toUpperCase(),
+                  'SCAN QR CODE'.tr().toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                     letterSpacing: 1.5,
                     color: AppTheme.accentColor,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Fastest way to check stop & pay'.tr() == 'Fastest way to check stop & pay'
-                      ? 'Fastest way to select stop & pay'
-                      : 'Fastest way to check stop & pay'.tr(),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.hintColor.withOpacity(0.7),
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -265,9 +256,14 @@ class _LoginScreenState extends State<LoginScreen> {
         
         ElevatedButton(
           onPressed: _isLoading ? null : _handleLogin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.accentColor,
+            foregroundColor: Colors.black,
+            minimumSize: const Size(double.infinity, 56),
+          ),
           child: _isLoading 
             ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-            : Text('login_and_confirm'.tr().toUpperCase() == 'LOGIN_AND_CONFIRM' ? 'AUTHORIZE & CONFIRM' : 'login_and_confirm'.tr().toUpperCase()),
+            : Text('LOGIN'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
         ),
         const SizedBox(height: 24),
         
@@ -358,9 +354,14 @@ class _LoginScreenState extends State<LoginScreen> {
         
         ElevatedButton(
           onPressed: _isLoading ? null : _handleLogin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.accentColor,
+            foregroundColor: Colors.black,
+            minimumSize: const Size(double.infinity, 56),
+          ),
           child: _isLoading 
             ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-            : Text('login'.tr().toUpperCase()),
+            : Text('login'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
         ),
         const SizedBox(height: 24),
         
@@ -396,16 +397,27 @@ class _LoginScreenState extends State<LoginScreen> {
     if (phone.isEmpty || password.isEmpty) return;
     setState(() => _isLoading = true);
     try {
-      await context.read<AuthProvider>().login('0$phone', password);
+      final auth = context.read<AuthProvider>();
+      await auth.login('0$phone', password);
       if (mounted) {
         if (_scannedQrCode != null) {
-          Navigator.pushReplacementNamed(context, '/route-selection');
+          final qrProvider = context.read<QRProvider>();
+          final isValid = await qrProvider.verifyQRCode(_scannedQrCode!, auth.token!, headers: auth.headers);
+          if (mounted) {
+            if (isValid) {
+              Navigator.pushReplacementNamed(context, '/home');
+              Navigator.pushNamed(context, '/confirm-payment', arguments: {'trip_id': _scannedQrCode});
+            } else {
+              Navigator.pushReplacementNamed(context, '/home');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('invalid_qr_code'.tr())));
+            }
+          }
         } else {
           Navigator.pushReplacementNamed(context, '/home');
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -457,24 +469,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           } catch (_) {}
 
-                          setState(() {
-                            _scannedQrCode = code;
-                            _isQrMode = true;
-                            if (extractedPhone != null && extractedPhone.isNotEmpty) {
-                              String displayPhone = extractedPhone;
-                              if (displayPhone.startsWith('+251')) {
-                                displayPhone = displayPhone.substring(4);
-                              } else if (displayPhone.startsWith('0')) {
-                                displayPhone = displayPhone.substring(1);
-                              }
-                              _phoneController.text = displayPhone;
-                              _qrBannerMessage = 'QR code scanned successfully! Enter password to log in and pay.';
-                            } else if (_phoneController.text.isNotEmpty) {
-                              _qrBannerMessage = 'QR scanned! Proceeding with saved number +251 ${_phoneController.text}.';
-                            } else {
-                              _qrBannerMessage = 'QR scanned! Enter your phone and password to complete login.';
-                            }
-                          });
+                          String displayPhone = extractedPhone ?? _phoneController.text.trim();
+                          if (displayPhone.startsWith('+251')) {
+                            displayPhone = displayPhone.substring(4);
+                          } else if (displayPhone.startsWith('0')) {
+                            displayPhone = displayPhone.substring(1);
+                          }
+
+                          Navigator.pushNamed(
+                            context,
+                            '/confirm-payment',
+                            arguments: {
+                              'trip_id': code,
+                              'passenger_phone': displayPhone,
+                            },
+                          );
                         }
                       }
                     },

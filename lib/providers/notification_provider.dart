@@ -97,10 +97,10 @@ class NotificationProvider with ChangeNotifier {
         extraHeaders: headers,
       );
 
-      if (response.statusCode == 200) {
-        print('Notification Debug: Device token registered successfully');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Notification Debug: Device token registered successfully: ${response.statusCode} - ${response.body}');
       } else {
-        print('Notification Debug: Failed to register device token: ${response.statusCode}');
+        print('Notification Debug: Failed to register device token: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Notification Debug: Register device token failed: $e');
@@ -118,10 +118,10 @@ class NotificationProvider with ChangeNotifier {
         extraHeaders: headers,
       );
 
-      if (response.statusCode == 200) {
-        print('Notification Debug: Device token unregistered successfully');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Notification Debug: Device token unregistered successfully: ${response.statusCode} - ${response.body}');
       } else {
-        print('Notification Debug: Failed to unregister device token: ${response.statusCode}');
+        print('Notification Debug: Failed to unregister device token: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Notification Debug: Unregister device token failed: $e');

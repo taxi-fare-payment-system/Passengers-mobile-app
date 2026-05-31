@@ -1,11 +1,7 @@
 # Messaging Service Interface
-
 Base URL: `http://localhost:8087`
-
 ## HTTP Endpoints
-
 ### Public OTP Contract (Auth Service Integration)
-
 #### `POST /api/v1/messaging/otp/send`
 - Auth: none
 - Request:
@@ -49,7 +45,6 @@ Behavior:
 }
 ```
 - `404`: no OTP found for recipient (expired or never sent)
-
 Behavior:
 - OTP is invalidated immediately after successful verification (replay-safe)
 
@@ -115,13 +110,10 @@ Expected payload:
 ```
 
 ## Delivery Guarantees and Retry
-
 - Twilio/Resend dispatch retries up to 3 times with exponential backoff
 - On final failure, message status is set to `failed` and message is acknowledged
 - Duplicate `notification_id` values are skipped with 24-hour idempotency TTL
-
 ## Required Environment Variables
-
 ```env
 PORT=8087
 RABBITMQ_URL=amqp://user:pass@rabbitmq:5672/

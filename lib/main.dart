@@ -27,6 +27,8 @@ import 'providers/qr_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/feedback_provider.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'providers/driver_provider.dart';
@@ -35,10 +37,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      debugPrint('Firebase initialization failed: $e');
+    }
+  } else {
+    debugPrint('Firebase messaging is bypassed on this platform (${Platform.operatingSystem})');
   }
 
   runApp(

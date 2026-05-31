@@ -25,6 +25,8 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
   bool _isPaying = false;
   String? _error;
 
+  String? _passengerPhone;
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +36,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         if (args['amount'] != null) {
           _amountController.text = args['amount'].toString();
         }
+        _passengerPhone = args['passenger_phone']?.toString();
         _fetchStops(args['trip_id']?.toString());
       }
     });
@@ -53,32 +56,32 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       
       if (isUuid) {
         // Fetch trip status to load currentTrip and fetch next stops directly
-        await tripProvider.fetchTripStatus(trimmedCode, auth.token!, headers: auth.headers);
+        await tripProvider.fetchTripStatus(trimmedCode, auth.token ?? '', headers: auth.headers);
         if (tripProvider.currentTrip != null) {
-          await tripProvider.fetchNextStops(trimmedCode, auth.token!, headers: auth.headers);
+          await tripProvider.fetchNextStops(trimmedCode, auth.token ?? '', headers: auth.headers);
         } else {
           // If no trip was loaded, maybe the UUID represents a driver ID!
           // Fallback: Fetch active trip by driver ID
-          await tripProvider.fetchActiveTripByDriver(trimmedCode, auth.token!, headers: auth.headers);
+          await tripProvider.fetchActiveTripByDriver(trimmedCode, auth.token ?? '', headers: auth.headers);
           final realTripId = tripProvider.currentTrip?['id']?.toString();
           if (realTripId != null) {
-            await tripProvider.fetchNextStops(realTripId, auth.token!, headers: auth.headers);
+            await tripProvider.fetchNextStops(realTripId, auth.token ?? '', headers: auth.headers);
           }
         }
       } else {
         // 1. Resolve Driver/Trip from QR
         final qrProvider = context.read<QRProvider>();
-        final qrData = await qrProvider.getDriverFromQR(trimmedCode, auth.token!, headers: auth.headers);
+        final qrData = await qrProvider.getDriverFromQR(trimmedCode, auth.token ?? '', headers: auth.headers);
         final driverId = qrData?['driver_id'];
         
         if (driverId != null) {
           // 2. Get active trip for this driver to get the REAL UUID
-          await tripProvider.fetchActiveTripByDriver(driverId, auth.token!, headers: auth.headers);
+          await tripProvider.fetchActiveTripByDriver(driverId, auth.token ?? '', headers: auth.headers);
           
           // 3. Use the real Trip UUID to fetch stops
           final realTripId = tripProvider.currentTrip?['id']?.toString();
           if (realTripId != null) {
-            await tripProvider.fetchNextStops(realTripId, auth.token!, headers: auth.headers);
+            await tripProvider.fetchNextStops(realTripId, auth.token ?? '', headers: auth.headers);
           }
         }
       }
@@ -95,21 +98,42 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
     final tripId = tripProvider.currentTrip?['id']?.toString() ?? args?['trip_id']?.toString();
     if (tripId == null) return;
 
+    final auth = context.read<AuthProvider>();
+    if (!auth.isAuthenticated) {
+      _showPaymentAuthSheet(context, tripId);
+      return;
+    }
+
     setState(() {
       _isPaying = true;
       _error = null;
     });
 
     try {
-      final auth = context.read<AuthProvider>();
       final wallet = context.read<WalletProvider>();
       
       final amount = double.tryParse(_amountController.text) ?? 0;
       if (amount <= 0) {
         setState(() {
-          _error = 'please_enter_valid_amount'.tr();
           _isPaying = false;
         });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('please_enter_valid_amount'.tr(), style: const TextStyle(color: Colors.white))),
+                ],
+              ),
+              backgroundColor: Colors.red.shade800,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
         return;
       }
       
@@ -146,9 +170,35 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       }
     } catch (e) {
       setState(() {
-        _error = e.toString().replaceAll('Exception: ', '');
         _isPaying = false;
       });
+      
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      String displayMsg = errorMsg;
+      if (errorMsg.toLowerCase().contains('insufficient balance') || 
+          errorMsg.toLowerCase().contains('not enough') || 
+          errorMsg.toLowerCase().contains('balance')) {
+        displayMsg = 'insufficient_balance_msg'.tr(defaultValue: 'Insufficient wallet balance. Please top up your wallet.');
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text(displayMsg, style: const TextStyle(color: Colors.white))),
+              ],
+            ),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
@@ -279,7 +329,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                         final price = await tripProvider.fetchPriceQuote(
                           tripId: tripProvider.currentTrip?['id']?.toString() ?? (ModalRoute.of(context)?.settings.arguments as Map?)?['trip_id']?.toString() ?? '',
                           destinationStopIndex: stopIndex as int,
-                          token: auth.token!,
+                          token: auth.token ?? '',
                           headers: auth.headers,
                         );
                         setState(() => _amountController.text = price.toStringAsFixed(2));
@@ -296,21 +346,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
 
             const SizedBox(height: 40),
             
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold))),
-                    ],
-                  ),
-                ),
-              ),
+            const SizedBox(height: 16),
 
             ElevatedButton(
               onPressed: _isPaying ? null : _handlePayment,
@@ -328,6 +364,214 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showPaymentAuthSheet(BuildContext context, String tripId) {
+    final TextEditingController phoneController = TextEditingController(text: _passengerPhone ?? '');
+    final TextEditingController passwordController = TextEditingController();
+    bool isPasswordObscured = true;
+    bool isAuthLoading = false;
+    String? authError;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final theme = Theme.of(context);
+          final hasPhone = _passengerPhone != null && _passengerPhone!.isNotEmpty;
+
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+              top: 24,
+              left: 32,
+              right: 32,
+            ),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 40,
+                  offset: const Offset(0, -10),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'confirm_identity'.tr().toUpperCase(),
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  hasPhone
+                      ? '${'enter_password_to_pay'.tr()} (+251 $_passengerPhone)'
+                      : 'enter_phone_password_msg'.tr(),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+                ),
+                
+                if (!hasPhone) ...[
+                  const SizedBox(height: 24),
+                  Text('phone_number'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                        ),
+                        child: const Text('+251', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          enabled: !isAuthLoading,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                          decoration: InputDecoration(
+                            hintText: '91 234 5678',
+                            fillColor: theme.cardColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 24),
+
+                // Password field
+                Text('password'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordController,
+                  obscureText: isPasswordObscured,
+                  enabled: !isAuthLoading,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    fillColor: theme.cardColor,
+                    suffixIcon: IconButton(
+                      icon: Icon(isPasswordObscured ? Icons.visibility_off : Icons.visibility, color: theme.hintColor),
+                      onPressed: () => setSheetState(() => isPasswordObscured = !isPasswordObscured),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                if (authError != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            authError!,
+                            style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                ElevatedButton(
+                  onPressed: isAuthLoading
+                      ? null
+                      : () async {
+                          var phone = phoneController.text.trim();
+                          final password = passwordController.text.trim();
+                          if (phone.isEmpty || password.isEmpty) return;
+
+                          // Format phone to 0-prefixed if necessary
+                          if (phone.startsWith('+251')) {
+                            phone = phone.substring(4);
+                          } else if (phone.startsWith('0')) {
+                            phone = phone.substring(1);
+                          }
+
+                          setSheetState(() {
+                            isAuthLoading = true;
+                            authError = null;
+                          });
+
+                          try {
+                            final auth = context.read<AuthProvider>();
+                            final wallet = context.read<WalletProvider>();
+
+                            // 1. Log in passenger
+                            await auth.login('0$phone', password);
+
+                            // 2. Fetch logged-in wallet balance
+                            final userId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
+                            if (userId.isNotEmpty) {
+                              await wallet.refreshWallet(userId, auth.token!);
+                            }
+
+                            // 3. Pop bottom sheet and execute payment
+                            if (context.mounted) {
+                              Navigator.pop(sheetContext);
+                              _handlePayment();
+                            }
+                          } catch (e) {
+                            setSheetState(() {
+                              isAuthLoading = false;
+                              authError = e.toString().replaceAll('Exception: ', '');
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.accentColor,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 56),
+                  ),
+                  child: isAuthLoading
+                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                      : Text('verify_and_pay'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

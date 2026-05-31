@@ -19,9 +19,22 @@ class AuthProvider with ChangeNotifier {
   
   Map<String, String> get headers {
     final Map<String, String> h = {};
-    final userId = (_user?['id'] ?? _user?['user_id'])?.toString();
+    var userId = (_user?['id'] ?? _user?['user_id'] ?? _user?['uid'] ?? _user?['_id'])?.toString();
+    if (userId == null && _user?['user'] != null) {
+      final nested = _user?['user'];
+      if (nested is Map) {
+        userId = (nested['id'] ?? nested['user_id'] ?? nested['uid'] ?? nested['_id'])?.toString();
+      }
+    }
     if (userId != null) h['X-User-ID'] = userId;
-    final role = _user?['role']?.toString();
+    
+    var role = _user?['role']?.toString();
+    if (role == null && _user?['user'] != null) {
+      final nested = _user?['user'];
+      if (nested is Map) {
+        role = nested['role']?.toString();
+      }
+    }
     if (role != null) h['X-User-Role'] = role;
     return h;
   }
@@ -59,6 +72,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> verifyOTP(String phone, String code) async {
     final response = await ApiService.post('/api/v1/auth/verify-phone', {
       'phone': phone,
+      'role': 'passenger',
       'code': code,
     });
 
@@ -106,7 +120,10 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.post('/api/v1/auth/password-reset', {'phone': phone});
+      final response = await ApiService.post('/api/v1/auth/forgot-password', {
+        'phone': phone,
+        'role': 'passenger',
+      });
       if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body)['message'] ?? 'Reset failed';
         throw Exception(error);
@@ -121,6 +138,7 @@ class AuthProvider with ChangeNotifier {
     final response = await ApiService.post('/api/v1/auth/login', {
       'phone': phone,
       'password': password,
+      'role': 'passenger',
     });
 
     if (response.statusCode == 200) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
@@ -16,6 +17,7 @@ class RouteSelectionScreen extends StatefulWidget {
 class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
   int _selectedRouteIndex = -1;
   bool _isSubmitting = false;
+  String _scannedStation = 'Scan Station QR';
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +35,20 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
       ),
       body: Stack(
         children: [
-          // Map Placeholder
-          Container(
+          // QR Scanner Background
+          SizedBox(
             width: double.infinity,
             height: double.infinity,
-            color: isDark ? Colors.grey[900] : const Color(0xFFF3F4F6),
-            child: Center(
-              child: Icon(Icons.map_rounded, size: 80, color: isDark ? Colors.white10 : Colors.black12),
+            child: MobileScanner(
+              onDetect: (capture) {
+                final barcodes = capture.barcodes;
+                if (barcodes.isNotEmpty) {
+                  final code = barcodes.first.rawValue?.trim();
+                  if (code != null && code != _scannedStation) {
+                    setState(() => _scannedStation = code);
+                  }
+                }
+              },
             ),
           ),
           
@@ -61,10 +70,10 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                 children: [
                   _buildLocationRow(
                     context,
-                    icon: Icons.my_location_rounded,
+                    icon: Icons.qr_code_scanner_rounded,
                     color: AppTheme.accentColor,
                     title: 'current_location'.tr(),
-                    value: 'Megenagna Station',
+                    value: _scannedStation,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
