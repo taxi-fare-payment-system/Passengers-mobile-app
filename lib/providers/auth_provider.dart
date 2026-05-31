@@ -99,6 +99,34 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> verifyOtpEndpoint(String phone, String code) async {
+    final response = await ApiService.post('/api/v1/auth/verify-otp', {
+      'phone': phone,
+      'role': 'passenger',
+      'code': code,
+    });
+
+    if (response.statusCode == 200) {
+      print('Auth Debug: Response body: ${response.body}');
+      final body = jsonDecode(response.body);
+      final data = (body is Map && body.containsKey('data')) ? body['data'] : body;
+      
+      _token = data['token'] ?? body['token'];
+      _user = data['user'] ?? (data.containsKey('phone') || data.containsKey('display_name') ? data : null);
+      
+      if (_token != null) {
+        await _storage.write(key: 'token', value: _token);
+        final userPhone = _user?['phone'] ?? phone;
+        await _storage.write(key: 'phone', value: userPhone);
+        _storedPhone = userPhone;
+        notifyListeners();
+      }
+    } else {
+      print('Auth Debug: Error response: ${response.body}');
+      throw Exception(jsonDecode(response.body)['message'] ?? 'Verification failed');
+    }
+  }
+
   List<dynamic> _subCities = [];
   List<dynamic> get subCities => _subCities;
 
@@ -126,6 +154,27 @@ class AuthProvider with ChangeNotifier {
       });
       if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body)['message'] ?? 'Reset failed';
+        throw Exception(error);
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> confirmPasswordReset(String phone, String code, String newPassword) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.post('/api/v1/auth/reset-password', {
+        'phone': phone,
+        'role': 'passenger',
+        'code': code,
+        'new_password': newPassword,
+      });
+      if (response.statusCode != 200) {
+        final error = jsonDecode(response.body)['message'] ?? 'Password reset failed';
         throw Exception(error);
       }
     } finally {
