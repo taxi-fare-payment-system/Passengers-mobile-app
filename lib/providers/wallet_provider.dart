@@ -128,12 +128,12 @@ class WalletProvider with ChangeNotifier {
       final response = await ApiService.get('/api/v1/wallet/transactions?limit=50', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List<dynamic> allTx = data is List ? data : (data['data'] ?? data['items'] ?? []);
+        final List<dynamic> allTx = List.from(data is List ? data : (data['data'] ?? data['items'] ?? []));
         
         // Sort and update
         allTx.sort((a, b) {
-          final dateA = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
-          final dateB = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime.now();
+          final dateA = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.now();
+          final dateB = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.now();
           return dateB.compareTo(dateA);
         });
 
@@ -141,9 +141,11 @@ class WalletProvider with ChangeNotifier {
         print('Wallet Debug: Fetched ${_transactions.length} transactions');
       } else {
         print('Wallet Debug: Transaction fetch failed status ${response.statusCode}: ${response.body}');
+        _transactions = [];
       }
     } catch (e) {
-      print('Wallet Debug (tx): Error: $e');
+      print('Wallet Debug (tx): Error fetching transactions: $e');
+      _transactions = [];
     } finally {
       _isLoading = false;
       notifyListeners();

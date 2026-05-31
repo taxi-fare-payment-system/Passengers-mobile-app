@@ -540,44 +540,100 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showForgotPasswordDialog() {
     final TextEditingController forgotPhoneController = TextEditingController();
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('reset_password'.tr(), style: const TextStyle(fontWeight: FontWeight.w900)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('reset_password_desc'.tr(), style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 20),
-            TextField(
-              controller: forgotPhoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(hintText: '91 234 5678', prefixText: '+251 '),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary))),
-          ElevatedButton(
-            onPressed: () async {
-              final phone = forgotPhoneController.text.trim();
-              if (phone.isEmpty) return;
-              try {
-                await context.read<AuthProvider>().resetPassword('0$phone');
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  AppModals.showSuccess(context, 'reset_instructions_sent'.tr());
-                }
-              } catch (e) {
-                if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
-              }
-            },
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 48)),
-            child: Text('send'.tr()),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(modalContext).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(modalContext).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('reset_password'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 8),
+                    Text('reset_password_desc'.tr(), style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5)),
+                    const SizedBox(height: 32),
+                    
+                    Text('phone_number'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                          ),
+                          child: const Text('+251', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: forgotPhoneController,
+                            keyboardType: TextInputType.phone,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            decoration: InputDecoration(
+                              hintText: '91 234 5678',
+                              fillColor: Theme.of(context).cardColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                    
+                    ElevatedButton(
+                      onPressed: () async {
+                        final phone = forgotPhoneController.text.trim();
+                        if (phone.isEmpty) return;
+                        try {
+                          await context.read<AuthProvider>().resetPassword('0$phone');
+                          if (context.mounted) {
+                            Navigator.pop(modalContext);
+                            AppModals.showSuccess(context, 'reset_instructions_sent'.tr());
+                          }
+                        } catch (e) {
+                          if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.accentColor,
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(double.infinity, 56),
+                      ),
+                      child: Text('send'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(modalContext),
+                        child: Text(
+                          'cancel'.tr().toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary, fontSize: 12, letterSpacing: 0.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

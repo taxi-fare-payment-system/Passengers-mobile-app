@@ -38,7 +38,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('notifications'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 2, color: AppTheme.accentColor)),
+        title: Text('notifications'.tr(), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
@@ -74,9 +74,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_none_rounded, size: 80, color: theme.dividerColor.withOpacity(0.1)),
-            const SizedBox(height: 16),
-            Text('no_notifications_yet'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentColor.withOpacity(0.05),
+                    blurRadius: 40,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
+              child: Icon(Icons.notifications_none_rounded, size: 64, color: AppTheme.accentColor.withOpacity(0.5)),
+            ),
+            const SizedBox(height: 32),
+            Text('no_notifications_yet'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, fontSize: 16)),
           ],
         ),
       );
@@ -101,15 +115,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isUnread ? theme.cardColor : theme.cardColor.withOpacity(0.4),
+              color: isUnread ? theme.cardColor : theme.cardColor.withOpacity(0.5),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: isUnread ? AppTheme.accentColor.withOpacity(0.15) : theme.dividerColor.withOpacity(0.03),
-                width: 1,
+                color: isUnread ? AppTheme.accentColor.withOpacity(0.3) : theme.dividerColor.withOpacity(0.05),
               ),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -124,41 +136,56 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _translate(notification['title'] ?? 'notification'),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 15,
-                                color: isUnread ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Text(
-                            DateFormat.Hm(context.locale.toString()).format(date),
-                            style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, color: theme.hintColor.withOpacity(0.4)),
-                          ),
-                        ],
+                      Text(
+                        _translate(notification['title'] ?? 'notification'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          color: isUnread ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         _translate(notification['content'] ?? ''),
                         style: TextStyle(
                           color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
                           fontSize: 12,
                           height: 1.4,
-                          fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
                         ),
-                        maxLines: 3,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      DateFormat.yMMMd(context.locale.toString()).format(date),
+                      style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, color: theme.hintColor.withOpacity(0.4)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat.Hm(context.locale.toString()).format(date),
+                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11, fontWeight: FontWeight.w800),
+                    ),
+                    if (isUnread) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.accentColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

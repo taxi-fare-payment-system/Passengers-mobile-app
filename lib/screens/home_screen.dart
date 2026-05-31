@@ -241,10 +241,21 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildTripsList(BuildContext context) {
-    final tripProvider = context.watch<TripProvider>();
+    final wallet = context.watch<WalletProvider>();
     final theme = Theme.of(context);
-    if (tripProvider.isLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.accentColor));
-    if (tripProvider.tripHistory.isEmpty) {
+    
+    if (wallet.isLoading && wallet.transactions.isEmpty) {
+      return const Center(child: CircularProgressIndicator(color: AppTheme.accentColor));
+    }
+    
+    final trips = wallet.transactions.where((tx) {
+      final reason = (tx['reason'] ?? '').toString().toLowerCase();
+      final message = (tx['message'] ?? '').toString().toLowerCase();
+      final type = (tx['type'] ?? '').toString().toLowerCase();
+      return reason == 'fare' || reason.contains('fare') || message.contains('fare') || type.contains('fare');
+    }).toList();
+
+    if (trips.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(48),
         width: double.infinity,
@@ -263,7 +274,7 @@ class HomeScreen extends StatelessWidget {
       );
     }
     return Column(
-      children: tripProvider.tripHistory.take(3).map((trip) => _TripItem(trip: trip)).toList(),
+      children: trips.take(3).map((trip) => _TripItem(trip: trip)).toList(),
     );
   }
 
@@ -384,6 +395,14 @@ class _TripItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final date = DateTime.tryParse(trip['created_at'] ?? '') ?? DateTime.now();
+    final amount = double.tryParse((trip['amount'] ?? trip['totalFare'])?.toString() ?? '0') ?? 0;
+    
+    String title = 'taxi_fare'.tr();
+    if (trip['startLocation'] != null && trip['endLocation'] != null) {
+      title = '${trip['startLocation']} → ${trip['endLocation']}';
+    } else if (trip['metadata']?['route_name'] != null) {
+      title = trip['metadata']['route_name'];
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -409,7 +428,7 @@ class _TripItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${trip['start_location']} → ${trip['end_location']}',
+                  title,
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -422,8 +441,8 @@ class _TripItem extends StatelessWidget {
             ),
           ),
           Text(
-            '${trip['estimated_fare']} ${'currency'.tr()}',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppTheme.accentColor),
+            '-${amount.toStringAsFixed(2)} ${'currency'.tr()}',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: theme.textTheme.bodyLarge?.color),
           ),
         ],
       ),
