@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_modals.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -141,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await context.read<AuthProvider>().register(phone: fullPhone, password: password, displayName: name);
       if (mounted) Navigator.pushReplacementNamed(context, '/otp', arguments: {'phone': fullPhone, 'password': password});
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

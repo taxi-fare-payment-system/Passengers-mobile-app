@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feedback_provider.dart';
 import '../providers/driver_provider.dart';
+import '../utils/app_modals.dart';
 
 class RateTripScreen extends StatefulWidget {
   final String tripId;
@@ -219,21 +220,12 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                           );
                         }
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('feedback_submitted_thanks'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                              backgroundColor: Colors.green,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            ),
-                          );
+                          AppModals.showSuccess(context, 'feedback_submitted_thanks'.tr());
                           Navigator.popUntil(context, (route) => route.isFirst);
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
-                          );
+                          AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                         }
                       }
                     },

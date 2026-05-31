@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -9,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   Map<String, dynamic>? _user;
   bool _isLoading = false;
   String? _storedPhone;
+  final LocalAuthentication _localAuth = LocalAuthentication();
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
@@ -202,6 +204,7 @@ class AuthProvider with ChangeNotifier {
         await _storage.write(key: 'token', value: _token);
         final userPhone = _user?['phone'] ?? phone;
         await _storage.write(key: 'phone', value: userPhone);
+        await _storage.write(key: 'password', value: password);
         _storedPhone = userPhone;
         notifyListeners();
       }
@@ -215,7 +218,42 @@ class AuthProvider with ChangeNotifier {
     _token = null;
     _user = null;
     await _storage.delete(key: 'token');
+    await _storage.delete(key: 'password');
     notifyListeners();
+  }
+
+  Future<bool> hasStoredCredentials() async {
+    final phone = await _storage.read(key: 'phone');
+    final password = await _storage.read(key: 'password');
+    return phone != null && password != null;
+  }
+
+  Future<void> biometricLogin() async {
+    try {
+      final isAvailable = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
+      if (!isAvailable) throw Exception('Biometric authentication is not supported on this device');
+
+      final didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Please authenticate to login securely',
+        options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true),
+      );
+
+      if (didAuthenticate) {
+        final phone = await _storage.read(key: 'phone');
+        final password = await _storage.read(key: 'password');
+        
+        if (phone != null && password != null) {
+          await login(phone, password);
+        } else {
+          throw Exception('No saved credentials found. Please login normally first.');
+        }
+      } else {
+        throw Exception('Biometric authentication failed');
+      }
+    } catch (e) {
+      print('Auth Debug: Biometric login error: $e');
+      rethrow;
+    }
   }
 
   Future<void> tryAutoLogin() async {

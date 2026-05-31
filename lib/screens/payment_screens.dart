@@ -9,6 +9,7 @@ import '../providers/wallet_provider.dart';
 import '../providers/qr_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/driver_provider.dart';
+import '../utils/app_modals.dart';
 import 'feedback_screens.dart';
 
 class ConfirmPaymentScreen extends StatefulWidget {
@@ -118,21 +119,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
           _isPaying = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text('please_enter_valid_amount'.tr(), style: const TextStyle(color: Colors.white))),
-                ],
-              ),
-              backgroundColor: Colors.red.shade800,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppModals.showError(context, 'please_enter_valid_amount'.tr());
         }
         return;
       }
@@ -178,26 +165,11 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       if (errorMsg.toLowerCase().contains('insufficient balance') || 
           errorMsg.toLowerCase().contains('not enough') || 
           errorMsg.toLowerCase().contains('balance')) {
-        displayMsg = 'insufficient_balance_msg'.tr(defaultValue: 'Insufficient wallet balance. Please top up your wallet.');
+        displayMsg = 'insufficient_balance_msg'.tr();
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text(displayMsg, style: const TextStyle(color: Colors.white))),
-              ],
-            ),
-            backgroundColor: Colors.red.shade800,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        AppModals.showError(context, displayMsg);
       }
     }
   }

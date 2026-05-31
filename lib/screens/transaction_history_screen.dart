@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
+import '../utils/app_modals.dart';
 import '../providers/trip_provider.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
@@ -157,12 +158,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 await launchUrl(url, mode: LaunchMode.inAppBrowserView);
               } catch (_) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open receipt')));
+                  AppModals.showError(context, 'Could not open receipt');
                 }
               }
             } else {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No receipt available')));
+                AppModals.showError(context, 'No receipt available');
               }
             }
           },

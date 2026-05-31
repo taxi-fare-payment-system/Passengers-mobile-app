@@ -7,6 +7,7 @@ import '../providers/qr_provider.dart';
 import '../providers/trip_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/wallet_provider.dart';
+import '../utils/app_modals.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -222,11 +223,11 @@ class HomeScreen extends StatelessWidget {
                         if (isValid) {
                           Navigator.pushNamed(context, '/confirm-payment', arguments: {'trip_id': code});
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('invalid_qr_code'.tr())));
+                          AppModals.showError(context, 'invalid_qr_code'.tr());
                         }
                       }
                     } catch (e) {
-                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                      if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                     }
                   },
                   icon: const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 28),
@@ -308,11 +309,11 @@ class HomeScreen extends StatelessWidget {
                               if (isValid) {
                                 Navigator.pushNamed(context, '/confirm-payment', arguments: {'trip_id': code});
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('invalid_qr_code'.tr())));
+                                AppModals.showError(context, 'invalid_qr_code'.tr());
                               }
                             }
                           } catch (e) {
-                            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                            if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                           }
                         }
                       }

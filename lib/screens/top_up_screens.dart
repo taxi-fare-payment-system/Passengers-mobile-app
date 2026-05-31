@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/qr_provider.dart';
+import '../utils/app_modals.dart';
 
 class TopUpScreen extends StatefulWidget {
   const TopUpScreen({super.key});
@@ -135,13 +136,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
   Future<void> _handleTopUp() async {
     final amountText = _amountController.text.trim();
     if (amountText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_amount'.tr())));
+      AppModals.showError(context, 'please_enter_amount'.tr());
       return;
     }
 
     final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('please_enter_valid_amount'.tr())));
+      AppModals.showError(context, 'please_enter_valid_amount'.tr());
       return;
     }
 
@@ -167,7 +168,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
       }
     }
   }
@@ -307,7 +308,7 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
     } catch (e) {
       await closeInAppWebView();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AppModals.showError(context, 'Error: ${e.toString().replaceAll('Exception: ', '')}');
         Navigator.pop(context);
       }
     }

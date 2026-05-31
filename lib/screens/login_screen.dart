@@ -6,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../providers/auth_provider.dart';
 import '../providers/qr_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_modals.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,12 +24,17 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isQrMode = false;
   String? _qrBannerMessage;
   bool _showManualLogin = false;
+  bool _canUseBiometrics = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final auth = context.read<AuthProvider>();
+      final hasCreds = await auth.hasStoredCredentials();
+      if (mounted && hasCreds) {
+        setState(() => _canUseBiometrics = true);
+      }
       await auth.tryAutoLogin();
       if (auth.storedPhone != null && auth.storedPhone!.isNotEmpty) {
         setState(() {
@@ -363,6 +369,20 @@ class _LoginScreenState extends State<LoginScreen> {
             ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
             : Text('login'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
         ),
+        if (_canUseBiometrics) ...[
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : _handleBiometricLogin,
+            icon: const Icon(Icons.fingerprint_rounded, size: 28),
+            label: const Text('Login with Biometrics', style: TextStyle(fontWeight: FontWeight.w900)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.cardColor,
+              foregroundColor: AppTheme.accentColor,
+              minimumSize: const Size(double.infinity, 56),
+              side: BorderSide(color: AppTheme.accentColor.withOpacity(0.5)),
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         
         // Back to QR scan centerpiece
@@ -391,6 +411,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleBiometricLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      final auth = context.read<AuthProvider>();
+      await auth.biometricLogin();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _handleLogin() async {
     final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
@@ -409,7 +444,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Navigator.pushNamed(context, '/confirm-payment', arguments: {'trip_id': _scannedQrCode});
             } else {
               Navigator.pushReplacementNamed(context, '/home');
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('invalid_qr_code'.tr())));
+              AppModals.showError(context, 'invalid_qr_code'.tr());
             }
           }
         } else {
@@ -417,7 +452,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))));
+      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -533,10 +568,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 await context.read<AuthProvider>().resetPassword('0$phone');
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('reset_instructions_sent'.tr())));
+                  AppModals.showSuccess(context, 'reset_instructions_sent'.tr());
                 }
               } catch (e) {
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
               }
             },
             style: ElevatedButton.styleFrom(minimumSize: const Size(100, 48)),

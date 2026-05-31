@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_modals.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key});
@@ -133,7 +134,7 @@ class _OTPScreenState extends State<OTPScreen> {
       if (password != null) await context.read<AuthProvider>().login(phone, password);
       if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "145928511585",
+    "project_id": "wulo-pay",
+    "storage_bucket": "wulo-pay.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145928511585:android:4da041b60cd201e2d4ca20",
+        "android_client_info": {
+          "package_name": "com.wulopay.driver_assistant_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGcM8LrXtC9w-u-mdIpuJROPNg7rY1hSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145928511585:android:af33dcca71a116ead4ca20",
+        "android_client_info": {
+          "package_name": "com.wulopay.passanger_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGcM8LrXtC9w-u-mdIpuJROPNg7rY1hSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

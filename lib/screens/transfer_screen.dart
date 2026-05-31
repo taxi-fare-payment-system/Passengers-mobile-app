@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
 import '../providers/notification_provider.dart';
+import '../utils/app_modals.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -136,21 +137,12 @@ class _TransferScreenState extends State<TransferScreen> {
                                 walletProvider.fetchTransactions(userId, auth.token!);
                               }
                               
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('transfer_successful'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)), 
-                                  backgroundColor: Colors.green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                ),
-                              );
+                              AppModals.showSuccess(context, 'transfer_successful'.tr());
                               Navigator.pop(context);
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
-                              );
+                              AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                             }
                           }
                         }

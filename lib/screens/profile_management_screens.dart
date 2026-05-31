@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../utils/app_modals.dart';
 import '../providers/document_provider.dart';
 
 class ProfileSetupScreen extends StatelessWidget {
@@ -140,17 +141,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               child: ElevatedButton(
                 onPressed: auth.isLoading ? null : () async {
                   if (_newPasswordController.text != _confirmPasswordController.text) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('passwords_do_not_match'.tr())));
+                    AppModals.showError(context, 'passwords_do_not_match'.tr());
                     return;
                   }
                   try {
                     await auth.changePassword(_currentPasswordController.text, _newPasswordController.text);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('password_updated_success'.tr())));
+                      AppModals.showSuccess(context, 'password_updated_success'.tr());
                       Navigator.pop(context);
                     }
                   } catch (e) {
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                    if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                   }
                 },
                 child: auth.isLoading 

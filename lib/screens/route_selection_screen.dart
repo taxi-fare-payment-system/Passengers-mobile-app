@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
+import '../utils/app_modals.dart';
 import 'trip_details_screen.dart';
 
 class RouteSelectionScreen extends StatefulWidget {
@@ -171,7 +172,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => TripDetailsScreen(route: route)));
                               }
                             } catch (e) {
-                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                              if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                             } finally {
                               if (mounted) setState(() => _isSubmitting = false);
                             }

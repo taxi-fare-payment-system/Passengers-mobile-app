@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/document_provider.dart';
+import '../utils/app_modals.dart';
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
@@ -51,11 +52,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
         userId: userId, documentType: _documentType, file: _selectedFile!, token: auth.token!, headers: auth.headers,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('doc_uploaded_success_msg'.tr()), backgroundColor: Colors.green));
+        AppModals.showSuccess(context, 'doc_uploaded_success_msg'.tr());
         setState(() => _selectedFile = null);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${'upload_failed'.tr()}: $e'), backgroundColor: Colors.red));
+      if (mounted) AppModals.showError(context, '${'upload_failed'.tr()}: ${e.toString().replaceAll('Exception: ', '')}');
     }
   }
 

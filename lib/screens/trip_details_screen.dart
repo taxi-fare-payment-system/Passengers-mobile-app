@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/trip_provider.dart';
+import '../utils/app_modals.dart';
 
 class TripDetailsScreen extends StatefulWidget {
   final dynamic route;
@@ -159,7 +160,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                   'estimated_fare': widget.route['baseFare'],
                                 }, authProvider.token!);
                               } catch (e) {
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                                if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
                               } finally {
                                 if (mounted) setState(() => _isBooking = false);
                               }
