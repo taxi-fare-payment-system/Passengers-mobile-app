@@ -87,6 +87,47 @@ class _MainNavigationState extends State<MainNavigation> {
         }).onError((err) {
           debugPrint('FCM Token Refresh Error: $err');
         });
+
+        // Listen for foreground messages
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          debugPrint('FCM Foreground Message Received: ${message.messageId}');
+          
+          if (mounted && message.notification != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(message.notification?.title ?? 'Notification', style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
+                    const SizedBox(height: 4),
+                    Text(message.notification?.body ?? '', style: const TextStyle(color: Colors.black87)),
+                  ],
+                ),
+                backgroundColor: AppTheme.accentColor,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'VIEW'.tr(),
+                  textColor: Colors.black,
+                  onPressed: () {
+                    if (mounted) setState(() => _selectedIndex = 0); // Optional: navigate to home or update state
+                  },
+                ),
+              ),
+            );
+          }
+          
+          // Refresh notifications when a new message arrives
+          if (authProvider.isAuthenticated && authProvider.token != null) {
+            notificationProvider.fetchNotifications(
+              authProvider.token!,
+              headers: authProvider.headers,
+            );
+          }
+        });
       }
     } catch (e) {
       debugPrint('FCM Registration Setup Failed: $e');

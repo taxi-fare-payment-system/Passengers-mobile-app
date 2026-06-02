@@ -35,7 +35,9 @@ class DriverProvider with ChangeNotifier {
     try {
       final response = await ApiService.get('/api/v1/auth/drivers/$driverId/profile', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
-        _currentDriverProfile = jsonDecode(response.body);
+        final body = jsonDecode(response.body);
+        _currentDriverProfile = (body is Map && body.containsKey('data')) ? body['data'] : body;
+        print('Driver Debug: Extracted Driver Profile: $_currentDriverProfile');
       } else {
         print('Driver Debug: Failed to fetch profile status ${response.statusCode}');
       }

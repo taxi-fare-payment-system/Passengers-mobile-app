@@ -29,14 +29,14 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final driverProvider = context.watch<DriverProvider>();
-    final driver = driverProvider.currentDriverProfile;
+    final driverResponse = driverProvider.currentDriverProfile;
     final isLoading = driverProvider.isLoading;
 
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (driver == null) {
+    if (driverResponse == null) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(title: Text('driver_profile'.tr())),
@@ -44,7 +44,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       );
     }
 
-    final reviews = driver['reviews'] ?? {};
+    final driver = driverResponse['driver'] ?? driverResponse;
+    final reviews = driverResponse['reviews'] ?? driver['reviews'] ?? {};
     final reviewList = reviews['reviews'] as List? ?? [];
 
     return Scaffold(
@@ -100,7 +101,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(driver['display_name'] ?? 'Unknown Driver', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                            Text(driver['display_name'] ?? driver['full_name'] ?? driver['name'] ?? 'Unknown Driver', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
