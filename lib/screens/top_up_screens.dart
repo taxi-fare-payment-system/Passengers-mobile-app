@@ -98,7 +98,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
             
             _PaymentMethodTile(
               title: 'Telebirr',
-              subtitle: 'telebirr_desc'.tr(),
               icon: Icons.account_balance_wallet_rounded,
               isSelected: _selectedMethod == 'Telebirr',
               onTap: () => setState(() => _selectedMethod = 'Telebirr'),
@@ -106,7 +105,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
             const SizedBox(height: 16),
             _PaymentMethodTile(
               title: 'CBE Birr',
-              subtitle: 'cbebirr_desc'.tr(),
               icon: Icons.account_balance_rounded,
               isSelected: _selectedMethod == 'CBE Birr',
               onTap: () => setState(() => _selectedMethod = 'CBE Birr'),
@@ -114,7 +112,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
             const SizedBox(height: 16),
             _PaymentMethodTile(
               title: 'Card',
-              subtitle: 'card_desc'.tr(),
               icon: Icons.credit_card_rounded,
               isSelected: _selectedMethod == 'Card',
               onTap: () => setState(() => _selectedMethod = 'Card'),
@@ -176,14 +173,12 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
 class _PaymentMethodTile extends StatelessWidget {
   final String title;
-  final String subtitle;
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _PaymentMethodTile({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.isSelected,
     required this.onTap,
@@ -227,15 +222,6 @@ class _PaymentMethodTile extends StatelessWidget {
                       fontSize: 14, 
                       letterSpacing: 1,
                       color: isSelected ? Colors.black : theme.textTheme.bodyLarge?.color
-                    )
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle, 
-                    style: TextStyle(
-                      color: isSelected ? Colors.black.withOpacity(0.6) : theme.hintColor, 
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700
                     )
                   ),
                 ],

@@ -55,12 +55,24 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             expandedHeight: 120,
             floating: false,
             pinned: true,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF161616) : Theme.of(context).scaffoldBackgroundColor,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text('driver_profile'.tr(), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              title: Text('driver_profile'.tr(), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.5)),
               centerTitle: false,
               titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppTheme.accentColor.withOpacity(0.1),
+                      Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -79,7 +91,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         ),
                         child: CircleAvatar(
                           radius: 44,
-                          backgroundImage: NetworkImage(driver['avatar'] ?? 'https://i.pravatar.cc/150?u=${driver['id']}'),
+                          backgroundColor: Theme.of(context).cardColor,
+                          backgroundImage: NetworkImage(driver['profile_picture'] ?? driver['avatar'] ?? 'https://i.pravatar.cc/150?u=${driver['id']}'),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -87,14 +100,51 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(driver['display_name'] ?? 'Unknown Driver', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24)),
-                            Row(
+                            Text(driver['display_name'] ?? 'Unknown Driver', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
-                                if (driver['is_verified'] == true) ...[
-                                  const Icon(Icons.verified, color: AppTheme.accentColor, size: 18),
-                                  const SizedBox(width: 4),
-                                  Text('verified'.tr(), style: const TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.bold, fontSize: 12)),
-                                ],
+                                if (driver['is_verified'] == true) 
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.accentColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.verified, color: AppTheme.accentColor, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text('verified'.tr(), style: const TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.w800, fontSize: 10, letterSpacing: 0.5)),
+                                      ],
+                                    ),
+                                  ),
+                                if (driver['vehicle_type'] != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).dividerColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          driver['vehicle_type'].toString().toLowerCase() == 'bajaj' ? Icons.electric_rickshaw_rounded : Icons.local_taxi_rounded,
+                                          size: 14,
+                                          color: Theme.of(context).hintColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${driver['vehicle_type']} • ${driver['plate_number'] ?? ''}'.toUpperCase(),
+                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
                           ],
@@ -136,7 +186,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   // Reviews Section
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('recent_reviews'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                    child: Text('recent_reviews'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 2)),
                   ),
                   const SizedBox(height: 16),
                   if (reviewList.isEmpty)
@@ -147,7 +197,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Center(child: Text('no_reviews_yet'.tr())),
+                      child: Center(child: Text('no_reviews_yet'.tr(), style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
                     )
                   else
                     ...reviewList.map((review) => _ReviewCard(review: review)),

@@ -36,9 +36,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: theme.brightness == Brightness.dark ? Colors.black : theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('notifications'.tr(), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+        title: Text('notifications'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 2, color: AppTheme.accentColor)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
@@ -74,30 +74,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.accentColor.withOpacity(0.05),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                  ),
-                ],
-              ),
-              child: Icon(Icons.notifications_none_rounded, size: 64, color: AppTheme.accentColor.withOpacity(0.5)),
-            ),
-            const SizedBox(height: 32),
-            Text('no_notifications_yet'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, fontSize: 16)),
+            Icon(Icons.notifications_none_rounded, size: 80, color: theme.dividerColor.withOpacity(0.1)),
+            const SizedBox(height: 16),
+            Text('no_notifications_yet'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
           ],
         ),
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       itemCount: provider.notifications.length,
       separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
@@ -113,12 +99,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           },
           borderRadius: BorderRadius.circular(24),
           child: Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isUnread ? theme.cardColor : theme.cardColor.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(24),
+              color: theme.brightness == Brightness.dark ? Colors.black : (isUnread ? theme.cardColor : theme.cardColor.withOpacity(0.5)),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isUnread ? AppTheme.accentColor.withOpacity(0.3) : theme.dividerColor.withOpacity(0.05),
+                color: isUnread ? AppTheme.accentColor.withOpacity(0.4) : theme.dividerColor.withOpacity(0.05),
               ),
             ),
             child: Row(
@@ -140,22 +126,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         _translate(notification['title'] ?? 'notification'),
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
-                          fontSize: 15,
+                          fontSize: 16,
+                          letterSpacing: -0.3,
                           color: isUnread ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         _translate(notification['content'] ?? ''),
                         style: TextStyle(
-                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
-                          fontSize: 12,
-                          height: 1.4,
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(isUnread ? 0.9 : 0.6),
+                          fontSize: 13,
+                          height: 1.5,
                           fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
                         ),
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

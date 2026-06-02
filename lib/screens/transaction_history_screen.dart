@@ -39,17 +39,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text('transactions'.tr(), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+          title: Text('transactions'.tr().toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 2, color: AppTheme.accentColor)),
           bottom: TabBar(
             labelColor: AppTheme.accentColor,
             unselectedLabelColor: theme.brightness == Brightness.dark ? Colors.white.withOpacity(0.3) : theme.hintColor.withOpacity(0.5),
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            indicator: BoxDecoration(
-              color: AppTheme.accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppTheme.accentColor.withOpacity(0.3)),
-            ),
+            indicatorColor: AppTheme.accentColor,
+            indicatorWeight: 4,
             labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1),
             tabs: [
               Tab(text: 'all'.tr().toUpperCase()),
@@ -113,30 +108,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.accentColor.withOpacity(0.05),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                  ),
-                ],
-              ),
-              child: Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 64, color: AppTheme.accentColor.withOpacity(0.5)),
-            ),
-            const SizedBox(height: 32),
-            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, fontSize: 16)),
+            Icon(isTrip ? Icons.directions_car_rounded : Icons.history_rounded, size: 64, color: theme.dividerColor.withOpacity(0.1)),
+            const SizedBox(height: 16),
+            Text(isTrip ? 'no_rides_found'.tr() : 'no_transactions_found'.tr(), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
           ],
         ),
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       itemCount: transactions.length,
       separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) {

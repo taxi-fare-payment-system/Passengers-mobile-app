@@ -233,6 +233,7 @@ class TripProvider with ChangeNotifier {
     required double amount,
     required String walletId,
     required String driverId,
+    required int destinationStopIndex,
     required String token,
     Map<String, String>? headers,
   }) async {
@@ -242,6 +243,7 @@ class TripProvider with ChangeNotifier {
         'amount': amount,
         'wallet_id': walletId,
         'driver_id': driverId,
+        'DestinationStopIndex': destinationStopIndex,
         'message': 'Fare payment for trip $tripId',
       },
       token: token,

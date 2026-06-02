@@ -124,11 +124,22 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         return;
       }
       
+      if (_selectedStopIndex == null) {
+        setState(() {
+          _isPaying = false;
+        });
+        if (mounted) {
+          AppModals.showError(context, 'please_select_destination'.tr());
+        }
+        return;
+      }
+      
       final txId = await tripProvider.payFare(
         tripId: tripId,
         amount: amount,
         walletId: wallet.walletId ?? '',
         driverId: (tripProvider.currentTrip?['driver_id'] ?? tripProvider.currentTrip?['driverId'])?.toString() ?? '',
+        destinationStopIndex: _selectedStopIndex!,
         token: auth.token!,
         headers: auth.headers,
       );
