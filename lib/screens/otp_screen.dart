@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,33 @@ class OTPScreen extends StatefulWidget {
 class _OTPScreenState extends State<OTPScreen> {
   final _pinController = TextEditingController();
   bool _isLoading = false;
+  int _secondsRemaining = 60;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    setState(() => _secondsRemaining = 60);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pinController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +99,26 @@ class _OTPScreenState extends State<OTPScreen> {
                     children: [
                       const Icon(Icons.timer_outlined, size: 16, color: AppTheme.accentColor),
                       const SizedBox(width: 8),
-                      Text(
-                        '${'resend_code_in'.tr()} 00:55',
-                        style: theme.textTheme.labelSmall?.copyWith(fontSize: 11, letterSpacing: 1),
+                      GestureDetector(
+                        onTap: _secondsRemaining == 0 ? () {
+                          // Handle resend logic here
+                          _startTimer();
+                          final args = ModalRoute.of(context)!.settings.arguments;
+                          String phone = args is String ? args : (args as Map)['phone'];
+                          context.read<AuthProvider>().sendOTP(phone).catchError((e) {
+                            if (mounted) AppModals.showError(context, e.toString());
+                          });
+                        } : null,
+                        child: Text(
+                          _secondsRemaining > 0
+                              ? '${'resend_code_in'.tr()} 00:${_secondsRemaining.toString().padLeft(2, '0')}'
+                              : 'resend_code'.tr(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontSize: 11, 
+                            letterSpacing: 1,
+                            color: _secondsRemaining > 0 ? theme.hintColor : AppTheme.accentColor,
+                          ),
+                        ),
                       ),
                     ],
                   ),

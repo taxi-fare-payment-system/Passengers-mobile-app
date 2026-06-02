@@ -210,10 +210,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   IconData _getCategoryIcon(String? category) {
     switch (category?.toLowerCase()) {
-      case 'billing': case 'payment': return Icons.account_balance_wallet_rounded;
-      case 'trip': return Icons.local_taxi_rounded;
-      case 'security': return Icons.security_rounded;
-      default: return Icons.notifications_rounded;
+      case 'billing': case 'payment': return Icons.receipt_long_rounded;
+      case 'trip': return Icons.directions_car_filled_rounded;
+      case 'security': return Icons.shield_rounded;
+      default: return Icons.notifications_active_rounded;
     }
   }
 

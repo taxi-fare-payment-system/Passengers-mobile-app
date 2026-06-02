@@ -604,7 +604,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           await context.read<AuthProvider>().resetPassword('0$phone');
                           if (context.mounted) {
                             Navigator.pop(modalContext);
-                            AppModals.showSuccess(context, 'reset_instructions_sent'.tr());
+                            _showResetPasswordDialog(context, '0$phone');
                           }
                         } catch (e) {
                           if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
@@ -632,6 +632,115 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showResetPasswordDialog(BuildContext context, String phone) {
+    final TextEditingController otpController = TextEditingController();
+    final TextEditingController newPasswordController = TextEditingController();
+    bool isResetLoading = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(modalContext).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(modalContext).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('create_new_password'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 8),
+                      Text('enter_the_otp_sent_to_your_phone'.tr(), style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5)),
+                      const SizedBox(height: 32),
+                      
+                      Text('otp_code'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: otpController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                        decoration: InputDecoration(
+                          hintText: '123456',
+                          fillColor: Theme.of(context).cardColor,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      Text('new_password'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: newPasswordController,
+                        obscureText: true,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          fillColor: Theme.of(context).cardColor,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      
+                      ElevatedButton(
+                        onPressed: isResetLoading ? null : () async {
+                          final otp = otpController.text.trim();
+                          final newPassword = newPasswordController.text.trim();
+                          if (otp.isEmpty || newPassword.isEmpty) return;
+                          
+                          setSheetState(() => isResetLoading = true);
+                          try {
+                            await context.read<AuthProvider>().confirmPasswordReset(phone, otp, newPassword);
+                            if (context.mounted) {
+                              Navigator.pop(modalContext);
+                              AppModals.showSuccess(context, 'password_reset_successful'.tr());
+                            }
+                          } catch (e) {
+                            if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                          } finally {
+                            if (context.mounted) setSheetState(() => isResetLoading = false);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accentColor,
+                          foregroundColor: Colors.black,
+                          minimumSize: const Size(double.infinity, 56),
+                        ),
+                        child: isResetLoading
+                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                          : Text('reset_password'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
+                      ),
+                      const SizedBox(height: 24),
+                      Center(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(modalContext),
+                          child: Text(
+                            'cancel'.tr().toUpperCase(),
+                            style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary, fontSize: 12, letterSpacing: 0.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
