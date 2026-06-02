@@ -199,6 +199,33 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
         elevation: 0,
         centerTitle: false,
       ),
+      bottomNavigationBar: _isLoadingStops ? null : SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(context).viewInsets.bottom + 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                  child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: _isPaying ? null : _handlePayment,
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                  child: _isPaying
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                    : Text('pay_fare'.tr().toUpperCase(), style: const TextStyle(fontSize: 13)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: _isLoadingStops
           ? Center(
               child: Column(
@@ -327,23 +354,6 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                   },
                 ),
 
-            const SizedBox(height: 40),
-            
-            const SizedBox(height: 16),
-
-            ElevatedButton(
-              onPressed: _isPaying ? null : _handlePayment,
-              child: _isPaying 
-                ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-                : Text('pay_fare'.tr().toUpperCase()),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
-              ),
-            ),
             const SizedBox(height: 40),
           ],
         ),
@@ -773,51 +783,63 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> with Single
                   FutureBuilder<Map<String, dynamic>?>(
                     future: context.read<DriverProvider>().getDriverProfileData(widget.driverId!, auth.token!, headers: auth.headers),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: CircularProgressIndicator(color: AppTheme.accentColor),
-                        );
-                      }
-                      
                       final profile = snapshot.data;
                       final reviews = profile?['reviews'] ?? {};
                       final reviewList = reviews['reviews'] as List? ?? [];
                       final currentUserId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
                       final hasReviewed = reviewList.any((r) => r['reviewer_id']?.toString() == currentUserId);
+                      final isLoading = snapshot.connectionState == ConnectionState.waiting;
                       
-                      if (hasReviewed) {
-                        return const SizedBox.shrink(); // Hide review action if already reviewed
-                      }
-                      
-                      return ElevatedButton(
-                        onPressed: () => Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (context) => RateTripScreen(tripId: widget.tripId, driverId: widget.driverId))
-                        ),
-                        child: Text('rate_your_trip'.tr().toUpperCase()),
+                      return Row(
+                        children: [
+                          if (isLoading)
+                            const Expanded(child: Center(child: CircularProgressIndicator(color: AppTheme.accentColor)))
+                          else if (!hasReviewed) ...[
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pushReplacement(
+                                  context, 
+                                  MaterialPageRoute(builder: (context) => RateTripScreen(tripId: widget.tripId, driverId: widget.driverId))
+                                ),
+                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                                child: Text('rate_your_trip'.tr().toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                backgroundColor: theme.cardColor,
+                                foregroundColor: AppTheme.accentColor,
+                                side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                                elevation: 0,
+                              ),
+                              child: Text('back_to_home'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.5)),
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
                 ] else ...[
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushReplacement(
-                      context, 
-                      MaterialPageRoute(builder: (context) => RateTripScreen(tripId: widget.tripId, driverId: widget.driverId))
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        backgroundColor: theme.cardColor,
+                        foregroundColor: AppTheme.accentColor,
+                        side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                        elevation: 0,
+                      ),
+                      child: Text('back_to_home'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.5)),
                     ),
-                    child: Text('rate_your_trip'.tr().toUpperCase()),
                   ),
                 ],
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                  ),
-                  child: Text('back_to_home'.tr().toUpperCase()),
-                ),
                 const SizedBox(height: 20),
               ],
             ),

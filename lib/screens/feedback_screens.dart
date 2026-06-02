@@ -97,16 +97,28 @@ class _RateTripScreenState extends State<RateTripScreen> {
               ),
             const Spacer(),
             
-            ElevatedButton(
-              onPressed: _rating > 0 
-                ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, driverId: widget.driverId, rating: _rating))) 
-                : null,
-              child: Text('continue'.tr().toUpperCase()),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-              child: Text('skip'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                    ),
+                    child: Text('skip'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _rating > 0 
+                      ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, driverId: widget.driverId, rating: _rating))) 
+                      : null,
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                    child: Text('continue'.tr().toUpperCase(), style: const TextStyle(fontSize: 13)),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
           ],

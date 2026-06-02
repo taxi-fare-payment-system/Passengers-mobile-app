@@ -11,16 +11,17 @@ class VehicleDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final metadata = vehicle['metadata'] ?? {};
     final typeInfo = vehicle['vehicleType'] ?? {};
+    final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: Colors.black,
-            leading: const BackButton(color: Colors.white),
+            backgroundColor: theme.scaffoldBackgroundColor,
+            leading: BackButton(color: theme.iconTheme.color),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -170,18 +171,22 @@ class VehicleDetailsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.orange.shade50, Colors.white],
+          colors: [AppTheme.accentColor.withOpacity(0.1), theme.cardColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.orange.withOpacity(0.1)),
+        border: Border.all(color: AppTheme.accentColor.withOpacity(0.2)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: Colors.orange,
-            child: Icon(Icons.payments_rounded, color: Colors.white),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: AppTheme.accentColor,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.payments_rounded, color: Colors.black),
           ),
           const SizedBox(width: 16),
           Expanded(

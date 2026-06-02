@@ -13,11 +13,12 @@ class ProfileSetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('profile_setup'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('profile_setup'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
@@ -112,14 +113,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('change_password'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('change_password'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: const BackButton(color: Colors.black),
+        leading: BackButton(color: theme.iconTheme.color),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -155,8 +158,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   }
                 },
                 child: auth.isLoading 
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text('update_password'.tr()),
+                  ? const CircularProgressIndicator(color: AppTheme.accentColor)
+                  : Text('update_password'.tr().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
               ),
             ),
           ],

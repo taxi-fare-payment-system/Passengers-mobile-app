@@ -116,7 +116,19 @@ class _WalletScreenState extends State<WalletScreen> {
             else if (wallet.transactions.isEmpty)
               Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('no_transactions_yet'.tr(), style: theme.textTheme.bodyMedium)))
             else
-              ...wallet.transactions.take(5).map((tx) => _TransactionTile(tx: tx, walletId: wallet.walletId)),
+              ...wallet.transactions
+                  .where((tx) {
+                    final reason = (tx['reason'] ?? '').toString().toLowerCase();
+                    final message = (tx['message'] ?? '').toString().toLowerCase();
+                    final type = (tx['type'] ?? '').toString().toLowerCase();
+                    final isFare = reason.contains('fare') || 
+                                   reason.contains('pay') || 
+                                   message.contains('fare') || 
+                                   type.contains('fare');
+                    return !isFare;
+                  })
+                  .take(5)
+                  .map((tx) => _TransactionTile(tx: tx, walletId: wallet.walletId)),
             
             const SizedBox(height: 40),
           ],
