@@ -24,7 +24,7 @@ Behavior:
 - TTL is 5 minutes
 
 #### `POST /api/v1/messaging/otp/verify`
-- Auth: none
+- Auth: nonez3
 - Request:
 ```json
 {

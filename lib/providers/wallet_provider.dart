@@ -14,6 +14,8 @@ class WalletProvider with ChangeNotifier {
   bool get isTransferring => _isTransferring;
   List<dynamic> _transactions = [];
   List<dynamic> get transactions => _transactions;
+  double _platformFee = 0.07;
+  double get platformFee => _platformFee;
 
   Future<String?> getWalletByUserId(String userId, String type, String token, {Map<String, String>? headers}) async {
     try {
@@ -120,11 +122,36 @@ class WalletProvider with ChangeNotifier {
     return false;
   }
 
+  Future<void> fetchPlatformFee(String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.get(
+        '/api/v1/wallet/admin/configs',
+        token: token,
+        extraHeaders: headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final configs = data['configs'] as List? ?? [];
+        final feeConfig = configs.firstWhere(
+          (c) => c['key'] == 'fare_platform_fee',
+          orElse: () => null,
+        );
+        if (feeConfig != null) {
+          _platformFee = double.tryParse(feeConfig['value']?.toString() ?? '0') ?? 0.07;
+        }
+      }
+    } catch (e) {
+      print('Wallet Debug: Error fetching platform fee config: $e');
+    }
+  }
+
   Future<void> fetchTransactions(String userId, String token, {Map<String, String>? headers}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
+      await fetchPlatformFee(token, headers: headers);
+
       final response = await ApiService.get('/api/v1/wallet/transactions?limit=50', token: token, extraHeaders: headers);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -137,42 +164,24 @@ class WalletProvider with ChangeNotifier {
           return dateB.compareTo(dateA);
         });
 
-        // Match individual fare payments with their corresponding fee (created at the same time)
-        final Set<String> feeIdsToSkip = {};
-        final Map<String, double> fareExtraFees = {};
-        
-        for (var tx in allTx) {
-          final msg = (tx['message'] ?? '').toString().toLowerCase();
-          if (msg.contains('fare payment') && tx['trip_id'] != null) {
-             for (var otherTx in allTx) {
-                final otherMsg = (otherTx['message'] ?? '').toString().toLowerCase();
-                if (otherMsg.contains('platform fee') && otherTx['trip_id'] == tx['trip_id']) {
-                   final date1 = DateTime.tryParse(tx['created_at']?.toString() ?? '') ?? DateTime.now();
-                   final date2 = DateTime.tryParse(otherTx['created_at']?.toString() ?? '') ?? DateTime.now();
-                   if (date1.difference(date2).inSeconds.abs() <= 5 && !feeIdsToSkip.contains(otherTx['id'])) {
-                       feeIdsToSkip.add(otherTx['id']);
-                       fareExtraFees[tx['id']] = double.tryParse(otherTx['amount']?.toString() ?? '0') ?? 0;
-                       break; 
-                   }
-                }
-             }
-          }
-        }
-
         final List<dynamic> finalTxs = [];
         for (var tx in allTx) {
-           if (feeIdsToSkip.contains(tx['id'])) continue;
-           
-           final newTx = Map<String, dynamic>.from(tx);
-           if (fareExtraFees.containsKey(tx['id'])) {
-               final amt = double.tryParse(newTx['amount']?.toString() ?? '0') ?? 0;
-               final fee = fareExtraFees[tx['id']]!;
-               
-               // Show decimal only if necessary
-               final total = amt + fee;
-               newTx['amount'] = total == total.toInt() ? total.toInt().toString() : total.toStringAsFixed(2);
-           }
-           finalTxs.add(newTx);
+          final msg = (tx['message'] ?? '').toString().toLowerCase();
+          
+          // Skip the separate platform fee transaction records from being displayed
+          if (msg.contains('platform fee')) {
+            continue;
+          }
+
+          final newTx = Map<String, dynamic>.from(tx);
+          final isFarePayment = msg.contains('fare payment') || (tx['reason'] ?? '').toString().toLowerCase().contains('fare');
+
+          if (isFarePayment) {
+            final amt = double.tryParse(newTx['amount']?.toString() ?? '0') ?? 0;
+            final total = amt + _platformFee;
+            newTx['amount'] = total == total.toInt() ? total.toInt().toString() : total.toStringAsFixed(2);
+          }
+          finalTxs.add(newTx);
         }
 
         _transactions = finalTxs;

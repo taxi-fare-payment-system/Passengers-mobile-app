@@ -69,8 +69,9 @@ class ProfileScreen extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     user?['display_name'] ?? user?['name'] ?? 'passenger_user'.tr(),
-                                    style: theme.textTheme.displayLarge?.copyWith(fontSize: 24),
+                                    style: theme.textTheme.displayLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.w800),
                                     overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
                                   ),
                                 ),
                                   if (auth.isVerified) 
@@ -119,9 +120,15 @@ class ProfileScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
-                              style: theme.textTheme.displayLarge?.copyWith(fontSize: 32, color: AppTheme.accentColor),
+                            Expanded(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
+                                  style: theme.textTheme.displayLarge?.copyWith(fontSize: 32, color: AppTheme.accentColor),
+                                ),
+                              ),
                             ),
                             Container(
                               decoration: BoxDecoration(color: AppTheme.accentColor, borderRadius: BorderRadius.circular(16)),

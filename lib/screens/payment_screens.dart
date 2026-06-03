@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
@@ -25,22 +27,65 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
   bool _isLoadingStops = false;
   bool _isPaying = false;
   String? _error;
+  double _platformFee = 0.0; // flat fee in birr, e.g. 0.07 birr
+  double _fareAmount = 0.0;
 
   String? _passengerPhone;
 
   @override
   void initState() {
     super.initState();
+    _amountController.addListener(_onAmountChanged);
+    _fetchPlatformFee();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         if (args['amount'] != null) {
           _amountController.text = args['amount'].toString();
+          _fareAmount = double.tryParse(args['amount'].toString()) ?? 0.0;
         }
         _passengerPhone = args['passenger_phone']?.toString();
         _fetchStops(args['trip_id']?.toString());
       }
     });
+  }
+
+  void _onAmountChanged() {
+    final parsed = double.tryParse(_amountController.text) ?? 0.0;
+    if (parsed != _fareAmount) {
+      setState(() => _fareAmount = parsed);
+    }
+  }
+
+  Future<void> _fetchPlatformFee() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final response = await ApiService.get(
+        '/api/v1/wallet/admin/configs',
+        token: auth.token,
+        extraHeaders: auth.headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final configs = data['configs'] as List? ?? [];
+        final feeConfig = configs.firstWhere(
+          (c) => c['key'] == 'fare_platform_fee',
+          orElse: () => null,
+        );
+        if (feeConfig != null) {
+          setState(() {
+            _platformFee = double.tryParse(feeConfig['value']?.toString() ?? '0') ?? 0.0;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _amountController.removeListener(_onAmountChanged);
+    _amountController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchStops(String? qrCode) async {
@@ -193,25 +238,94 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       bottomNavigationBar: _isLoadingStops ? null : SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(context).viewInsets.bottom + 16),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
-                  child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: _isPaying ? null : _handlePayment,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
-                  child: _isPaying
-                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-                    : Text('pay_fare'.tr().toUpperCase(), style: const TextStyle(fontSize: 13)),
-                ),
+              // ── Total Breakdown ──
+              if (_fareAmount > 0) ...[
+                Builder(builder: (context) {
+                  final fee = _platformFee;
+                  final total = _fareAmount + fee;
+                  final theme = Theme.of(context);
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: theme.dividerColor.withOpacity(0.06)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Fare', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${_fareAmount.toStringAsFixed(2)} ${'currency'.tr()}',
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_platformFee > 0) ...[
+                          Container(width: 1, height: 36, color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text('Platform Fee', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${fee.toStringAsFixed(2)} ${'currency'.tr()}',
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(width: 1, height: 36, color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text('Total', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.accentColor, fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${total.toStringAsFixed(2)} ${'currency'.tr()}',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppTheme.accentColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                      child: Text('cancel'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: _isPaying ? null : _handlePayment,
+                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                      child: _isPaying
+                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                        : Text('pay_fare'.tr().toUpperCase(), style: const TextStyle(fontSize: 13)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -224,7 +338,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                 children: [
                   const CircularProgressIndicator(color: AppTheme.accentColor),
                   const SizedBox(height: 24),
-                  Text('fetching_trip_details'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+                  Text(''.tr(), style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
                 ],
               ),
             )
@@ -655,10 +769,15 @@ class PaymentSuccessScreen extends StatefulWidget {
 class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  String? _resolvedDriverId;
 
   @override
   void initState() {
     super.initState();
+    _resolvedDriverId = widget.driverId;
+    if (_resolvedDriverId == null || _resolvedDriverId!.isEmpty) {
+      _resolveDriverId();
+    }
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -668,6 +787,23 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> with Single
       curve: Curves.elasticOut,
     );
     _animationController.forward();
+  }
+
+  Future<void> _resolveDriverId() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final tripProvider = context.read<TripProvider>();
+      await tripProvider.fetchTripStatus(widget.tripId, auth.token!, headers: auth.headers);
+      if (mounted) {
+        setState(() {
+          _resolvedDriverId = tripProvider.currentTrip?['driver_id']?.toString() ?? 
+                              tripProvider.currentTrip?['driverId']?.toString();
+        });
+        print('PaymentSuccessScreen Debug: Resolved driver ID = $_resolvedDriverId');
+      }
+    } catch (e) {
+      print('PaymentSuccessScreen Debug: Error resolving driver ID: $e');
+    }
   }
 
   @override
@@ -680,6 +816,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> with Single
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
     final theme = Theme.of(context);
+    print('PaymentSuccessScreen Debug: driverId = ${widget.driverId}');
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -770,30 +907,34 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> with Single
                 
                 const Spacer(),
                 
-                if (widget.driverId != null) ...[
+                if (_resolvedDriverId != null && _resolvedDriverId!.isNotEmpty) ...[
                   FutureBuilder<Map<String, dynamic>?>(
-                    future: context.read<DriverProvider>().getDriverProfileData(widget.driverId!, auth.token!, headers: auth.headers),
+                    future: context.read<DriverProvider>().getMyReview(_resolvedDriverId!, auth.token!, headers: auth.headers),
                     builder: (context, snapshot) {
-                      final profile = snapshot.data;
-                      final reviews = profile?['reviews'] ?? {};
-                      final reviewList = reviews['reviews'] as List? ?? [];
-                      final currentUserId = (auth.user?['id'] ?? auth.user?['user_id'])?.toString() ?? '';
-                      final hasReviewed = reviewList.any((r) => r['reviewer_id']?.toString() == currentUserId);
+                      final existingReview = snapshot.data;
+                      final hasReviewed = existingReview != null;
                       final isLoading = snapshot.connectionState == ConnectionState.waiting;
-                      
+
                       return Row(
                         children: [
                           if (isLoading)
                             const Expanded(child: Center(child: CircularProgressIndicator(color: AppTheme.accentColor)))
-                          else if (!hasReviewed) ...[
+                          else ...[ 
                             Expanded(
                               child: ElevatedButton(
                                 onPressed: () => Navigator.pushReplacement(
                                   context, 
-                                  MaterialPageRoute(builder: (context) => RateTripScreen(tripId: widget.tripId, driverId: widget.driverId))
+                                  MaterialPageRoute(builder: (context) => RateTripScreen(
+                                    tripId: widget.tripId,
+                                    driverId: _resolvedDriverId,
+                                    existingReview: existingReview,
+                                  ))
                                 ),
                                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
-                                child: Text('rate_your_trip'.tr().toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+                                child: Text(
+                                  (hasReviewed ? 'edit_review' : 'rate_your_trip').tr().toUpperCase(),
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),

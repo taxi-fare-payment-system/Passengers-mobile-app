@@ -136,4 +136,37 @@ class DriverProvider with ChangeNotifier {
     }
     return null;
   }
+
+  Future<Map<String, dynamic>?> getMyReview(String driverId, String token, {Map<String, String>? headers}) async {
+    try {
+      final response = await ApiService.get(
+        '/api/v1/auth/drivers/$driverId/reviews/mine',
+        token: token,
+        extraHeaders: headers,
+      );
+      print('Driver Debug (getMyReview): Status = ${response.statusCode}, Body = ${response.body}');
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        if (body is Map) {
+          if (body['data'] != null) {
+            final data = body['data'];
+            if (data is Map) {
+              if (data['review'] != null) {
+                return Map<String, dynamic>.from(data['review'] as Map);
+              }
+              if (data['driver_id'] != null || data['id'] != null) {
+                return Map<String, dynamic>.from(data);
+              }
+            }
+          }
+          if (body['review'] != null) {
+            return Map<String, dynamic>.from(body['review'] as Map);
+          }
+        }
+      }
+    } catch (e) {
+      print('Driver Debug: Error fetching my review: $e');
+    }
+    return null;
+  }
 }

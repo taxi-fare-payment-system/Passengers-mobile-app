@@ -126,10 +126,13 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
-                  '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
-                  style: theme.textTheme.displayLarge?.copyWith(fontSize: 40, color: AppTheme.accentColor, letterSpacing: -1),
-                  overflow: TextOverflow.ellipsis,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${wallet.balance ?? '0.00'} ${'currency'.tr()}',
+                    style: theme.textTheme.displayLarge?.copyWith(fontSize: 40, color: AppTheme.accentColor, letterSpacing: -1),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -394,10 +397,8 @@ class _TripItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final amount = double.tryParse((trip['amount'] ?? trip['totalFare'])?.toString() ?? '0') ?? 0;
     final date = DateTime.tryParse(trip['created_at'] ?? '') ?? DateTime.now();
-    double amount = double.tryParse((trip['amount'] ?? trip['totalFare'])?.toString() ?? '0') ?? 0;
-    final fee = double.tryParse((trip['fee'] ?? trip['metadata']?['fee'])?.toString() ?? '0') ?? 0;
-    amount += fee;
     
     String title = 'taxi_fare'.tr();
     if (trip['startLocation'] != null && trip['endLocation'] != null) {

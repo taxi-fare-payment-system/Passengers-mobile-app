@@ -128,9 +128,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
         final isTopUp = reason.contains('topup') || reason.contains('top up') || type == 'topup' || type == 'transfer_in';
         final isExpense = !isTopUp && (isTrip || reason == 'fare' || reason.contains('fare') || reason.contains('pay') || (tx['sender_wallet_id'] == wallet.walletId));
-        double amount = double.tryParse((tx['amount'] ?? tx['totalFare'])?.toString() ?? '0') ?? 0;
-        final fee = double.tryParse((tx['fee'] ?? tx['metadata']?['fee'])?.toString() ?? '0') ?? 0;
-        amount += fee;
+        final amount = double.tryParse((tx['amount'] ?? tx['totalFare'])?.toString() ?? '0') ?? 0;
         final date = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
 
         final isFare = isTrip || 
