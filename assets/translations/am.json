@@ -325,5 +325,7 @@
   "completed": "ተጠናቋል",
   "top_up_failed": "ገንዘብ ማስገባት አልተሳካም",
   "top_up_failed_msg": "የገንዘብ ማስገባት ጥያቄዎን ማስተናገድ አልቻልንም። እባክዎ እንደገና ይሞክሩ።",
-  "returning_to_wallet_in": "በ {} ሰከንድ ውስጥ ወደ ዋሌት ይመለሳል..."
+  "returning_to_wallet_in": "በ {} ሰከንድ ውስጥ ወደ ዋሌት ይመለሳል...",
+  "insufficient_balance_msg": "የዋሌት ሂሳብ በቂ አይደለም። ዋሌትዎን ይሙሉ።",
+  "update_review": "አስተያየት ያሻሽሉ"
 }

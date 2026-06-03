@@ -55,8 +55,32 @@ class DriverProvider with ChangeNotifier {
     required String message,
     required String token,
     Map<String, String>? headers,
+    String? existingReviewId,
   }) async {
     try {
+      // If we have an existing review ID, update it instead of creating a new one
+      if (existingReviewId != null && existingReviewId.isNotEmpty) {
+        final updateResponse = await ApiService.put(
+          '/api/v1/auth/drivers/$driverId/reviews/$existingReviewId',
+          {
+            'rating': rating,
+            'message': message,
+          },
+          token: token,
+          extraHeaders: headers,
+        );
+        if (updateResponse.statusCode == 200 || updateResponse.statusCode == 201) {
+          final data = jsonDecode(updateResponse.body);
+          if (data['reviews'] != null && _currentDriverProfile != null) {
+            _currentDriverProfile!['reviews'] = data['reviews'];
+            notifyListeners();
+          }
+          return;
+        }
+        // If update endpoint failed, fall through to try POST
+      }
+
+      // Try creating a new review
       final response = await ApiService.post(
         '/api/v1/auth/drivers/$driverId/reviews',
         {
@@ -72,6 +96,26 @@ class DriverProvider with ChangeNotifier {
         if (data['reviews'] != null && _currentDriverProfile != null) {
           _currentDriverProfile!['reviews'] = data['reviews'];
           notifyListeners();
+        }
+      } else if (response.statusCode == 409 || response.statusCode == 400) {
+        // Review already exists — try PUT without ID (some APIs update by driver+user)
+        final updateResponse = await ApiService.put(
+          '/api/v1/auth/drivers/$driverId/reviews',
+          {
+            'rating': rating,
+            'message': message,
+          },
+          token: token,
+          extraHeaders: headers,
+        );
+        if (updateResponse.statusCode == 200 || updateResponse.statusCode == 201) {
+          final data = jsonDecode(updateResponse.body);
+          if (data['reviews'] != null && _currentDriverProfile != null) {
+            _currentDriverProfile!['reviews'] = data['reviews'];
+            notifyListeners();
+          }
+        } else {
+          throw Exception('Failed to update review: ${updateResponse.body}');
         }
       } else {
         throw Exception('Failed to submit review: ${response.body}');
