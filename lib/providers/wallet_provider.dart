@@ -130,15 +130,52 @@ class WalletProvider with ChangeNotifier {
         final data = jsonDecode(response.body);
         final List<dynamic> allTx = List.from(data is List ? data : (data['data'] ?? data['items'] ?? []));
         
-        // Sort and update
+        // Sort first
         allTx.sort((a, b) {
           final dateA = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.now();
           final dateB = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.now();
           return dateB.compareTo(dateA);
         });
 
-        _transactions = allTx;
-        print('Wallet Debug: Fetched ${_transactions.length} transactions');
+        // Match individual fare payments with their corresponding fee (created at the same time)
+        final Set<String> feeIdsToSkip = {};
+        final Map<String, double> fareExtraFees = {};
+        
+        for (var tx in allTx) {
+          final msg = (tx['message'] ?? '').toString().toLowerCase();
+          if (msg.contains('fare payment') && tx['trip_id'] != null) {
+             for (var otherTx in allTx) {
+                final otherMsg = (otherTx['message'] ?? '').toString().toLowerCase();
+                if (otherMsg.contains('platform fee') && otherTx['trip_id'] == tx['trip_id']) {
+                   final date1 = DateTime.tryParse(tx['created_at']?.toString() ?? '') ?? DateTime.now();
+                   final date2 = DateTime.tryParse(otherTx['created_at']?.toString() ?? '') ?? DateTime.now();
+                   if (date1.difference(date2).inSeconds.abs() <= 5 && !feeIdsToSkip.contains(otherTx['id'])) {
+                       feeIdsToSkip.add(otherTx['id']);
+                       fareExtraFees[tx['id']] = double.tryParse(otherTx['amount']?.toString() ?? '0') ?? 0;
+                       break; 
+                   }
+                }
+             }
+          }
+        }
+
+        final List<dynamic> finalTxs = [];
+        for (var tx in allTx) {
+           if (feeIdsToSkip.contains(tx['id'])) continue;
+           
+           final newTx = Map<String, dynamic>.from(tx);
+           if (fareExtraFees.containsKey(tx['id'])) {
+               final amt = double.tryParse(newTx['amount']?.toString() ?? '0') ?? 0;
+               final fee = fareExtraFees[tx['id']]!;
+               
+               // Show decimal only if necessary
+               final total = amt + fee;
+               newTx['amount'] = total == total.toInt() ? total.toInt().toString() : total.toStringAsFixed(2);
+           }
+           finalTxs.add(newTx);
+        }
+
+        _transactions = finalTxs;
       } else {
         print('Wallet Debug: Transaction fetch failed status ${response.statusCode}: ${response.body}');
         _transactions = [];

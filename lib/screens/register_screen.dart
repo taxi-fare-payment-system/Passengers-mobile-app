@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await context.read<AuthProvider>().register(phone: fullPhone, password: password, displayName: name);
       if (mounted) Navigator.pushReplacementNamed(context, '/otp', arguments: {'phone': fullPhone, 'password': password});
     } catch (e) {
-      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+      if (mounted) AppModals.showException(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

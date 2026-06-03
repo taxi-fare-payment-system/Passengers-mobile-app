@@ -154,7 +154,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       Navigator.pop(context);
                     }
                   } catch (e) {
-                    if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                    if (mounted) AppModals.showException(context, e);
                   }
                 },
                 child: auth.isLoading 

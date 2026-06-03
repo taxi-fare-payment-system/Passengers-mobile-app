@@ -327,5 +327,6 @@
   "top_up_failed_msg": "We couldn't process your top-up request. Please try again.",
   "returning_to_wallet_in": "Returning to wallet in {} seconds...",
   "insufficient_balance_msg": "Insufficient wallet balance. Please top up your wallet.",
-  "update_review": "Update Review"
+  "update_review": "Update Review",
+  "continue": "Continue"
 }

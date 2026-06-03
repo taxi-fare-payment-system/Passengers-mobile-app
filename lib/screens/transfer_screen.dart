@@ -142,7 +142,7 @@ class _TransferScreenState extends State<TransferScreen> {
                             }
                           } catch (e) {
                             if (mounted) {
-                              AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                              AppModals.showException(context, e);
                             }
                           }
                         }

@@ -7,58 +7,84 @@ import '../providers/feedback_provider.dart';
 import '../providers/driver_provider.dart';
 import '../utils/app_modals.dart';
 
-// RateTripScreen now redirects directly to FeedbackFormScreen (no intermediate page)
-class RateTripScreen extends StatelessWidget {
+class RateTripScreen extends StatefulWidget {
   final String tripId;
   final String? driverId;
-  final String? existingReviewId;
-  const RateTripScreen({super.key, required this.tripId, this.driverId, this.existingReviewId});
+  const RateTripScreen({super.key, required this.tripId, this.driverId});
+
+  @override
+  State<RateTripScreen> createState() => _RateTripScreenState();
+}
+
+class _RateTripScreenState extends State<RateTripScreen> {
+  int _rating = 0;
 
   @override
   Widget build(BuildContext context) {
-    // Immediately redirect — no separate "rate your trip" page needed
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FeedbackFormScreen(
-            tripId: tripId,
-            driverId: driverId,
-            existingReviewId: existingReviewId,
-          ),
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text('rate_your_trip'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        centerTitle: false,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          children: [
+            const Spacer(),
+            Text(
+              'how_was_ride'.tr(),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 48),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) => IconButton(
+                onPressed: () => setState(() => _rating = index + 1),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                icon: Icon(
+                  index < _rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  size: 56,
+                  color: index < _rating ? Colors.orange : theme.dividerColor,
+                ),
+              )),
+            ),
+            const SizedBox(height: 16),
+            if (_rating > 0)
+              Text(
+                _getRatingText().toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.orange, letterSpacing: 1.5),
+              ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                    child: Text('skip'.tr(), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _rating > 0
+                      ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackFormScreen(tripId: widget.tripId, driverId: widget.driverId, rating: _rating)))
+                      : null,
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
+                    child: Text('continue'.tr().toUpperCase(), style: const TextStyle(fontSize: 13)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
-      );
-    });
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator(color: AppTheme.accentColor)),
+      ),
     );
-  }
-}
-
-class FeedbackFormScreen extends StatefulWidget {
-  final String tripId;
-  final String? driverId;
-  final String? existingReviewId;
-
-  const FeedbackFormScreen({
-    super.key,
-    required this.tripId,
-    this.driverId,
-    this.existingReviewId,
-  });
-
-  @override
-  State<FeedbackFormScreen> createState() => _FeedbackFormScreenState();
-}
-
-class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
-  int _rating = 0;
-  final TextEditingController _commentController = TextEditingController();
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
   }
 
   String _getRatingText() {
@@ -70,6 +96,26 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       case 5: return 'excellent'.tr();
       default: return '';
     }
+  }
+}
+
+class FeedbackFormScreen extends StatefulWidget {
+  final String tripId;
+  final String? driverId;
+  final int rating;
+  const FeedbackFormScreen({super.key, required this.tripId, this.driverId, required this.rating});
+
+  @override
+  State<FeedbackFormScreen> createState() => _FeedbackFormScreenState();
+}
+
+class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -87,48 +133,10 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(32.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 24),
-
-            // Star rating
-            Text(
-              'how_was_ride'.tr(),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) => IconButton(
-                onPressed: () => setState(() => _rating = index + 1),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                icon: Icon(
-                  index < _rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                  size: 52,
-                  color: index < _rating ? Colors.orange : theme.dividerColor,
-                ),
-              )),
-            ),
-            if (_rating > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                _getRatingText().toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.orange,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 40),
-
-            // Comment field
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('write_comment'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
-            ),
+            const SizedBox(height: 8),
+            Text('write_comment'.tr().toUpperCase(), style: theme.textTheme.labelSmall),
             const SizedBox(height: 16),
             TextField(
               controller: _commentController,
@@ -137,32 +145,28 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                 hintText: 'share_experience_hint'.tr(),
               ),
             ),
-
             const SizedBox(height: 48),
-
-            // Submit button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (_rating == 0 || feedbackProvider.isSubmitting)
+                onPressed: feedbackProvider.isSubmitting
                     ? null
                     : () async {
                         try {
                           if (widget.driverId != null) {
                             await driverProvider.submitDriverReview(
                               driverId: widget.driverId!,
-                              rating: _rating.toDouble(),
+                              rating: widget.rating.toDouble(),
                               message: _commentController.text.isNotEmpty
                                   ? _commentController.text
                                   : 'No comment provided',
                               token: auth.token!,
                               headers: auth.headers,
-                              existingReviewId: widget.existingReviewId,
                             );
                           } else {
                             await feedbackProvider.submitFeedback(
                               tripId: widget.tripId,
-                              rating: _rating,
+                              rating: widget.rating,
                               tags: [],
                               comment: _commentController.text,
                               token: auth.token!,
@@ -175,7 +179,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                           }
                         } catch (e) {
                           if (mounted) {
-                            AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                            AppModals.showException(context, e);
                           }
                         }
                       },

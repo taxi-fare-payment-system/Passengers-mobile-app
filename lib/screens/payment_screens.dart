@@ -170,17 +170,8 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
       setState(() {
         _isPaying = false;
       });
-      
-      final errorMsg = e.toString().replaceAll('Exception: ', '');
-      String displayMsg = errorMsg;
-      if (errorMsg.toLowerCase().contains('insufficient balance') || 
-          errorMsg.toLowerCase().contains('not enough') || 
-          errorMsg.toLowerCase().contains('balance')) {
-        displayMsg = 'insufficient_balance_msg'.tr();
-      }
-      
       if (mounted) {
-        AppModals.showError(context, displayMsg);
+        AppModals.showError(context, AppModals.friendlyError(e));
       }
     }
   }
@@ -541,7 +532,7 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
                           } catch (e) {
                             setSheetState(() {
                               isAuthLoading = false;
-                              authError = e.toString().replaceAll('Exception: ', '');
+                              authError = AppModals.friendlyError(e);
                             });
                           }
                         },

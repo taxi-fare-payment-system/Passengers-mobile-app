@@ -56,7 +56,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
         setState(() => _selectedFile = null);
       }
     } catch (e) {
-      if (mounted) AppModals.showError(context, '${'upload_failed'.tr()}: ${e.toString().replaceAll('Exception: ', '')}');
+      if (mounted) AppModals.showException(context, e);
     }
   }
 

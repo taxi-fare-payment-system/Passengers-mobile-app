@@ -2,6 +2,43 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class AppModals {
+  /// Converts a raw exception into a user-friendly message.
+  /// Use this everywhere instead of e.toString().replaceAll('Exception: ', '').
+  static String friendlyError(Object e) {
+    final raw = e.toString();
+
+    if (raw.contains('SocketException') ||
+        raw.contains('SocketFailed') ||
+        raw.contains('ClientException') ||
+        raw.contains('NetworkException') ||
+        raw.contains('Failed host lookup') ||
+        raw.contains('No address associated') ||
+        raw.contains('errno = 7') ||
+        raw.contains('Connection refused') ||
+        raw.contains('Connection timed out') ||
+        raw.contains('HttpException')) {
+      return 'No internet connection. Please check your network and try again.';
+    }
+
+    if (raw.contains('TimeoutException') || raw.contains('timed out')) {
+      return 'Request timed out. Please try again.';
+    }
+
+    if (raw.toLowerCase().contains('invalid credentials') ||
+        raw.toLowerCase().contains('unauthorized') ||
+        raw.toLowerCase().contains('wrong password') ||
+        raw.toLowerCase().contains('incorrect password')) {
+      return 'Invalid phone number or password.';
+    }
+
+    if (raw.toLowerCase().contains('insufficient balance') ||
+        raw.toLowerCase().contains('not enough') && raw.toLowerCase().contains('balance')) {
+      return 'Insufficient wallet balance. Please top up your wallet.';
+    }
+
+    return raw.replaceAll('Exception: ', '');
+  }
+
   static void showError(BuildContext context, String message) {
     if (!context.mounted) return;
     
@@ -42,6 +79,11 @@ class AppModals {
         duration: const Duration(seconds: 4),
       ),
     );
+  }
+
+  /// Convenience: show a friendly error from a raw exception object.
+  static void showException(BuildContext context, Object e) {
+    showError(context, friendlyError(e));
   }
 
   static void showSuccess(BuildContext context, String message) {

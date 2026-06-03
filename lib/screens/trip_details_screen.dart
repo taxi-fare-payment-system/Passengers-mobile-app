@@ -160,7 +160,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                   'estimated_fare': widget.route['baseFare'],
                                 }, authProvider.token!);
                               } catch (e) {
-                                if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                                if (mounted) AppModals.showException(context, e);
                               } finally {
                                 if (mounted) setState(() => _isBooking = false);
                               }

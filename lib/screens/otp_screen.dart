@@ -179,7 +179,7 @@ class _OTPScreenState extends State<OTPScreen> {
       if (password != null) await context.read<AuthProvider>().login(phone, password);
       if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
-      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+      if (mounted) AppModals.showException(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

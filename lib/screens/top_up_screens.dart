@@ -165,7 +165,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+        AppModals.showException(context, e);
       }
     }
   }
@@ -294,7 +294,7 @@ class _TopUpRedirectScreenState extends State<TopUpRedirectScreen> {
     } catch (e) {
       await closeInAppWebView();
       if (mounted) {
-        AppModals.showError(context, 'Error: ${e.toString().replaceAll('Exception: ', '')}');
+        AppModals.showException(context, e);
         Navigator.pop(context);
       }
     }

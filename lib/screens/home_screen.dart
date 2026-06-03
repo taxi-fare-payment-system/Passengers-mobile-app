@@ -227,7 +227,7 @@ class HomeScreen extends StatelessWidget {
                         }
                       }
                     } catch (e) {
-                      if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                      if (context.mounted) AppModals.showException(context, e);
                     }
                   },
                   icon: const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 28),
@@ -324,7 +324,7 @@ class HomeScreen extends StatelessWidget {
                               }
                             }
                           } catch (e) {
-                            if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                            if (context.mounted) AppModals.showException(context, e);
                           }
                         }
                       }
@@ -395,7 +395,9 @@ class _TripItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final date = DateTime.tryParse(trip['created_at'] ?? '') ?? DateTime.now();
-    final amount = double.tryParse((trip['amount'] ?? trip['totalFare'])?.toString() ?? '0') ?? 0;
+    double amount = double.tryParse((trip['amount'] ?? trip['totalFare'])?.toString() ?? '0') ?? 0;
+    final fee = double.tryParse((trip['fee'] ?? trip['metadata']?['fee'])?.toString() ?? '0') ?? 0;
+    amount += fee;
     
     String title = 'taxi_fare'.tr();
     if (trip['startLocation'] != null && trip['endLocation'] != null) {

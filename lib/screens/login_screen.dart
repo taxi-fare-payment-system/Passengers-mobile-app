@@ -420,7 +420,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
-      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+      if (mounted) AppModals.showException(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -452,7 +452,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+      if (mounted) AppModals.showException(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -607,7 +607,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _showResetPasswordDialog(context, '0$phone');
                           }
                         } catch (e) {
-                          if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                          if (context.mounted) AppModals.showException(context, e);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -711,7 +711,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               AppModals.showSuccess(context, 'password_reset_successful'.tr());
                             }
                           } catch (e) {
-                            if (context.mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                            if (context.mounted) AppModals.showException(context, e);
                           } finally {
                             if (context.mounted) setSheetState(() => isResetLoading = false);
                           }

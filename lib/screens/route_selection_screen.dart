@@ -172,7 +172,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => TripDetailsScreen(route: route)));
                               }
                             } catch (e) {
-                              if (mounted) AppModals.showError(context, e.toString().replaceAll('Exception: ', ''));
+                              if (mounted) AppModals.showException(context, e);
                             } finally {
                               if (mounted) setState(() => _isSubmitting = false);
                             }
